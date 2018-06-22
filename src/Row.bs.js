@@ -8,7 +8,7 @@ var ReasonReact = require("reason-react/src/ReasonReact.js");
 
 var component = ReasonReact.statelessComponent("Lane");
 
-function make(label, lane, onClick, onSetLength, _) {
+function make(label, lane, onSetValue, onSetLength, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -23,9 +23,9 @@ function make(label, lane, onClick, onSetLength, _) {
               return React.createElement("div", undefined, React.createElement("p", undefined, label), React.createElement("div", {
                               className: "flex"
                             }, $$Array.mapi((function (i, value) {
-                                    var match = i >= lane[/* length */2];
-                                    var match$1 = lane[/* index */1] === i;
-                                    var match$2 = lane[/* index */1] === i;
+                                    var match = i > lane[/* loopAfterIndex */3];
+                                    var match$1 = lane[/* visualIndex */2] === i;
+                                    var match$2 = lane[/* visualIndex */2] === i;
                                     return React.createElement("div", {
                                                 key: String(i),
                                                 className: "w2 relative " + (
@@ -36,14 +36,14 @@ function make(label, lane, onClick, onSetLength, _) {
                                                       match$1 ? "bg-red" : "bg-gray"
                                                     ),
                                                     onClick: (function () {
-                                                        return Curry._2(onClick, i, value + 1 | 0);
+                                                        return Curry._2(onSetValue, i, value + 1 | 0);
                                                       })
                                                   }), React.createElement("button", {
                                                     className: "input-reset db w-100 h1 " + (
                                                       match$2 ? "bg-red" : "bg-gray"
                                                     ),
                                                     onClick: (function () {
-                                                        return Curry._2(onClick, i, value - 1 | 0);
+                                                        return Curry._2(onSetValue, i, value - 1 | 0);
                                                       })
                                                   }), React.createElement("p", {
                                                     className: "relative tc ma0"

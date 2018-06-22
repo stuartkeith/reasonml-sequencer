@@ -1,18 +1,19 @@
 {
   "name": "reasonml-sequencer",
+  "repository": "git@github.com:stuartkeith/reasonml-sequencer.git",
   "version": "0.1.0",
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack -w",
-    "webpack:production": "NODE_ENV=production webpack"
+    "webpack": "webpack-serve --config ./webpack.config.js --content static/",
+    "webpack:production": "NODE_ENV=production webpack && cp static/* build/"
   },
   "keywords": [
     "BuckleScript"
   ],
-  "author": "",
+  "author": "Stuart Keith <stuart@stuartkeith.com>",
   "license": "MIT",
   "dependencies": {
     "react": "^16.2.0",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "bs-platform": "^3.1.5",
     "webpack": "^4.0.1",
-    "webpack-cli": "^2.0.10"
+    "webpack-cli": "^2.0.10",
+    "webpack-serve": "^1.0.4"
   }
 }

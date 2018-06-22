@@ -20,14 +20,33 @@ function make() {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              return WebAudio$ReactTemplate.createSchedule((function (_, _$1) {
-                            return Curry._1(self[/* send */3], /* Playback */0);
-                          }));
+              Curry._2(WebAudio$ReactTemplate.loadSound, "harp.mp3", (function (buffer) {
+                      self[/* state */1][/* soundBuffer */4][0] = /* Some */[buffer];
+                      return /* () */0;
+                    }));
+              self[/* state */1][/* scheduler */3][0] = /* Some */[WebAudio$ReactTemplate.createSchedule((function (beatTime, beatLength) {
+                        return Curry._1(self[/* send */3], /* Playback */Block.__(0, [
+                                      beatTime,
+                                      beatLength
+                                    ]));
+                      }))];
+              return /* () */0;
             }),
           /* didUpdate */(function (param) {
-              if (param[/* oldSelf */0][/* state */1][/* isPlaying */2] !== param[/* newSelf */1][/* state */1][/* isPlaying */2]) {
-                console.log("is has changed - change schedule");
-                return /* () */0;
+              var newSelf = param[/* newSelf */1];
+              if (param[/* oldSelf */0][/* state */1][/* isPlaying */2] !== newSelf[/* state */1][/* isPlaying */2]) {
+                var match = newSelf[/* state */1][/* scheduler */3][0];
+                if (match) {
+                  var scheduler = match[0];
+                  if (newSelf[/* state */1][/* isPlaying */2]) {
+                    Curry._1(newSelf[/* send */3], /* ResetLanes */1);
+                    return Curry._1(scheduler[/* start */0], /* () */0);
+                  } else {
+                    return Curry._1(scheduler[/* stop */1], /* () */0);
+                  }
+                } else {
+                  return /* () */0;
+                }
               } else {
                 return 0;
               }
@@ -39,27 +58,27 @@ function make() {
               var match = self[/* state */1][/* isPlaying */2];
               return React.createElement("div", undefined, React.createElement("button", {
                               onClick: (function () {
-                                  return Curry._1(self[/* send */3], /* SetPlayback */Block.__(1, [!self[/* state */1][/* isPlaying */2]]));
+                                  return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */2]]));
                                 })
                             }, match ? "Playing" : "Stopped"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], (function (index, value) {
-                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(2, [/* record */[
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
                                                     /* laneValue : Octave */0,
                                                     /* index */index,
                                                     /* value */value
                                                   ]]));
                                   }), (function (index) {
-                                    return Curry._1(self[/* send */3], /* SetLength */Block.__(0, [
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
                                                   /* Octave */0,
                                                   index
                                                 ]));
                                   }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", self[/* state */1][/* transpose */1], (function (index, value) {
-                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(2, [/* record */[
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
                                                     /* laneValue : Transpose */1,
                                                     /* index */index,
                                                     /* value */value
                                                   ]]));
                                   }), (function (index) {
-                                    return Curry._1(self[/* send */3], /* SetLength */Block.__(0, [
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
                                                   /* Transpose */1,
                                                   index
                                                 ]));
@@ -69,64 +88,103 @@ function make() {
               return /* record */[
                       /* octave */Lane$ReactTemplate.emptyLane(/* () */0),
                       /* transpose */Lane$ReactTemplate.emptyLane(/* () */0),
-                      /* isPlaying */false
+                      /* isPlaying */false,
+                      /* scheduler */[/* None */0],
+                      /* soundBuffer */[/* None */0]
                     ];
             }),
           /* retainedProps */component[/* retainedProps */11],
           /* reducer */(function (action, state) {
               if (typeof action === "number") {
                 if (action === 0) {
-                  return /* SideEffects */Block.__(1, [(function (self) {
-                                var octave = Caml_array.caml_array_get(self[/* state */1][/* octave */0][/* values */0], self[/* state */1][/* octave */0][/* index */1]);
-                                var transpose = Caml_array.caml_array_get(self[/* state */1][/* transpose */1][/* values */0], self[/* state */1][/* transpose */1][/* index */1]);
-                                var note = Caml_int32.imul(octave, 12) + transpose | 0;
-                                console.log(note);
-                                return Curry._1(self[/* send */3], /* AdvancePlayback */1);
-                              })]);
-                } else {
                   return /* Update */Block.__(0, [/* record */[
                               /* octave */Lane$ReactTemplate.advance(state[/* octave */0]),
                               /* transpose */Lane$ReactTemplate.advance(state[/* transpose */1]),
-                              /* isPlaying */state[/* isPlaying */2]
+                              /* isPlaying */state[/* isPlaying */2],
+                              /* scheduler */state[/* scheduler */3],
+                              /* soundBuffer */state[/* soundBuffer */4]
+                            ]]);
+                } else {
+                  var init = state[/* octave */0];
+                  var init$1 = state[/* transpose */1];
+                  return /* Update */Block.__(0, [/* record */[
+                              /* octave : record */[
+                                /* values */init[/* values */0],
+                                /* index */0,
+                                /* visualIndex */0,
+                                /* loopAfterIndex */init[/* loopAfterIndex */3]
+                              ],
+                              /* transpose : record */[
+                                /* values */init$1[/* values */0],
+                                /* index */0,
+                                /* visualIndex */0,
+                                /* loopAfterIndex */init$1[/* loopAfterIndex */3]
+                              ],
+                              /* isPlaying */state[/* isPlaying */2],
+                              /* scheduler */state[/* scheduler */3],
+                              /* soundBuffer */state[/* soundBuffer */4]
                             ]]);
                 }
               } else {
                 switch (action.tag | 0) {
                   case 0 : 
+                      var beatTime = action[0];
+                      var match = state[/* soundBuffer */4][0];
+                      if (match) {
+                        var buffer = match[0];
+                        return /* SideEffects */Block.__(1, [(function (self) {
+                                      var octave = Caml_array.caml_array_get(self[/* state */1][/* octave */0][/* values */0], self[/* state */1][/* octave */0][/* index */1]);
+                                      var transpose = Caml_array.caml_array_get(self[/* state */1][/* transpose */1][/* values */0], self[/* state */1][/* transpose */1][/* index */1]);
+                                      var note = Caml_int32.imul(octave, 12) + transpose | 0;
+                                      Curry._6(WebAudio$ReactTemplate.playBuffer, buffer, note, 1, beatTime, 0, 1);
+                                      return Curry._1(self[/* send */3], /* AdvancePlayback */0);
+                                    })]);
+                      } else {
+                        return /* NoUpdate */0;
+                      }
+                  case 1 : 
                       var index = action[1];
                       if (action[0]) {
-                        var init = state[/* transpose */1];
+                        var init$2 = state[/* transpose */1];
                         return /* Update */Block.__(0, [/* record */[
                                     /* octave */state[/* octave */0],
                                     /* transpose : record */[
-                                      /* values */init[/* values */0],
-                                      /* index */init[/* index */1],
-                                      /* length */index
+                                      /* values */init$2[/* values */0],
+                                      /* index */init$2[/* index */1],
+                                      /* visualIndex */init$2[/* visualIndex */2],
+                                      /* loopAfterIndex */index
                                     ],
-                                    /* isPlaying */state[/* isPlaying */2]
+                                    /* isPlaying */state[/* isPlaying */2],
+                                    /* scheduler */state[/* scheduler */3],
+                                    /* soundBuffer */state[/* soundBuffer */4]
                                   ]]);
                       } else {
-                        var init$1 = state[/* octave */0];
+                        var init$3 = state[/* octave */0];
                         return /* Update */Block.__(0, [/* record */[
                                     /* octave : record */[
-                                      /* values */init$1[/* values */0],
-                                      /* index */init$1[/* index */1],
-                                      /* length */index
+                                      /* values */init$3[/* values */0],
+                                      /* index */init$3[/* index */1],
+                                      /* visualIndex */init$3[/* visualIndex */2],
+                                      /* loopAfterIndex */index
                                     ],
                                     /* transpose */state[/* transpose */1],
-                                    /* isPlaying */state[/* isPlaying */2]
+                                    /* isPlaying */state[/* isPlaying */2],
+                                    /* scheduler */state[/* scheduler */3],
+                                    /* soundBuffer */state[/* soundBuffer */4]
                                   ]]);
                       }
-                  case 1 : 
+                  case 2 : 
                       return /* Update */Block.__(0, [/* record */[
                                   /* octave */state[/* octave */0],
                                   /* transpose */state[/* transpose */1],
-                                  /* isPlaying */action[0]
+                                  /* isPlaying */action[0],
+                                  /* scheduler */state[/* scheduler */3],
+                                  /* soundBuffer */state[/* soundBuffer */4]
                                 ]]);
-                  case 2 : 
+                  case 3 : 
                       var laneEdit = action[0];
-                      var match = laneEdit[/* laneValue */0];
-                      if (match) {
+                      var match$1 = laneEdit[/* laneValue */0];
+                      if (match$1) {
                         Caml_array.caml_array_set(state[/* transpose */1][/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);
                       } else {
                         Caml_array.caml_array_set(state[/* octave */0][/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);

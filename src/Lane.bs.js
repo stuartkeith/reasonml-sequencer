@@ -7,16 +7,19 @@ function emptyLane() {
   return /* record */[
           /* values */Caml_array.caml_make_vect(16, 0),
           /* index */0,
-          /* length */8
+          /* visualIndex */0,
+          /* loopAfterIndex */7
         ];
 }
 
 function advance(lane) {
-  var match = (lane[/* index */1] + 1 | 0) >= lane[/* length */2];
+  var nextIndex = lane[/* index */1] + 1 | 0;
+  var match = nextIndex > lane[/* loopAfterIndex */3];
   return /* record */[
           /* values */lane[/* values */0],
-          /* index */match ? 0 : lane[/* index */1] + 1 | 0,
-          /* length */lane[/* length */2]
+          /* index */match ? 0 : nextIndex,
+          /* visualIndex */lane[/* index */1],
+          /* loopAfterIndex */lane[/* loopAfterIndex */3]
         ];
 }
 

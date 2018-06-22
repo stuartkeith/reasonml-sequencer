@@ -5,18 +5,23 @@ type laneValue =
 type lane = {
   values: array(int),
   index: int,
-  length: int
+  visualIndex: int,
+  loopAfterIndex: int
 };
 
 let emptyLane = () => {
   values: Array.make(16, 0),
   index: 0,
-  length: 8
+  visualIndex: 0,
+  loopAfterIndex: 7
 };
 
 let advance = (lane) => {
+  let nextIndex = lane.index + 1;
+
   {
     ...lane,
-    index: lane.index + 1 >= lane.length ? 0 : lane.index + 1
+    index: nextIndex > lane.loopAfterIndex ? 0 : nextIndex,
+    visualIndex: lane.index
   }
 };
