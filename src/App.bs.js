@@ -13,6 +13,32 @@ var WebAudio$ReactTemplate = require("./WebAudio.bs.js");
 
 var component = ReasonReact.reducerComponent("App");
 
+function applyToAllLanes(state, fn) {
+  return /* Update */Block.__(0, [/* record */[
+              /* octave */Curry._1(fn, state[/* octave */0]),
+              /* transpose */Curry._1(fn, state[/* transpose */1]),
+              /* isPlaying */state[/* isPlaying */2],
+              /* scheduler */state[/* scheduler */3],
+              /* soundBuffer */state[/* soundBuffer */4]
+            ]]);
+}
+
+function applyToLane(state, laneValue, fn) {
+  return /* Update */Block.__(0, [laneValue ? /* record */[
+                /* octave */state[/* octave */0],
+                /* transpose */Curry._1(fn, state[/* transpose */1]),
+                /* isPlaying */state[/* isPlaying */2],
+                /* scheduler */state[/* scheduler */3],
+                /* soundBuffer */state[/* soundBuffer */4]
+              ] : /* record */[
+                /* octave */Curry._1(fn, state[/* octave */0]),
+                /* transpose */state[/* transpose */1],
+                /* isPlaying */state[/* isPlaying */2],
+                /* scheduler */state[/* scheduler */3],
+                /* soundBuffer */state[/* soundBuffer */4]
+              ]]);
+}
+
 function make() {
   return /* record */[
           /* debugName */component[/* debugName */0],
@@ -56,11 +82,14 @@ function make() {
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
               var match = self[/* state */1][/* isPlaying */2];
-              return React.createElement("div", undefined, React.createElement("button", {
+              return React.createElement("div", {
+                          className: "ma4"
+                        }, React.createElement("button", {
+                              className: "w4",
                               onClick: (function () {
                                   return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */2]]));
                                 })
-                            }, match ? "Playing" : "Stopped"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], (function (index, value) {
+                            }, match ? "Stop" : "Play"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], (function (index, value) {
                                     return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
                                                     /* laneValue : Octave */0,
                                                     /* index */index,
@@ -97,33 +126,9 @@ function make() {
           /* reducer */(function (action, state) {
               if (typeof action === "number") {
                 if (action === 0) {
-                  return /* Update */Block.__(0, [/* record */[
-                              /* octave */Lane$ReactTemplate.advance(state[/* octave */0]),
-                              /* transpose */Lane$ReactTemplate.advance(state[/* transpose */1]),
-                              /* isPlaying */state[/* isPlaying */2],
-                              /* scheduler */state[/* scheduler */3],
-                              /* soundBuffer */state[/* soundBuffer */4]
-                            ]]);
+                  return applyToAllLanes(state, Lane$ReactTemplate.advance);
                 } else {
-                  var init = state[/* octave */0];
-                  var init$1 = state[/* transpose */1];
-                  return /* Update */Block.__(0, [/* record */[
-                              /* octave : record */[
-                                /* values */init[/* values */0],
-                                /* index */0,
-                                /* visualIndex */0,
-                                /* loopAfterIndex */init[/* loopAfterIndex */3]
-                              ],
-                              /* transpose : record */[
-                                /* values */init$1[/* values */0],
-                                /* index */0,
-                                /* visualIndex */0,
-                                /* loopAfterIndex */init$1[/* loopAfterIndex */3]
-                              ],
-                              /* isPlaying */state[/* isPlaying */2],
-                              /* scheduler */state[/* scheduler */3],
-                              /* soundBuffer */state[/* soundBuffer */4]
-                            ]]);
+                  return applyToAllLanes(state, Lane$ReactTemplate.reset);
                 }
               } else {
                 switch (action.tag | 0) {
@@ -144,35 +149,14 @@ function make() {
                       }
                   case 1 : 
                       var index = action[1];
-                      if (action[0]) {
-                        var init$2 = state[/* transpose */1];
-                        return /* Update */Block.__(0, [/* record */[
-                                    /* octave */state[/* octave */0],
-                                    /* transpose : record */[
-                                      /* values */init$2[/* values */0],
-                                      /* index */init$2[/* index */1],
-                                      /* visualIndex */init$2[/* visualIndex */2],
-                                      /* loopAfterIndex */index
-                                    ],
-                                    /* isPlaying */state[/* isPlaying */2],
-                                    /* scheduler */state[/* scheduler */3],
-                                    /* soundBuffer */state[/* soundBuffer */4]
-                                  ]]);
-                      } else {
-                        var init$3 = state[/* octave */0];
-                        return /* Update */Block.__(0, [/* record */[
-                                    /* octave : record */[
-                                      /* values */init$3[/* values */0],
-                                      /* index */init$3[/* index */1],
-                                      /* visualIndex */init$3[/* visualIndex */2],
-                                      /* loopAfterIndex */index
-                                    ],
-                                    /* transpose */state[/* transpose */1],
-                                    /* isPlaying */state[/* isPlaying */2],
-                                    /* scheduler */state[/* scheduler */3],
-                                    /* soundBuffer */state[/* soundBuffer */4]
-                                  ]]);
-                      }
+                      return applyToLane(state, action[0], (function (subState) {
+                                    return /* record */[
+                                            /* values */subState[/* values */0],
+                                            /* index */subState[/* index */1],
+                                            /* visualIndex */subState[/* visualIndex */2],
+                                            /* loopAfterIndex */index
+                                          ];
+                                  }));
                   case 2 : 
                       return /* Update */Block.__(0, [/* record */[
                                   /* octave */state[/* octave */0],
@@ -183,13 +167,10 @@ function make() {
                                 ]]);
                   case 3 : 
                       var laneEdit = action[0];
-                      var match$1 = laneEdit[/* laneValue */0];
-                      if (match$1) {
-                        Caml_array.caml_array_set(state[/* transpose */1][/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);
-                      } else {
-                        Caml_array.caml_array_set(state[/* octave */0][/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);
-                      }
-                      return /* Update */Block.__(0, [state]);
+                      return applyToLane(state, laneEdit[/* laneValue */0], (function (subState) {
+                                    Caml_array.caml_array_set(subState[/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);
+                                    return subState;
+                                  }));
                   
                 }
               }
@@ -200,5 +181,7 @@ function make() {
 }
 
 exports.component = component;
+exports.applyToAllLanes = applyToAllLanes;
+exports.applyToLane = applyToLane;
 exports.make = make;
 /* component Not a pure module */

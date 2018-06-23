@@ -23,6 +23,16 @@ function advance(lane) {
         ];
 }
 
+function reset(lane) {
+  return /* record */[
+          /* values */lane[/* values */0],
+          /* index */0,
+          /* visualIndex */0,
+          /* loopAfterIndex */lane[/* loopAfterIndex */3]
+        ];
+}
+
 exports.emptyLane = emptyLane;
 exports.advance = advance;
+exports.reset = reset;
 /* No side effect */

@@ -25,3 +25,9 @@ let advance = (lane) => {
     visualIndex: lane.index
   }
 };
+
+let reset = (lane) => {
+  ...lane,
+  index: 0,
+  visualIndex: 0
+};

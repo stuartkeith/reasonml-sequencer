@@ -22,6 +22,21 @@ type action =
 
 let component = ReasonReact.reducerComponent("App");
 
+/* apply a function to all lanes */
+let applyToAllLanes = (state, fn) => ReasonReact.Update({
+  ...state,
+  octave: fn(state.octave),
+  transpose: fn(state.transpose)
+});
+
+/* apply a function to one lane */
+let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
+  switch (laneValue) {
+    | Lane.Octave => { ...state, octave: fn(state.octave) }
+    | Lane.Transpose => { ...state, transpose: fn(state.transpose) }
+  }
+);
+
 let make = (_children) => {
   ...component,
 
@@ -35,19 +50,7 @@ let make = (_children) => {
 
   reducer: (action, state) =>
     switch (action) {
-      | ResetLanes => ReasonReact.Update({
-        ...state,
-        octave: {
-          ...state.octave,
-          index: 0,
-          visualIndex: 0
-        },
-        transpose: {
-          ...state.transpose,
-          index: 0,
-          visualIndex: 0
-        }
-      })
+      | ResetLanes => applyToAllLanes(state, Lane.reset)
       | Playback(beatTime, _beatLength) => switch(state.soundBuffer^) {
         | None => ReasonReact.NoUpdate
         | Some(buffer) => ReasonReact.SideEffects((self) => {
@@ -60,39 +63,17 @@ let make = (_children) => {
             self.send(AdvancePlayback);
         })
       }
-      | AdvancePlayback => ReasonReact.Update({
-        ...state,
-        octave: Lane.advance(state.octave),
-        transpose: Lane.advance(state.transpose),
-      })
+      | AdvancePlayback => applyToAllLanes(state, Lane.advance)
       | SetPlayback(value) => ReasonReact.Update({
         ...state,
         isPlaying: value
       })
-      | SetLoopAfterIndex(laneValue, index) => switch (laneValue) {
-        | Lane.Octave => ReasonReact.Update({
-          ...state,
-          octave: {
-            ...state.octave,
-            loopAfterIndex: index
-          }
-        })
-        | Lane.Transpose => ReasonReact.Update({
-          ...state,
-          transpose: {
-            ...state.transpose,
-            loopAfterIndex: index
-          }
-        })
-      }
-      | SetLaneValue(laneEdit) => {
-        switch (laneEdit.laneValue) {
-        | Lane.Octave => state.octave.values[laneEdit.index] = laneEdit.value
-        | Lane.Transpose => state.transpose.values[laneEdit.index] = laneEdit.value
-        };
+      | SetLoopAfterIndex(laneValue, index) => applyToLane(state, laneValue, (subState) => { ...subState, loopAfterIndex: index })
+      | SetLaneValue(laneEdit) => applyToLane(state, laneEdit.laneValue, (subState) => {
+        subState.values[laneEdit.index] = laneEdit.value;
 
-        ReasonReact.Update(state);
-      }
+        subState;
+      })
     },
 
   didMount: (self) => {
@@ -123,9 +104,9 @@ let make = (_children) => {
   },
 
   render: self => {
-    <div>
-      <button onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
-        (self.state.isPlaying ? ReasonReact.string("Playing") : ReasonReact.string("Stopped"))
+    <div className="ma4">
+      <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
+        (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
       </button>
       <Row
         label="Octave"
