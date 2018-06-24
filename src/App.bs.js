@@ -17,26 +17,49 @@ function applyToAllLanes(state, fn) {
   return /* Update */Block.__(0, [/* record */[
               /* octave */Curry._1(fn, state[/* octave */0]),
               /* transpose */Curry._1(fn, state[/* transpose */1]),
-              /* isPlaying */state[/* isPlaying */2],
-              /* scheduler */state[/* scheduler */3],
-              /* soundBuffer */state[/* soundBuffer */4]
+              /* velocity */Curry._1(fn, state[/* velocity */2]),
+              /* isPlaying */state[/* isPlaying */3],
+              /* scheduler */state[/* scheduler */4],
+              /* soundBuffer */state[/* soundBuffer */5]
             ]]);
 }
 
 function applyToLane(state, laneValue, fn) {
-  return /* Update */Block.__(0, [laneValue ? /* record */[
-                /* octave */state[/* octave */0],
-                /* transpose */Curry._1(fn, state[/* transpose */1]),
-                /* isPlaying */state[/* isPlaying */2],
-                /* scheduler */state[/* scheduler */3],
-                /* soundBuffer */state[/* soundBuffer */4]
-              ] : /* record */[
-                /* octave */Curry._1(fn, state[/* octave */0]),
-                /* transpose */state[/* transpose */1],
-                /* isPlaying */state[/* isPlaying */2],
-                /* scheduler */state[/* scheduler */3],
-                /* soundBuffer */state[/* soundBuffer */4]
-              ]]);
+  var tmp;
+  switch (laneValue) {
+    case 0 : 
+        tmp = /* record */[
+          /* octave */Curry._1(fn, state[/* octave */0]),
+          /* transpose */state[/* transpose */1],
+          /* velocity */state[/* velocity */2],
+          /* isPlaying */state[/* isPlaying */3],
+          /* scheduler */state[/* scheduler */4],
+          /* soundBuffer */state[/* soundBuffer */5]
+        ];
+        break;
+    case 1 : 
+        tmp = /* record */[
+          /* octave */state[/* octave */0],
+          /* transpose */Curry._1(fn, state[/* transpose */1]),
+          /* velocity */state[/* velocity */2],
+          /* isPlaying */state[/* isPlaying */3],
+          /* scheduler */state[/* scheduler */4],
+          /* soundBuffer */state[/* soundBuffer */5]
+        ];
+        break;
+    case 2 : 
+        tmp = /* record */[
+          /* octave */state[/* octave */0],
+          /* transpose */state[/* transpose */1],
+          /* velocity */Curry._1(fn, state[/* velocity */2]),
+          /* isPlaying */state[/* isPlaying */3],
+          /* scheduler */state[/* scheduler */4],
+          /* soundBuffer */state[/* soundBuffer */5]
+        ];
+        break;
+    
+  }
+  return /* Update */Block.__(0, [tmp]);
 }
 
 function make() {
@@ -47,10 +70,10 @@ function make() {
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
               Curry._2(WebAudio$ReactTemplate.loadSound, "harp.mp3", (function (buffer) {
-                      self[/* state */1][/* soundBuffer */4][0] = /* Some */[buffer];
+                      self[/* state */1][/* soundBuffer */5][0] = /* Some */[buffer];
                       return /* () */0;
                     }));
-              self[/* state */1][/* scheduler */3][0] = /* Some */[WebAudio$ReactTemplate.createSchedule((function (beatTime, beatLength) {
+              self[/* state */1][/* scheduler */4][0] = /* Some */[WebAudio$ReactTemplate.createSchedule((function (beatTime, beatLength) {
                         return Curry._1(self[/* send */3], /* Playback */Block.__(0, [
                                       beatTime,
                                       beatLength
@@ -60,11 +83,11 @@ function make() {
             }),
           /* didUpdate */(function (param) {
               var newSelf = param[/* newSelf */1];
-              if (param[/* oldSelf */0][/* state */1][/* isPlaying */2] !== newSelf[/* state */1][/* isPlaying */2]) {
-                var match = newSelf[/* state */1][/* scheduler */3][0];
+              if (param[/* oldSelf */0][/* state */1][/* isPlaying */3] !== newSelf[/* state */1][/* isPlaying */3]) {
+                var match = newSelf[/* state */1][/* scheduler */4][0];
                 if (match) {
                   var scheduler = match[0];
-                  if (newSelf[/* state */1][/* isPlaying */2]) {
+                  if (newSelf[/* state */1][/* isPlaying */3]) {
                     Curry._1(newSelf[/* send */3], /* ResetLanes */1);
                     return Curry._1(scheduler[/* start */0], /* () */0);
                   } else {
@@ -81,13 +104,13 @@ function make() {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              var match = self[/* state */1][/* isPlaying */2];
+              var match = self[/* state */1][/* isPlaying */3];
               return React.createElement("div", {
                           className: "ma4"
                         }, React.createElement("button", {
                               className: "w4",
                               onClick: (function () {
-                                  return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */2]]));
+                                  return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */3]]));
                                 })
                             }, match ? "Stop" : "Play"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], (function (index, value) {
                                     return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
@@ -111,12 +134,24 @@ function make() {
                                                   /* Transpose */1,
                                                   index
                                                 ]));
+                                  }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", self[/* state */1][/* velocity */2], (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
+                                                    /* laneValue : Velocity */2,
+                                                    /* index */index,
+                                                    /* value */value
+                                                  ]]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Velocity */2,
+                                                  index
+                                                ]));
                                   }), /* array */[])));
             }),
           /* initialState */(function () {
               return /* record */[
-                      /* octave */Lane$ReactTemplate.emptyLane(/* () */0),
-                      /* transpose */Lane$ReactTemplate.emptyLane(/* () */0),
+                      /* octave */Lane$ReactTemplate.emptyLane(0),
+                      /* transpose */Lane$ReactTemplate.emptyLane(0),
+                      /* velocity */Lane$ReactTemplate.emptyLane(100),
                       /* isPlaying */false,
                       /* scheduler */[/* None */0],
                       /* soundBuffer */[/* None */0]
@@ -134,14 +169,16 @@ function make() {
                 switch (action.tag | 0) {
                   case 0 : 
                       var beatTime = action[0];
-                      var match = state[/* soundBuffer */4][0];
+                      var match = state[/* soundBuffer */5][0];
                       if (match) {
                         var buffer = match[0];
                         return /* SideEffects */Block.__(1, [(function (self) {
                                       var octave = Caml_array.caml_array_get(self[/* state */1][/* octave */0][/* values */0], self[/* state */1][/* octave */0][/* index */1]);
                                       var transpose = Caml_array.caml_array_get(self[/* state */1][/* transpose */1][/* values */0], self[/* state */1][/* transpose */1][/* index */1]);
+                                      var velocity = Caml_array.caml_array_get(self[/* state */1][/* velocity */2][/* values */0], self[/* state */1][/* velocity */2][/* index */1]);
                                       var note = Caml_int32.imul(octave, 12) + transpose | 0;
-                                      Curry._6(WebAudio$ReactTemplate.playBuffer, buffer, note, 1, beatTime, 0, 1);
+                                      var gain = velocity / 100;
+                                      Curry._6(WebAudio$ReactTemplate.playBuffer, buffer, note, gain, beatTime, 0, 1);
                                       return Curry._1(self[/* send */3], /* AdvancePlayback */0);
                                     })]);
                       } else {
@@ -161,9 +198,10 @@ function make() {
                       return /* Update */Block.__(0, [/* record */[
                                   /* octave */state[/* octave */0],
                                   /* transpose */state[/* transpose */1],
+                                  /* velocity */state[/* velocity */2],
                                   /* isPlaying */action[0],
-                                  /* scheduler */state[/* scheduler */3],
-                                  /* soundBuffer */state[/* soundBuffer */4]
+                                  /* scheduler */state[/* scheduler */4],
+                                  /* soundBuffer */state[/* soundBuffer */5]
                                 ]]);
                   case 3 : 
                       var laneEdit = action[0];
@@ -180,6 +218,9 @@ function make() {
         ];
 }
 
+var maxVelocity = 100;
+
+exports.maxVelocity = maxVelocity;
 exports.component = component;
 exports.applyToAllLanes = applyToAllLanes;
 exports.applyToLane = applyToLane;

@@ -3,9 +3,9 @@
 
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 
-function emptyLane() {
+function emptyLane(initialValue) {
   return /* record */[
-          /* values */Caml_array.caml_make_vect(16, 0),
+          /* values */Caml_array.caml_make_vect(16, initialValue),
           /* index */0,
           /* visualIndex */0,
           /* loopAfterIndex */7

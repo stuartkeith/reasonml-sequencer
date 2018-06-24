@@ -4,8 +4,9 @@ sound from https://freesound.org/people/t1mp/sounds/53851/
 
 ## todo/ideas
 
+- set min/max values for lanes?
+- remove repeated logic for rows
 - lane for length
-- lane for velocity
 - lane for playback chance
 - sync changes to beat (toggle?)
 - randomise lanes/all?

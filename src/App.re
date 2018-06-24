@@ -1,6 +1,7 @@
 type state = {
   octave: Lane.lane,
   transpose: Lane.lane,
+  velocity: Lane.lane,
   isPlaying: bool,
   scheduler: ref(option(WebAudio.schedule)),
   soundBuffer: ref(option(WebAudio.buffer))
@@ -11,6 +12,8 @@ type laneEdit = {
   index: int,
   value: int
 };
+
+let maxVelocity = 100;
 
 type action =
   | Playback(float, float)
@@ -26,7 +29,8 @@ let component = ReasonReact.reducerComponent("App");
 let applyToAllLanes = (state, fn) => ReasonReact.Update({
   ...state,
   octave: fn(state.octave),
-  transpose: fn(state.transpose)
+  transpose: fn(state.transpose),
+  velocity: fn(state.velocity)
 });
 
 /* apply a function to one lane */
@@ -34,6 +38,7 @@ let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
   switch (laneValue) {
     | Lane.Octave => { ...state, octave: fn(state.octave) }
     | Lane.Transpose => { ...state, transpose: fn(state.transpose) }
+    | Lane.Velocity => { ...state, velocity: fn(state.velocity) }
   }
 );
 
@@ -42,8 +47,9 @@ let make = (_children) => {
 
   initialState: () => {
     isPlaying: false,
-    octave: Lane.emptyLane(),
-    transpose: Lane.emptyLane(),
+    octave: Lane.emptyLane(0),
+    transpose: Lane.emptyLane(0),
+    velocity: Lane.emptyLane(maxVelocity),
     scheduler: ref(None),
     soundBuffer: ref(None)
   },
@@ -56,9 +62,12 @@ let make = (_children) => {
         | Some(buffer) => ReasonReact.SideEffects((self) => {
             let octave = self.state.octave.values[self.state.octave.index];
             let transpose = self.state.transpose.values[self.state.transpose.index];
+            let velocity = self.state.velocity.values[self.state.velocity.index];
             let note = (octave * 12) + transpose;
 
-            WebAudio.playBuffer(buffer, note, 1., beatTime, 0., 1.);
+            let gain = float_of_int(velocity) /. float_of_int(maxVelocity);
+
+            WebAudio.playBuffer(buffer, note, gain, beatTime, 0., 1.);
 
             self.send(AdvancePlayback);
         })
@@ -119,6 +128,12 @@ let make = (_children) => {
         lane=self.state.transpose
         onSetValue=((index, value) => self.send(SetLaneValue({ laneValue: Lane.Transpose, index, value })))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Transpose, index)))
+      />
+      <Row
+        label="Velocity"
+        lane=self.state.velocity
+        onSetValue=((index, value) => self.send(SetLaneValue({ laneValue: Lane.Velocity, index, value })))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Velocity, index)))
       />
     </div>
   },

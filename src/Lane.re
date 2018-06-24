@@ -1,6 +1,7 @@
 type laneValue =
   | Octave
-  | Transpose;
+  | Transpose
+  | Velocity;
 
 type lane = {
   values: array(int),
@@ -9,8 +10,8 @@ type lane = {
   loopAfterIndex: int
 };
 
-let emptyLane = () => {
-  values: Array.make(16, 0),
+let emptyLane = (initialValue) => {
+  values: Array.make(16, initialValue),
   index: 0,
   visualIndex: 0,
   loopAfterIndex: 7
