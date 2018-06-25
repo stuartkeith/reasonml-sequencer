@@ -113,33 +113,33 @@ function make() {
                                   return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */3]]));
                                 })
                             }, match ? "Stop" : "Play"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], (function (index, value) {
-                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
-                                                    /* laneValue : Octave */0,
-                                                    /* index */index,
-                                                    /* value */value
-                                                  ]]));
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Octave */0,
+                                                  index,
+                                                  value
+                                                ]));
                                   }), (function (index) {
                                     return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
                                                   /* Octave */0,
                                                   index
                                                 ]));
                                   }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", self[/* state */1][/* transpose */1], (function (index, value) {
-                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
-                                                    /* laneValue : Transpose */1,
-                                                    /* index */index,
-                                                    /* value */value
-                                                  ]]));
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Transpose */1,
+                                                  index,
+                                                  value
+                                                ]));
                                   }), (function (index) {
                                     return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
                                                   /* Transpose */1,
                                                   index
                                                 ]));
                                   }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", self[/* state */1][/* velocity */2], (function (index, value) {
-                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [/* record */[
-                                                    /* laneValue : Velocity */2,
-                                                    /* index */index,
-                                                    /* value */value
-                                                  ]]));
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Velocity */2,
+                                                  index,
+                                                  value
+                                                ]));
                                   }), (function (index) {
                                     return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
                                                   /* Velocity */2,
@@ -204,9 +204,10 @@ function make() {
                                   /* soundBuffer */state[/* soundBuffer */5]
                                 ]]);
                   case 3 : 
-                      var laneEdit = action[0];
-                      return applyToLane(state, laneEdit[/* laneValue */0], (function (subState) {
-                                    Caml_array.caml_array_set(subState[/* values */0], laneEdit[/* index */1], laneEdit[/* value */2]);
+                      var value = action[2];
+                      var index$1 = action[1];
+                      return applyToLane(state, action[0], (function (subState) {
+                                    Caml_array.caml_array_set(subState[/* values */0], index$1, value);
                                     return subState;
                                   }));
                   
