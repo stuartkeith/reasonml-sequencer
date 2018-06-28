@@ -3,12 +3,40 @@
 
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 
-function emptyLane(initialValue) {
+function getDefaultValue(laneValue) {
+  if (laneValue !== 4 && laneValue >= 2) {
+    return 100;
+  } else {
+    return 0;
+  }
+}
+
+function getMinValue(laneValue) {
+  if (laneValue !== 0) {
+    return 0;
+  } else {
+    return -2;
+  }
+}
+
+function getMaxValue(laneValue) {
+  if (laneValue !== 1) {
+    if (laneValue !== 0) {
+      return 100;
+    } else {
+      return 2;
+    }
+  } else {
+    return 11;
+  }
+}
+
+function emptyLane(laneValue) {
   return /* record */[
-          /* values */Caml_array.caml_make_vect(16, initialValue),
+          /* values */Caml_array.caml_make_vect(16, getDefaultValue(laneValue)),
           /* index */0,
           /* visualIndex */0,
-          /* loopAfterIndex */7
+          /* loopAfterIndex */0
         ];
 }
 
@@ -32,7 +60,15 @@ function reset(lane) {
         ];
 }
 
+function getValue(lane) {
+  return Caml_array.caml_array_get(lane[/* values */0], lane[/* index */1]);
+}
+
+exports.getDefaultValue = getDefaultValue;
+exports.getMinValue = getMinValue;
+exports.getMaxValue = getMaxValue;
 exports.emptyLane = emptyLane;
 exports.advance = advance;
 exports.reset = reset;
+exports.getValue = getValue;
 /* No side effect */

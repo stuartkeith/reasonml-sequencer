@@ -18,8 +18,8 @@ let loadSound: (string, (buffer) => unit) => unit = [%bs.raw {|
 let playBuffer: (buffer, int, float, float, float, float) => unit = [%bs.raw {|
   function (buffer, note, gain, delay, offsetRatio, durationRatio) {
     var playbackRate = Math.pow(2, note / 12);
-    var offset = buffer.length * offsetRatio;
-    var duration = (buffer.length - offset) * durationRatio;
+    var offset = buffer.duration * offsetRatio;
+    var duration = (buffer.duration - offset) * durationRatio;
 
     var gainNode = audioContext.createGain();
     gainNode.gain.value = gain;

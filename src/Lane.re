@@ -1,7 +1,10 @@
 type laneValue =
   | Octave
   | Transpose
-  | Velocity;
+  | Velocity
+  | Chance
+  | Offset
+  | Length;
 
 type lane = {
   values: array(int),
@@ -10,11 +13,38 @@ type lane = {
   loopAfterIndex: int
 };
 
-let emptyLane = (initialValue) => {
-  values: Array.make(16, initialValue),
+let getDefaultValue = (laneValue) => switch (laneValue) {
+  | Octave => 0
+  | Transpose => 0
+  | Velocity => 100
+  | Chance => 100
+  | Offset => 0
+  | Length => 100
+};
+
+let getMinValue = (laneValue) => switch (laneValue) {
+  | Octave => -2
+  | Transpose => 0
+  | Velocity => 0
+  | Chance => 0
+  | Offset => 0
+  | Length => 0
+};
+
+let getMaxValue = (laneValue) => switch (laneValue) {
+  | Octave => 2
+  | Transpose => 11
+  | Velocity => 100
+  | Chance => 100
+  | Offset => 100
+  | Length => 100
+};
+
+let emptyLane = (laneValue) => {
+  values: Array.make(16, getDefaultValue(laneValue)),
   index: 0,
   visualIndex: 0,
-  loopAfterIndex: 7
+  loopAfterIndex: 0
 };
 
 let advance = (lane) => {
@@ -32,3 +62,5 @@ let reset = (lane) => {
   index: 0,
   visualIndex: 0
 };
+
+let getValue = (lane) => lane.values[lane.index];

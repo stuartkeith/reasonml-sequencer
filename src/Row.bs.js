@@ -5,10 +5,11 @@ var $$Array = require("bs-platform/lib/js/array.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
+var Lane$ReactTemplate = require("./Lane.bs.js");
 
 var component = ReasonReact.statelessComponent("Lane");
 
-function make(label, lane, onSetValue, onSetLength, _) {
+function make(label, laneValue, lane, onSetValue, onSetLength, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -35,22 +36,24 @@ function make(label, lane, onSetValue, onSetLength, _) {
                                                     className: "input-reset db w-100 h1 " + (
                                                       match$1 ? "bg-red" : "bg-gray"
                                                     ),
+                                                    disabled: value === Lane$ReactTemplate.getMaxValue(laneValue),
                                                     onClick: (function () {
-                                                        return Curry._2(onSetValue, i, value + 1 | 0);
+                                                        return Curry._3(onSetValue, laneValue, i, value + 1 | 0);
                                                       })
                                                   }), React.createElement("button", {
                                                     className: "input-reset db w-100 h1 " + (
                                                       match$2 ? "bg-red" : "bg-gray"
                                                     ),
+                                                    disabled: value === Lane$ReactTemplate.getMinValue(laneValue),
                                                     onClick: (function () {
-                                                        return Curry._2(onSetValue, i, value - 1 | 0);
+                                                        return Curry._3(onSetValue, laneValue, i, value - 1 | 0);
                                                       })
                                                   }), React.createElement("p", {
                                                     className: "relative tc ma0"
                                                   }, String(value)), React.createElement("button", {
                                                     className: "input-reset db w-100 h1",
                                                     onClick: (function () {
-                                                        return Curry._1(onSetLength, i);
+                                                        return Curry._2(onSetLength, laneValue, i);
                                                       })
                                                   }));
                                   }), lane[/* values */0])));
