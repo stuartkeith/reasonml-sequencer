@@ -16,13 +16,16 @@ let loadSound: (string, (buffer) => unit) => unit = [%bs.raw {|
 |}];
 
 let playBuffer: (buffer, int, float, float, float, float) => unit = [%bs.raw {|
-  function (buffer, note, gain, delay, offsetRatio, durationRatio) {
+  function (buffer, note, gain, time, offsetRatio, durationRatio) {
     var playbackRate = Math.pow(2, note / 12);
     var offset = buffer.duration * offsetRatio;
     var duration = (buffer.duration - offset) * durationRatio;
 
     var gainNode = audioContext.createGain();
     gainNode.gain.value = gain;
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.setTargetAtTime(1, time, 0.0005);
+    gainNode.gain.setTargetAtTime(0, time + duration, 0.0005);
 
     var bufferSource = audioContext.createBufferSource();
     bufferSource.buffer = buffer;
@@ -31,7 +34,7 @@ let playBuffer: (buffer, int, float, float, float, float) => unit = [%bs.raw {|
     bufferSource.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    bufferSource.start(delay, offset, duration);
+    bufferSource.start(time, offset);
   }
 |}];
 
