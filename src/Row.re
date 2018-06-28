@@ -3,8 +3,8 @@ let component = ReasonReact.statelessComponent("Lane");
 let make = (~label, ~laneValue:Lane.laneValue, ~lane:Lane.lane, ~onSetValue, ~onSetLength, _children) => {
   ...component,
   render: _self => {
-    <div>
-      <p>{ReasonReact.string(label)}</p>
+    <div className="flex items-center">
+      <p className="w4">{ReasonReact.string(label)}</p>
       <div className="flex">
         (ReasonReact.array(Array.mapi((i, value) =>
           <div key=(string_of_int(i)) className=("w2 relative " ++ (i > lane.loopAfterIndex ? "o-50" : ""))>

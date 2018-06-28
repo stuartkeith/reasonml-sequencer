@@ -21,7 +21,11 @@ function make(label, laneValue, lane, onSetValue, onSetLength, _) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function () {
-              return React.createElement("div", undefined, React.createElement("p", undefined, label), React.createElement("div", {
+              return React.createElement("div", {
+                          className: "flex items-center"
+                        }, React.createElement("p", {
+                              className: "w4"
+                            }, label), React.createElement("div", {
                               className: "flex"
                             }, $$Array.mapi((function (i, value) {
                                     var match = i > lane[/* loopAfterIndex */3];

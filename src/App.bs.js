@@ -137,7 +137,7 @@ function make() {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              Curry._2(WebAudio$ReactTemplate.loadSound, "harp.mp3", (function (buffer) {
+              Curry._2(WebAudio$ReactTemplate.loadSound, "guitar.mp3", (function (buffer) {
                       self[/* state */1][/* soundBuffer */8][0] = /* Some */[buffer];
                       return /* () */0;
                     }));
@@ -186,12 +186,24 @@ function make() {
               var match = self[/* state */1][/* isPlaying */6];
               return React.createElement("div", {
                           className: "ma4"
-                        }, React.createElement("button", {
-                              className: "w4",
-                              onClick: (function () {
-                                  return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */6]]));
-                                })
-                            }, match ? "Stop" : "Play"), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", /* Octave */0, self[/* state */1][/* octave */0], onSetValueBound, onSetLengthBound, /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", /* Transpose */1, self[/* state */1][/* transpose */1], onSetValueBound, onSetLengthBound, /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */3, self[/* state */1][/* chance */3], onSetValueBound, onSetLengthBound, /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */4, self[/* state */1][/* offset */4], onSetValueBound, onSetLengthBound, /* array */[])), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */5, self[/* state */1][/* length */5], onSetValueBound, onSetLengthBound, /* array */[])));
+                        }, React.createElement("div", undefined, React.createElement("button", {
+                                  className: "w4",
+                                  onClick: (function () {
+                                      return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */6]]));
+                                    })
+                                }, match ? "Stop" : "Play")), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", /* Octave */0, self[/* state */1][/* octave */0], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", /* Transpose */1, self[/* state */1][/* transpose */1], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */3, self[/* state */1][/* chance */3], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */4, self[/* state */1][/* offset */4], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */5, self[/* state */1][/* length */5], onSetValueBound, onSetLengthBound, /* array */[])));
             }),
           /* initialState */(function () {
               return /* record */[

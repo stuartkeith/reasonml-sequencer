@@ -107,7 +107,7 @@ let make = (_children) => {
     },
 
   didMount: (self) => {
-    WebAudio.loadSound("harp.mp3", (buffer) => {
+    WebAudio.loadSound("guitar.mp3", (buffer) => {
       self.state.soundBuffer := Some(buffer);
     });
 
@@ -138,9 +138,12 @@ let make = (_children) => {
     let onSetLengthBound = onSetLength(self.send);
 
     <div className="ma4">
-      <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
-        (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
-      </button>
+      <div>
+        <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
+          (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
+        </button>
+      </div>
+      <div className="h1" />
       <Row
         label="Octave"
         laneValue=Lane.Octave
@@ -148,6 +151,7 @@ let make = (_children) => {
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
+      <div className="h1" />
       <Row
         label="Transpose"
         laneValue=Lane.Transpose
@@ -155,6 +159,7 @@ let make = (_children) => {
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
+      <div className="h1" />
       <Row
         label="Velocity"
         laneValue=Lane.Velocity
@@ -162,6 +167,7 @@ let make = (_children) => {
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
+      <div className="h1" />
       <Row
         label="Chance"
         laneValue=Lane.Chance
@@ -169,6 +175,7 @@ let make = (_children) => {
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
+      <div className="h1" />
       <Row
         label="Offset"
         laneValue=Lane.Offset
@@ -176,6 +183,7 @@ let make = (_children) => {
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
+      <div className="h1" />
       <Row
         label="Length"
         laneValue=Lane.Length
