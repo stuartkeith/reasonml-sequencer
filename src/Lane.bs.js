@@ -4,18 +4,29 @@
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 
 function getDefaultValue(laneValue) {
-  if (laneValue !== 4 && laneValue >= 2) {
-    return 100;
-  } else {
-    return 0;
+  switch (laneValue) {
+    case 0 : 
+    case 1 : 
+    case 3 : 
+    case 5 : 
+        return 0;
+    case 2 : 
+    case 4 : 
+    case 6 : 
+        return 100;
+    
   }
 }
 
 function getMinValue(laneValue) {
-  if (laneValue !== 0) {
-    return 0;
+  if (laneValue !== 3) {
+    if (laneValue !== 0) {
+      return 0;
+    } else {
+      return -2;
+    }
   } else {
-    return -2;
+    return -100;
   }
 }
 

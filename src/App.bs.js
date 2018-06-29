@@ -20,12 +20,13 @@ function applyToAllLanes(state, fn) {
               /* octave */Curry._1(fn, state[/* octave */0]),
               /* transpose */Curry._1(fn, state[/* transpose */1]),
               /* velocity */Curry._1(fn, state[/* velocity */2]),
-              /* chance */Curry._1(fn, state[/* chance */3]),
-              /* offset */Curry._1(fn, state[/* offset */4]),
-              /* length */Curry._1(fn, state[/* length */5]),
-              /* isPlaying */state[/* isPlaying */6],
-              /* scheduler */state[/* scheduler */7],
-              /* soundBuffer */state[/* soundBuffer */8]
+              /* pan */Curry._1(fn, state[/* pan */3]),
+              /* chance */Curry._1(fn, state[/* chance */4]),
+              /* offset */Curry._1(fn, state[/* offset */5]),
+              /* length */Curry._1(fn, state[/* length */6]),
+              /* isPlaying */state[/* isPlaying */7],
+              /* scheduler */state[/* scheduler */8],
+              /* soundBuffer */state[/* soundBuffer */9]
             ]]);
 }
 
@@ -37,12 +38,13 @@ function applyToLane(state, laneValue, fn) {
           /* octave */Curry._1(fn, state[/* octave */0]),
           /* transpose */state[/* transpose */1],
           /* velocity */state[/* velocity */2],
-          /* chance */state[/* chance */3],
-          /* offset */state[/* offset */4],
-          /* length */state[/* length */5],
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */state[/* pan */3],
+          /* chance */state[/* chance */4],
+          /* offset */state[/* offset */5],
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     case 1 : 
@@ -50,12 +52,13 @@ function applyToLane(state, laneValue, fn) {
           /* octave */state[/* octave */0],
           /* transpose */Curry._1(fn, state[/* transpose */1]),
           /* velocity */state[/* velocity */2],
-          /* chance */state[/* chance */3],
-          /* offset */state[/* offset */4],
-          /* length */state[/* length */5],
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */state[/* pan */3],
+          /* chance */state[/* chance */4],
+          /* offset */state[/* offset */5],
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     case 2 : 
@@ -63,12 +66,13 @@ function applyToLane(state, laneValue, fn) {
           /* octave */state[/* octave */0],
           /* transpose */state[/* transpose */1],
           /* velocity */Curry._1(fn, state[/* velocity */2]),
-          /* chance */state[/* chance */3],
-          /* offset */state[/* offset */4],
-          /* length */state[/* length */5],
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */state[/* pan */3],
+          /* chance */state[/* chance */4],
+          /* offset */state[/* offset */5],
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     case 3 : 
@@ -76,12 +80,13 @@ function applyToLane(state, laneValue, fn) {
           /* octave */state[/* octave */0],
           /* transpose */state[/* transpose */1],
           /* velocity */state[/* velocity */2],
-          /* chance */Curry._1(fn, state[/* chance */3]),
-          /* offset */state[/* offset */4],
-          /* length */state[/* length */5],
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */Curry._1(fn, state[/* pan */3]),
+          /* chance */state[/* chance */4],
+          /* offset */state[/* offset */5],
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     case 4 : 
@@ -89,12 +94,13 @@ function applyToLane(state, laneValue, fn) {
           /* octave */state[/* octave */0],
           /* transpose */state[/* transpose */1],
           /* velocity */state[/* velocity */2],
-          /* chance */state[/* chance */3],
-          /* offset */Curry._1(fn, state[/* offset */4]),
-          /* length */state[/* length */5],
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */state[/* pan */3],
+          /* chance */Curry._1(fn, state[/* chance */4]),
+          /* offset */state[/* offset */5],
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     case 5 : 
@@ -102,12 +108,27 @@ function applyToLane(state, laneValue, fn) {
           /* octave */state[/* octave */0],
           /* transpose */state[/* transpose */1],
           /* velocity */state[/* velocity */2],
-          /* chance */state[/* chance */3],
-          /* offset */state[/* offset */4],
-          /* length */Curry._1(fn, state[/* length */5]),
-          /* isPlaying */state[/* isPlaying */6],
-          /* scheduler */state[/* scheduler */7],
-          /* soundBuffer */state[/* soundBuffer */8]
+          /* pan */state[/* pan */3],
+          /* chance */state[/* chance */4],
+          /* offset */Curry._1(fn, state[/* offset */5]),
+          /* length */state[/* length */6],
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
+        ];
+        break;
+    case 6 : 
+        tmp = /* record */[
+          /* octave */state[/* octave */0],
+          /* transpose */state[/* transpose */1],
+          /* velocity */state[/* velocity */2],
+          /* pan */state[/* pan */3],
+          /* chance */state[/* chance */4],
+          /* offset */state[/* offset */5],
+          /* length */Curry._1(fn, state[/* length */6]),
+          /* isPlaying */state[/* isPlaying */7],
+          /* scheduler */state[/* scheduler */8],
+          /* soundBuffer */state[/* soundBuffer */9]
         ];
         break;
     
@@ -138,10 +159,10 @@ function make() {
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
               Curry._2(WebAudio$ReactTemplate.loadSound, "guitar.mp3", (function (buffer) {
-                      self[/* state */1][/* soundBuffer */8][0] = /* Some */[buffer];
+                      self[/* state */1][/* soundBuffer */9][0] = /* Some */[buffer];
                       return /* () */0;
                     }));
-              self[/* state */1][/* scheduler */7][0] = /* Some */[WebAudio$ReactTemplate.createSchedule((function (beatTime, beatLength) {
+              self[/* state */1][/* scheduler */8][0] = /* Some */[WebAudio$ReactTemplate.createSchedule((function (beatTime, beatLength) {
                         return Curry._1(self[/* send */3], /* Playback */Block.__(0, [
                                       beatTime,
                                       beatLength
@@ -151,11 +172,11 @@ function make() {
             }),
           /* didUpdate */(function (param) {
               var newSelf = param[/* newSelf */1];
-              if (param[/* oldSelf */0][/* state */1][/* isPlaying */6] !== newSelf[/* state */1][/* isPlaying */6]) {
-                var match = newSelf[/* state */1][/* scheduler */7][0];
+              if (param[/* oldSelf */0][/* state */1][/* isPlaying */7] !== newSelf[/* state */1][/* isPlaying */7]) {
+                var match = newSelf[/* state */1][/* scheduler */8][0];
                 if (match) {
                   var scheduler = match[0];
-                  if (newSelf[/* state */1][/* isPlaying */6]) {
+                  if (newSelf[/* state */1][/* isPlaying */7]) {
                     Curry._1(newSelf[/* send */3], /* ResetLanes */1);
                     return Curry._1(scheduler[/* start */0], /* () */0);
                   } else {
@@ -183,13 +204,13 @@ function make() {
                               param$1
                             ]));
               };
-              var match = self[/* state */1][/* isPlaying */6];
+              var match = self[/* state */1][/* isPlaying */7];
               return React.createElement("div", {
                           className: "ma4"
                         }, React.createElement("div", undefined, React.createElement("button", {
                                   className: "w4",
                                   onClick: (function () {
-                                      return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */6]]));
+                                      return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */7]]));
                                     })
                                 }, match ? "Stop" : "Play")), React.createElement("div", {
                               className: "h1"
@@ -199,20 +220,23 @@ function make() {
                               className: "h1"
                             }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */3, self[/* state */1][/* chance */3], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Pan", /* Pan */3, self[/* state */1][/* pan */3], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */4, self[/* state */1][/* offset */4], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */4, self[/* state */1][/* chance */4], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */5, self[/* state */1][/* length */5], onSetValueBound, onSetLengthBound, /* array */[])));
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */5, self[/* state */1][/* offset */5], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                              className: "h1"
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */6, self[/* state */1][/* length */6], onSetValueBound, onSetLengthBound, /* array */[])));
             }),
           /* initialState */(function () {
               return /* record */[
                       /* octave */Lane$ReactTemplate.emptyLane(/* Octave */0),
                       /* transpose */Lane$ReactTemplate.emptyLane(/* Transpose */1),
                       /* velocity */Lane$ReactTemplate.emptyLane(/* Velocity */2),
-                      /* chance */Lane$ReactTemplate.emptyLane(/* Chance */3),
-                      /* offset */Lane$ReactTemplate.emptyLane(/* Offset */4),
-                      /* length */Lane$ReactTemplate.emptyLane(/* Length */5),
+                      /* pan */Lane$ReactTemplate.emptyLane(/* Pan */3),
+                      /* chance */Lane$ReactTemplate.emptyLane(/* Chance */4),
+                      /* offset */Lane$ReactTemplate.emptyLane(/* Offset */5),
+                      /* length */Lane$ReactTemplate.emptyLane(/* Length */6),
                       /* isPlaying */false,
                       /* scheduler */[/* None */0],
                       /* soundBuffer */[/* None */0]
@@ -230,22 +254,24 @@ function make() {
                 switch (action.tag | 0) {
                   case 0 : 
                       var beatTime = action[0];
-                      var match = state[/* soundBuffer */8][0];
+                      var match = state[/* soundBuffer */9][0];
                       if (match) {
                         var buffer = match[0];
                         return /* SideEffects */Block.__(1, [(function (self) {
                                       var chance = Random.$$int(101);
-                                      if (chance <= Lane$ReactTemplate.getValue(self[/* state */1][/* chance */3])) {
+                                      if (chance <= Lane$ReactTemplate.getValue(self[/* state */1][/* chance */4])) {
                                         var octave = Lane$ReactTemplate.getValue(self[/* state */1][/* octave */0]);
                                         var transpose = Lane$ReactTemplate.getValue(self[/* state */1][/* transpose */1]);
                                         var velocity = Lane$ReactTemplate.getValue(self[/* state */1][/* velocity */2]);
-                                        var offset = Lane$ReactTemplate.getValue(self[/* state */1][/* offset */4]);
-                                        var length = Lane$ReactTemplate.getValue(self[/* state */1][/* length */5]);
+                                        var pan = Lane$ReactTemplate.getValue(self[/* state */1][/* pan */3]);
+                                        var offset = Lane$ReactTemplate.getValue(self[/* state */1][/* offset */5]);
+                                        var length = Lane$ReactTemplate.getValue(self[/* state */1][/* length */6]);
                                         var note = Caml_int32.imul(octave, 12) + transpose | 0;
                                         var gain = velocity / 100;
+                                        var panValue = pan / 100;
                                         var offsetValue = offset / 100;
                                         var durationValue = length / 100;
-                                        Curry._6(WebAudio$ReactTemplate.playBuffer, buffer, note, gain, beatTime, offsetValue, durationValue);
+                                        Curry._7(WebAudio$ReactTemplate.playBuffer, buffer, note, gain, panValue, beatTime, offsetValue, durationValue);
                                       }
                                       return Curry._1(self[/* send */3], /* AdvancePlayback */0);
                                     })]);
@@ -267,12 +293,13 @@ function make() {
                                   /* octave */state[/* octave */0],
                                   /* transpose */state[/* transpose */1],
                                   /* velocity */state[/* velocity */2],
-                                  /* chance */state[/* chance */3],
-                                  /* offset */state[/* offset */4],
-                                  /* length */state[/* length */5],
+                                  /* pan */state[/* pan */3],
+                                  /* chance */state[/* chance */4],
+                                  /* offset */state[/* offset */5],
+                                  /* length */state[/* length */6],
                                   /* isPlaying */action[0],
-                                  /* scheduler */state[/* scheduler */7],
-                                  /* soundBuffer */state[/* soundBuffer */8]
+                                  /* scheduler */state[/* scheduler */8],
+                                  /* soundBuffer */state[/* soundBuffer */9]
                                 ]]);
                   case 3 : 
                       var value = action[2];

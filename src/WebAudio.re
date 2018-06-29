@@ -15,8 +15,8 @@ let loadSound: (string, (buffer) => unit) => unit = [%bs.raw {|
   }
 |}];
 
-let playBuffer: (buffer, int, float, float, float, float) => unit = [%bs.raw {|
-  function (buffer, note, gain, time, offsetRatio, durationRatio) {
+let playBuffer: (buffer, int, float, float, float, float, float) => unit = [%bs.raw {|
+  function (buffer, note, gain, pan, time, offsetRatio, durationRatio) {
     var playbackRate = Math.pow(2, note / 12);
     var offset = buffer.duration * offsetRatio;
     var duration = (buffer.duration - offset) * durationRatio;
@@ -27,12 +27,16 @@ let playBuffer: (buffer, int, float, float, float, float) => unit = [%bs.raw {|
     gainNode.gain.setTargetAtTime(1, time, 0.0005);
     gainNode.gain.setTargetAtTime(0, time + duration, 0.0005);
 
+    var stereoPannerNode = audioContext.createStereoPanner();
+    stereoPannerNode.pan.value = pan;
+
     var bufferSource = audioContext.createBufferSource();
     bufferSource.buffer = buffer;
     bufferSource.playbackRate.value = playbackRate;
 
     bufferSource.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    gainNode.connect(stereoPannerNode);
+    stereoPannerNode.connect(audioContext.destination);
 
     bufferSource.start(time, offset);
   }

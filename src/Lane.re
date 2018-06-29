@@ -2,6 +2,7 @@ type laneValue =
   | Octave
   | Transpose
   | Velocity
+  | Pan
   | Chance
   | Offset
   | Length;
@@ -16,6 +17,7 @@ type lane = {
 let getDefaultValue = (laneValue) => switch (laneValue) {
   | Octave => 0
   | Transpose => 0
+  | Pan => 0
   | Velocity => 100
   | Chance => 100
   | Offset => 0
@@ -26,6 +28,7 @@ let getMinValue = (laneValue) => switch (laneValue) {
   | Octave => -2
   | Transpose => 0
   | Velocity => 0
+  | Pan => -100
   | Chance => 0
   | Offset => 0
   | Length => 0
@@ -35,6 +38,7 @@ let getMaxValue = (laneValue) => switch (laneValue) {
   | Octave => 2
   | Transpose => 11
   | Velocity => 100
+  | Pan => 100
   | Chance => 100
   | Offset => 100
   | Length => 100

@@ -2,6 +2,7 @@ type state = {
   octave: Lane.lane,
   transpose: Lane.lane,
   velocity: Lane.lane,
+  pan: Lane.lane,
   chance: Lane.lane,
   offset: Lane.lane,
   length: Lane.lane,
@@ -29,6 +30,7 @@ let applyToAllLanes = (state, fn) => ReasonReact.Update({
   octave: fn(state.octave),
   transpose: fn(state.transpose),
   velocity: fn(state.velocity),
+  pan: fn(state.pan),
   chance: fn(state.chance),
   offset: fn(state.offset),
   length: fn(state.length)
@@ -40,6 +42,7 @@ let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
     | Lane.Octave => { ...state, octave: fn(state.octave) }
     | Lane.Transpose => { ...state, transpose: fn(state.transpose) }
     | Lane.Velocity => { ...state, velocity: fn(state.velocity) }
+    | Lane.Pan => { ...state, pan: fn(state.pan) }
     | Lane.Chance => { ...state, chance: fn(state.chance) }
     | Lane.Offset => { ...state, offset: fn(state.offset) }
     | Lane.Length => { ...state, length: fn(state.length) }
@@ -57,6 +60,7 @@ let make = (_children) => {
     octave: Lane.emptyLane(Lane.Octave),
     transpose: Lane.emptyLane(Lane.Transpose),
     velocity: Lane.emptyLane(Lane.Velocity),
+    pan: Lane.emptyLane(Lane.Pan),
     chance: Lane.emptyLane(Lane.Chance),
     offset: Lane.emptyLane(Lane.Offset),
     length: Lane.emptyLane(Lane.Length),
@@ -76,15 +80,17 @@ let make = (_children) => {
               let octave = Lane.getValue(self.state.octave);
               let transpose = Lane.getValue(self.state.transpose);
               let velocity = Lane.getValue(self.state.velocity);
+              let pan = Lane.getValue(self.state.pan);
               let offset = Lane.getValue(self.state.offset);
               let length = Lane.getValue(self.state.length);
 
               let note = (octave * 12) + transpose;
               let gain = float_of_int(velocity) /. 100.;
+              let panValue = float_of_int(pan) /. 100.;
               let offsetValue = float_of_int(offset) /. 100.;
               let durationValue = float_of_int(length) /. 100.;
 
-              WebAudio.playBuffer(buffer, note, gain, beatTime, offsetValue, durationValue);
+              WebAudio.playBuffer(buffer, note, gain, panValue, beatTime, offsetValue, durationValue);
             };
 
             self.send(AdvancePlayback);
@@ -164,6 +170,14 @@ let make = (_children) => {
         label="Velocity"
         laneValue=Lane.Velocity
         lane=self.state.velocity
+        onSetValue=onSetValueBound
+        onSetLength=onSetLengthBound
+      />
+      <div className="h1" />
+      <Row
+        label="Pan"
+        laneValue=Lane.Pan
+        lane=self.state.pan
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
       />
