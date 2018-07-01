@@ -5,11 +5,10 @@ var $$Array = require("bs-platform/lib/js/array.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Lane$ReactTemplate = require("./Lane.bs.js");
 
 var component = ReasonReact.statelessComponent("Lane");
 
-function make(label, laneValue, lane, onSetValue, onSetLength, onRandomiseAbsolute, _) {
+function make(label, lane, minValue, maxValue, onSetValue, onSetLength, onRandomiseAbsolute, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -42,24 +41,24 @@ function make(label, laneValue, lane, onSetValue, onSetLength, onRandomiseAbsolu
                                                     className: "input-reset db w-100 h1 " + (
                                                       match$1 ? "bg-red" : "bg-gray"
                                                     ),
-                                                    disabled: value === Lane$ReactTemplate.getMaxValue(laneValue),
+                                                    disabled: value === maxValue,
                                                     onClick: (function () {
-                                                        return Curry._3(onSetValue, laneValue, i, value + 1 | 0);
+                                                        return Curry._2(onSetValue, i, value + 1 | 0);
                                                       })
                                                   }), React.createElement("button", {
                                                     className: "input-reset db w-100 h1 " + (
                                                       match$2 ? "bg-red" : "bg-gray"
                                                     ),
-                                                    disabled: value === Lane$ReactTemplate.getMinValue(laneValue),
+                                                    disabled: value === minValue,
                                                     onClick: (function () {
-                                                        return Curry._3(onSetValue, laneValue, i, value - 1 | 0);
+                                                        return Curry._2(onSetValue, i, value - 1 | 0);
                                                       })
                                                   }), React.createElement("p", {
                                                     className: "relative tc ma0"
                                                   }, String(value)), React.createElement("button", {
                                                     className: "input-reset db w-100 h1",
                                                     onClick: (function () {
-                                                        return Curry._2(onSetLength, laneValue, i);
+                                                        return Curry._1(onSetLength, i);
                                                       })
                                                   }));
                                   }), lane[/* values */0])), React.createElement("div", {
@@ -68,7 +67,7 @@ function make(label, laneValue, lane, onSetValue, onSetLength, onRandomiseAbsolu
                               className: "flex"
                             }, React.createElement("button", {
                                   onClick: (function () {
-                                      return Curry._1(onRandomiseAbsolute, laneValue);
+                                      return Curry._1(onRandomiseAbsolute, /* () */0);
                                     })
                                 }, "Random Absolute")));
             }),

@@ -50,10 +50,6 @@ let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
   }
 );
 
-let onSetValue = (send, laneValue, index, value) => send(SetLaneValue(laneValue, index, value));
-let onSetLength = (send, laneValue, index) => send(SetLoopAfterIndex(laneValue, index));
-let onRandomiseAbsolute = (send, laneValue) => send(RandomiseLaneAbsolute(laneValue));
-
 let make = (_children) => {
   ...component,
 
@@ -152,10 +148,6 @@ let make = (_children) => {
   },
 
   render: self => {
-    let onSetValueBound = onSetValue(self.send);
-    let onSetLengthBound = onSetLength(self.send);
-    let onRandomiseAbsoluteBound = onRandomiseAbsolute(self.send);
-
     <div className="ma4">
       <div>
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
@@ -165,65 +157,72 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Octave"
-        laneValue=Lane.Octave
         lane=self.state.octave
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Octave)
+        maxValue=Lane.getMaxValue(Lane.Octave)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Octave, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Octave, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Octave)))
       />
       <div className="h1" />
       <Row
         label="Transpose"
-        laneValue=Lane.Transpose
         lane=self.state.transpose
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Transpose)
+        maxValue=Lane.getMaxValue(Lane.Transpose)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Transpose, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Transpose, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Transpose)))
       />
       <div className="h1" />
       <Row
         label="Velocity"
-        laneValue=Lane.Velocity
         lane=self.state.velocity
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Velocity)
+        maxValue=Lane.getMaxValue(Lane.Velocity)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Velocity, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Velocity, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Velocity)))
       />
       <div className="h1" />
       <Row
         label="Pan"
-        laneValue=Lane.Pan
         lane=self.state.pan
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Pan)
+        maxValue=Lane.getMaxValue(Lane.Pan)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Pan, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Pan, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Pan)))
       />
       <div className="h1" />
       <Row
         label="Chance"
-        laneValue=Lane.Chance
         lane=self.state.chance
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Chance)
+        maxValue=Lane.getMaxValue(Lane.Chance)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Chance, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Chance, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Chance)))
       />
       <div className="h1" />
       <Row
         label="Offset"
-        laneValue=Lane.Offset
         lane=self.state.offset
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Offset)
+        maxValue=Lane.getMaxValue(Lane.Offset)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Offset, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Offset, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Offset)))
       />
       <div className="h1" />
       <Row
         label="Length"
-        laneValue=Lane.Length
         lane=self.state.length
-        onSetValue=onSetValueBound
-        onSetLength=onSetLengthBound
-        onRandomiseAbsolute=onRandomiseAbsoluteBound
+        minValue=Lane.getMinValue(Lane.Length)
+        maxValue=Lane.getMaxValue(Lane.Length)
+        onSetValue=((index, value) => self.send(SetLaneValue(Lane.Length, index, value)))
+        onSetLength=((index) => self.send(SetLoopAfterIndex(Lane.Length, index)))
+        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Lane.Length)))
       />
     </div>
   },

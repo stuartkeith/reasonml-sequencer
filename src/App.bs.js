@@ -136,25 +136,6 @@ function applyToLane(state, laneValue, fn) {
   return /* Update */Block.__(0, [tmp]);
 }
 
-function onSetValue(send, laneValue, index, value) {
-  return Curry._1(send, /* SetLaneValue */Block.__(3, [
-                laneValue,
-                index,
-                value
-              ]));
-}
-
-function onSetLength(send, laneValue, index) {
-  return Curry._1(send, /* SetLoopAfterIndex */Block.__(1, [
-                laneValue,
-                index
-              ]));
-}
-
-function onRandomiseAbsolute(send, laneValue) {
-  return Curry._1(send, /* RandomiseLaneAbsolute */Block.__(4, [laneValue]));
-}
-
 function make() {
   return /* record */[
           /* debugName */component[/* debugName */0],
@@ -197,21 +178,6 @@ function make() {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              var partial_arg = self[/* send */3];
-              var onSetValueBound = function (param, param$1, param$2) {
-                return onSetValue(partial_arg, param, param$1, param$2);
-              };
-              var partial_arg$1 = self[/* send */3];
-              var onSetLengthBound = function (param, param$1) {
-                return Curry._1(partial_arg$1, /* SetLoopAfterIndex */Block.__(1, [
-                              param,
-                              param$1
-                            ]));
-              };
-              var partial_arg$2 = self[/* send */3];
-              var onRandomiseAbsoluteBound = function (param) {
-                return Curry._1(partial_arg$2, /* RandomiseLaneAbsolute */Block.__(4, [param]));
-              };
               var match = self[/* state */1][/* isPlaying */7];
               return React.createElement("div", {
                           className: "ma4"
@@ -222,19 +188,110 @@ function make() {
                                     })
                                 }, match ? "Stop" : "Play")), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", /* Octave */0, self[/* state */1][/* octave */0], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", self[/* state */1][/* octave */0], Lane$ReactTemplate.getMinValue(/* Octave */0), Lane$ReactTemplate.getMaxValue(/* Octave */0), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Octave */0,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Octave */0,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Octave */0]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", /* Transpose */1, self[/* state */1][/* transpose */1], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", self[/* state */1][/* transpose */1], Lane$ReactTemplate.getMinValue(/* Transpose */1), Lane$ReactTemplate.getMaxValue(/* Transpose */1), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Transpose */1,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Transpose */1,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Transpose */1]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", self[/* state */1][/* velocity */2], Lane$ReactTemplate.getMinValue(/* Velocity */2), Lane$ReactTemplate.getMaxValue(/* Velocity */2), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Velocity */2,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Velocity */2,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Velocity */2]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Pan", /* Pan */3, self[/* state */1][/* pan */3], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Pan", self[/* state */1][/* pan */3], Lane$ReactTemplate.getMinValue(/* Pan */3), Lane$ReactTemplate.getMaxValue(/* Pan */3), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Pan */3,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Pan */3,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Pan */3]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */4, self[/* state */1][/* chance */4], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", self[/* state */1][/* chance */4], Lane$ReactTemplate.getMinValue(/* Chance */4), Lane$ReactTemplate.getMaxValue(/* Chance */4), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Chance */4,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Chance */4,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Chance */4]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */5, self[/* state */1][/* offset */5], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", self[/* state */1][/* offset */5], Lane$ReactTemplate.getMinValue(/* Offset */5), Lane$ReactTemplate.getMaxValue(/* Offset */5), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Offset */5,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Offset */5,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Offset */5]));
+                                  }), /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */6, self[/* state */1][/* length */6], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])));
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", self[/* state */1][/* length */6], Lane$ReactTemplate.getMinValue(/* Length */6), Lane$ReactTemplate.getMaxValue(/* Length */6), (function (index, value) {
+                                    return Curry._1(self[/* send */3], /* SetLaneValue */Block.__(3, [
+                                                  /* Length */6,
+                                                  index,
+                                                  value
+                                                ]));
+                                  }), (function (index) {
+                                    return Curry._1(self[/* send */3], /* SetLoopAfterIndex */Block.__(1, [
+                                                  /* Length */6,
+                                                  index
+                                                ]));
+                                  }), (function () {
+                                    return Curry._1(self[/* send */3], /* RandomiseLaneAbsolute */Block.__(4, [/* Length */6]));
+                                  }), /* array */[])));
             }),
           /* initialState */(function () {
               return /* record */[
@@ -343,8 +400,5 @@ function make() {
 exports.component = component;
 exports.applyToAllLanes = applyToAllLanes;
 exports.applyToLane = applyToLane;
-exports.onSetValue = onSetValue;
-exports.onSetLength = onSetLength;
-exports.onRandomiseAbsolute = onRandomiseAbsolute;
 exports.make = make;
 /* component Not a pure module */
