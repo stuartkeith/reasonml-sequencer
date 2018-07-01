@@ -22,9 +22,8 @@ let playBuffer: (buffer, int, float, float, float, float, float) => unit = [%bs.
     var duration = (buffer.duration - offset) * durationRatio;
 
     var gainNode = audioContext.createGain();
-    gainNode.gain.value = gain;
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.setTargetAtTime(1, time, 0.0005);
+    gainNode.gain.value = 0;
+    gainNode.gain.setTargetAtTime(gain, time, 0.0005);
     gainNode.gain.setTargetAtTime(0, time + duration, 0.0005);
 
     var stereoPannerNode = audioContext.createStereoPanner();
