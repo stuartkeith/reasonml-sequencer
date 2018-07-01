@@ -20,7 +20,8 @@ type action =
   | ResetLanes
   | SetLoopAfterIndex(Lane.laneValue, arrayIndex)
   | SetPlayback(bool)
-  | SetLaneValue(Lane.laneValue, arrayIndex, arrayValue);
+  | SetLaneValue(Lane.laneValue, arrayIndex, arrayValue)
+  | RandomiseLaneAbsolute(Lane.laneValue);
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -51,6 +52,7 @@ let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
 
 let onSetValue = (send, laneValue, index, value) => send(SetLaneValue(laneValue, index, value));
 let onSetLength = (send, laneValue, index) => send(SetLoopAfterIndex(laneValue, index));
+let onRandomiseAbsolute = (send, laneValue) => send(RandomiseLaneAbsolute(laneValue));
 
 let make = (_children) => {
   ...component,
@@ -110,6 +112,16 @@ let make = (_children) => {
           loopAfterIndex: max(subState.loopAfterIndex, index)
         };
       })
+      | RandomiseLaneAbsolute(laneValue) => applyToLane(state, laneValue, (subState) => {
+        let minValue = Lane.getMinValue(laneValue);
+        let maxValue = Lane.getMaxValue(laneValue);
+
+        for (i in 0 to Array.length(subState.values) - 1) {
+          subState.values[i] = minValue + Random.int(maxValue - minValue + 1);
+        };
+
+        subState;
+      })
     },
 
   didMount: (self) => {
@@ -142,6 +154,7 @@ let make = (_children) => {
   render: self => {
     let onSetValueBound = onSetValue(self.send);
     let onSetLengthBound = onSetLength(self.send);
+    let onRandomiseAbsoluteBound = onRandomiseAbsolute(self.send);
 
     <div className="ma4">
       <div>
@@ -156,6 +169,7 @@ let make = (_children) => {
         lane=self.state.octave
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -164,6 +178,7 @@ let make = (_children) => {
         lane=self.state.transpose
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -172,6 +187,7 @@ let make = (_children) => {
         lane=self.state.velocity
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -180,6 +196,7 @@ let make = (_children) => {
         lane=self.state.pan
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -188,6 +205,7 @@ let make = (_children) => {
         lane=self.state.chance
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -196,6 +214,7 @@ let make = (_children) => {
         lane=self.state.offset
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
       <div className="h1" />
       <Row
@@ -204,6 +223,7 @@ let make = (_children) => {
         lane=self.state.length
         onSetValue=onSetValueBound
         onSetLength=onSetLengthBound
+        onRandomiseAbsolute=onRandomiseAbsoluteBound
       />
     </div>
   },

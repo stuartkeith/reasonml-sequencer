@@ -9,7 +9,7 @@ var Lane$ReactTemplate = require("./Lane.bs.js");
 
 var component = ReasonReact.statelessComponent("Lane");
 
-function make(label, laneValue, lane, onSetValue, onSetLength, _) {
+function make(label, laneValue, lane, onSetValue, onSetLength, onRandomiseAbsolute, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -26,6 +26,8 @@ function make(label, laneValue, lane, onSetValue, onSetLength, _) {
                         }, React.createElement("p", {
                               className: "w4"
                             }, label), React.createElement("div", {
+                              className: "w1"
+                            }), React.createElement("div", {
                               className: "flex"
                             }, $$Array.mapi((function (i, value) {
                                     var match = i > lane[/* loopAfterIndex */3];
@@ -60,7 +62,15 @@ function make(label, laneValue, lane, onSetValue, onSetLength, _) {
                                                         return Curry._2(onSetLength, laneValue, i);
                                                       })
                                                   }));
-                                  }), lane[/* values */0])));
+                                  }), lane[/* values */0])), React.createElement("div", {
+                              className: "w1"
+                            }), React.createElement("div", {
+                              className: "flex"
+                            }, React.createElement("button", {
+                                  onClick: (function () {
+                                      return Curry._1(onRandomiseAbsolute, laneValue);
+                                    })
+                                }, "Random Absolute")));
             }),
           /* initialState */component[/* initialState */10],
           /* retainedProps */component[/* retainedProps */11],

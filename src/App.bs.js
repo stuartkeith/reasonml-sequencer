@@ -151,6 +151,10 @@ function onSetLength(send, laneValue, index) {
               ]));
 }
 
+function onRandomiseAbsolute(send, laneValue) {
+  return Curry._1(send, /* RandomiseLaneAbsolute */Block.__(4, [laneValue]));
+}
+
 function make() {
   return /* record */[
           /* debugName */component[/* debugName */0],
@@ -204,6 +208,10 @@ function make() {
                               param$1
                             ]));
               };
+              var partial_arg$2 = self[/* send */3];
+              var onRandomiseAbsoluteBound = function (param) {
+                return Curry._1(partial_arg$2, /* RandomiseLaneAbsolute */Block.__(4, [param]));
+              };
               var match = self[/* state */1][/* isPlaying */7];
               return React.createElement("div", {
                           className: "ma4"
@@ -214,19 +222,19 @@ function make() {
                                     })
                                 }, match ? "Stop" : "Play")), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", /* Octave */0, self[/* state */1][/* octave */0], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Octave", /* Octave */0, self[/* state */1][/* octave */0], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", /* Transpose */1, self[/* state */1][/* transpose */1], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Transpose", /* Transpose */1, self[/* state */1][/* transpose */1], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Velocity", /* Velocity */2, self[/* state */1][/* velocity */2], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Pan", /* Pan */3, self[/* state */1][/* pan */3], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Pan", /* Pan */3, self[/* state */1][/* pan */3], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */4, self[/* state */1][/* chance */4], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Chance", /* Chance */4, self[/* state */1][/* chance */4], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */5, self[/* state */1][/* offset */5], onSetValueBound, onSetLengthBound, /* array */[])), React.createElement("div", {
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Offset", /* Offset */5, self[/* state */1][/* offset */5], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])), React.createElement("div", {
                               className: "h1"
-                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */6, self[/* state */1][/* length */6], onSetValueBound, onSetLengthBound, /* array */[])));
+                            }), ReasonReact.element(/* None */0, /* None */0, Row$ReactTemplate.make("Length", /* Length */6, self[/* state */1][/* length */6], onSetValueBound, onSetLengthBound, onRandomiseAbsoluteBound, /* array */[])));
             }),
           /* initialState */(function () {
               return /* record */[
@@ -313,6 +321,16 @@ function make() {
                                             /* loopAfterIndex */Caml_primitive.caml_int_max(subState[/* loopAfterIndex */3], index$1)
                                           ];
                                   }));
+                  case 4 : 
+                      var laneValue = action[0];
+                      return applyToLane(state, laneValue, (function (subState) {
+                                    var minValue = Lane$ReactTemplate.getMinValue(laneValue);
+                                    var maxValue = Lane$ReactTemplate.getMaxValue(laneValue);
+                                    for(var i = 0 ,i_finish = subState[/* values */0].length - 1 | 0; i <= i_finish; ++i){
+                                      Caml_array.caml_array_set(subState[/* values */0], i, minValue + Random.$$int((maxValue - minValue | 0) + 1 | 0) | 0);
+                                    }
+                                    return subState;
+                                  }));
                   
                 }
               }
@@ -327,5 +345,6 @@ exports.applyToAllLanes = applyToAllLanes;
 exports.applyToLane = applyToLane;
 exports.onSetValue = onSetValue;
 exports.onSetLength = onSetLength;
+exports.onRandomiseAbsolute = onRandomiseAbsolute;
 exports.make = make;
 /* component Not a pure module */

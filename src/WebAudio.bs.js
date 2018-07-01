@@ -44,7 +44,7 @@ var playBuffer = (
 function createSchedule(callback) {
   var beatTime = [0];
   var timeoutId = [/* None */0];
-  var beatLength = 60 / 120 / 1;
+  var beatLength = 60 / 120 / 4;
   var onTimeout = function () {
     var targetTime = audioContext.currentTime + 0.2;
     while(beatTime[0] < targetTime) {

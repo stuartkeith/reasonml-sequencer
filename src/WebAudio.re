@@ -51,7 +51,7 @@ let createSchedule = (callback) => {
   let beatTime = ref(0.);
   let timeoutId = ref(None);
   let bpm = 120.;
-  let ticksPerBeat = 1.;
+  let ticksPerBeat = 4.;
   let beatLength = 60. /. bpm /. ticksPerBeat;
 
   let rec onTimeout = () => {

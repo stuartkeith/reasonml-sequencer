@@ -1,10 +1,11 @@
 let component = ReasonReact.statelessComponent("Lane");
 
-let make = (~label, ~laneValue:Lane.laneValue, ~lane:Lane.lane, ~onSetValue, ~onSetLength, _children) => {
+let make = (~label, ~laneValue:Lane.laneValue, ~lane:Lane.lane, ~onSetValue, ~onSetLength, ~onRandomiseAbsolute, _children) => {
   ...component,
   render: _self => {
     <div className="flex items-center">
       <p className="w4">{ReasonReact.string(label)}</p>
+      <div className="w1" />
       <div className="flex">
         (ReasonReact.array(Array.mapi((i, value) =>
           <div key=(string_of_int(i)) className=("w2 relative " ++ (i > lane.loopAfterIndex ? "o-50" : ""))>
@@ -25,6 +26,10 @@ let make = (~label, ~laneValue:Lane.laneValue, ~lane:Lane.lane, ~onSetValue, ~on
             />
           </div>
         , lane.values)))
+      </div>
+      <div className="w1" />
+      <div className="flex">
+        <button onClick=(_event => onRandomiseAbsolute(laneValue))>(ReasonReact.string("Random Absolute"))</button>
       </div>
     </div>
   }
