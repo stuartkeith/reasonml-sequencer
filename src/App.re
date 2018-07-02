@@ -1,3 +1,14 @@
+let scales = [|
+  ("Chromatic", [|0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11|]),
+  ("Major", Scales.transposeMajor),
+  ("Dorian", Scales.transposeDorian),
+  ("Phrygian", Scales.transposePhrygian),
+  ("Lydian", Scales.transposeLydian),
+  ("Mixolydian", Scales.transposeMixolydian),
+  ("Minor", Scales.transposeMinor),
+  ("Locrian", Scales.transposeLocrian)
+|];
+
 type state = {
   octave: Lane.lane,
   transpose: Lane.lane,
@@ -6,6 +17,7 @@ type state = {
   chance: Lane.lane,
   offset: Lane.lane,
   length: Lane.lane,
+  scaleIndex: int,
   isPlaying: bool,
   scheduler: ref(option(WebAudio.schedule)),
   soundBuffer: ref(option(WebAudio.buffer))
@@ -21,7 +33,8 @@ type action =
   | SetLoopAfterIndex(Lane.laneValue, arrayIndex)
   | SetPlayback(bool)
   | SetLaneValue(Lane.laneValue, arrayIndex, arrayValue)
-  | RandomiseLaneAbsolute(Lane.laneValue);
+  | RandomiseLaneAbsolute(Lane.laneValue)
+  | SetScaleIndex(int);
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -62,6 +75,7 @@ let make = (_children) => {
     chance: Lane.emptyLane(Lane.Chance),
     offset: Lane.emptyLane(Lane.Offset),
     length: Lane.emptyLane(Lane.Length),
+    scaleIndex: 1,
     scheduler: ref(None),
     soundBuffer: ref(None)
   },
@@ -82,7 +96,11 @@ let make = (_children) => {
               let offset = Lane.getValue(self.state.offset);
               let length = Lane.getValue(self.state.length);
 
-              let note = (octave * 12) + transpose;
+              let (_, scale) = scales[self.state.scaleIndex];
+
+              let transposeScaled = scale[transpose mod Array.length(scale)];
+
+              let note = (octave * 12) + transposeScaled;
               let gain = float_of_int(velocity) /. 100.;
               let panValue = float_of_int(pan) /. 100.;
               let offsetValue = float_of_int(offset) /. 100.;
@@ -117,6 +135,10 @@ let make = (_children) => {
         };
 
         subState;
+      })
+      | SetScaleIndex(scaleIndex) => ReasonReact.Update({
+        ...state,
+        scaleIndex
       })
     },
 
@@ -153,6 +175,20 @@ let make = (_children) => {
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
+        <div>
+        (ReasonReact.array(Array.mapi((i, (label, _)) =>
+          <label key=label>
+            <input
+              _type="radio"
+              name="scale"
+              value=label
+              checked=(i === self.state.scaleIndex)
+              onChange=((_event) => self.send(SetScaleIndex(i)))
+            />
+            (ReasonReact.string(label))
+          </label>
+        , scales)))
+        </div>
       </div>
       <div className="h1" />
       <Row
