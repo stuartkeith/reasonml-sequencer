@@ -1,3 +1,5 @@
+[@bs.module] external sound : string = "./assets/guitar.mp3";
+
 let scales = [|
   ("Chromatic", [|0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11|]),
   ("Major", Scales.transposeMajor),
@@ -143,7 +145,7 @@ let make = (_children) => {
     },
 
   didMount: (self) => {
-    WebAudio.loadSound("guitar.mp3", (buffer) => {
+    WebAudio.loadSound(sound, (buffer) => {
       self.state.soundBuffer := Some(buffer);
     });
 

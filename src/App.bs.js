@@ -12,6 +12,7 @@ var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Caml_primitive = require("bs-platform/lib/js/caml_primitive.js");
 var Row$ReactTemplate = require("./Row.bs.js");
 var Lane$ReactTemplate = require("./Lane.bs.js");
+var GuitarMp3 = require("./assets/guitar.mp3");
 var Scales$ReactTemplate = require("./Scales.bs.js");
 var WebAudio$ReactTemplate = require("./WebAudio.bs.js");
 
@@ -201,7 +202,7 @@ function make() {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              Curry._2(WebAudio$ReactTemplate.loadSound, "guitar.mp3", (function (buffer) {
+              Curry._2(WebAudio$ReactTemplate.loadSound, GuitarMp3, (function (buffer) {
                       self[/* state */1][/* soundBuffer */10][0] = /* Some */[buffer];
                       return /* () */0;
                     }));
