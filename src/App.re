@@ -1,14 +1,14 @@
 [@bs.module] external sound : string = "./assets/guitar.mp3";
 
 let scales = [|
-  ("Chromatic", [|0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11|]),
-  ("Major", Scales.transposeMajor),
-  ("Dorian", Scales.transposeDorian),
-  ("Phrygian", Scales.transposePhrygian),
-  ("Lydian", Scales.transposeLydian),
-  ("Mixolydian", Scales.transposeMixolydian),
-  ("Minor", Scales.transposeMinor),
-  ("Locrian", Scales.transposeLocrian)
+  ("Chromatic", Scales.Chromatic),
+  ("Major", Scales.Major),
+  ("Dorian", Scales.Dorian),
+  ("Phrygian", Scales.Phrygian),
+  ("Lydian", Scales.Lydian),
+  ("Mixolydian", Scales.Mixolydian),
+  ("Minor", Scales.Minor),
+  ("Locrian", Scales.Locrian)
 |];
 
 type state = {
@@ -19,7 +19,7 @@ type state = {
   chance: Lane.lane,
   offset: Lane.lane,
   length: Lane.lane,
-  scaleIndex: int,
+  scale: Scales.t,
   isPlaying: bool,
   scheduler: ref(option(WebAudio.schedule)),
   soundBuffer: ref(option(WebAudio.buffer))
@@ -36,7 +36,7 @@ type action =
   | SetPlayback(bool)
   | SetLaneValue(Lane.laneValue, arrayIndex, arrayValue)
   | RandomiseLaneAbsolute(Lane.laneValue)
-  | SetScaleIndex(int);
+  | SetScale(Scales.t);
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -77,7 +77,7 @@ let make = (_children) => {
     chance: Lane.emptyLane(Lane.Chance),
     offset: Lane.emptyLane(Lane.Offset),
     length: Lane.emptyLane(Lane.Length),
-    scaleIndex: 1,
+    scale: Scales.Chromatic,
     scheduler: ref(None),
     soundBuffer: ref(None)
   },
@@ -98,9 +98,7 @@ let make = (_children) => {
               let offset = Lane.getValue(self.state.offset);
               let length = Lane.getValue(self.state.length);
 
-              let (_, scale) = scales[self.state.scaleIndex];
-
-              let transposeScaled = scale[transpose mod Array.length(scale)];
+              let transposeScaled = Scales.getScaleValue(transpose, self.state.scale);
 
               let note = (octave * 12) + transposeScaled;
               let gain = float_of_int(velocity) /. 100.;
@@ -138,9 +136,9 @@ let make = (_children) => {
 
         subState;
       })
-      | SetScaleIndex(scaleIndex) => ReasonReact.Update({
+      | SetScale(scale) => ReasonReact.Update({
         ...state,
-        scaleIndex
+        scale
       })
     },
 
@@ -178,18 +176,18 @@ let make = (_children) => {
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
         <div>
-        (ReasonReact.array(Array.mapi((i, (label, _)) =>
-          <label key=label>
-            <input
-              _type="radio"
-              name="scale"
-              value=label
-              checked=(i === self.state.scaleIndex)
-              onChange=((_event) => self.send(SetScaleIndex(i)))
-            />
-            (ReasonReact.string(label))
-          </label>
-        , scales)))
+          (ReasonReact.array(Array.map(((label, scale)) =>
+            <label key=label>
+              <input
+                _type="radio"
+                name="scale"
+                value=label
+                checked=(scale === self.state.scale)
+                onChange=((_event) => self.send(SetScale(scale)))
+              />
+              (ReasonReact.string(label))
+            </label>
+          , scales)))
         </div>
       </div>
       <div className="h1" />

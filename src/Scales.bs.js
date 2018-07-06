@@ -24,6 +24,21 @@ function generateTranspose(majorScaleOffset) {
   return result;
 }
 
+var transposeChromatic = /* array */[
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11
+];
+
 var transposeMajor = generateTranspose(0);
 
 var transposeDorian = generateTranspose(1);
@@ -38,13 +53,32 @@ var transposeMinor = generateTranspose(5);
 
 var transposeLocrian = generateTranspose(6);
 
-exports.majorScale = majorScale;
-exports.generateTranspose = generateTranspose;
-exports.transposeMajor = transposeMajor;
-exports.transposeDorian = transposeDorian;
-exports.transposePhrygian = transposePhrygian;
-exports.transposeLydian = transposeLydian;
-exports.transposeMixolydian = transposeMixolydian;
-exports.transposeMinor = transposeMinor;
-exports.transposeLocrian = transposeLocrian;
+function getScale(t) {
+  switch (t) {
+    case 0 : 
+        return transposeChromatic;
+    case 1 : 
+        return transposeMajor;
+    case 2 : 
+        return transposeDorian;
+    case 3 : 
+        return transposePhrygian;
+    case 4 : 
+        return transposeLydian;
+    case 5 : 
+        return transposeMixolydian;
+    case 6 : 
+        return transposeMinor;
+    case 7 : 
+        return transposeLocrian;
+    
+  }
+}
+
+function getScaleValue(note, t) {
+  var array = getScale(t);
+  return Caml_array.caml_array_get(array, Caml_int32.mod_(note, array.length));
+}
+
+exports.getScaleValue = getScaleValue;
 /* transposeMajor Not a pure module */

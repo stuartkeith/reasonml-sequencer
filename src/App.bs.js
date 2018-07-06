@@ -19,48 +19,35 @@ var WebAudio$ReactTemplate = require("./WebAudio.bs.js");
 var scales = /* array */[
   /* tuple */[
     "Chromatic",
-    /* array */[
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11
-    ]
+    /* Chromatic */0
   ],
   /* tuple */[
     "Major",
-    Scales$ReactTemplate.transposeMajor
+    /* Major */1
   ],
   /* tuple */[
     "Dorian",
-    Scales$ReactTemplate.transposeDorian
+    /* Dorian */2
   ],
   /* tuple */[
     "Phrygian",
-    Scales$ReactTemplate.transposePhrygian
+    /* Phrygian */3
   ],
   /* tuple */[
     "Lydian",
-    Scales$ReactTemplate.transposeLydian
+    /* Lydian */4
   ],
   /* tuple */[
     "Mixolydian",
-    Scales$ReactTemplate.transposeMixolydian
+    /* Mixolydian */5
   ],
   /* tuple */[
     "Minor",
-    Scales$ReactTemplate.transposeMinor
+    /* Minor */6
   ],
   /* tuple */[
     "Locrian",
-    Scales$ReactTemplate.transposeLocrian
+    /* Locrian */7
   ]
 ];
 
@@ -75,7 +62,7 @@ function applyToAllLanes(state, fn) {
               /* chance */Curry._1(fn, state[/* chance */4]),
               /* offset */Curry._1(fn, state[/* offset */5]),
               /* length */Curry._1(fn, state[/* length */6]),
-              /* scaleIndex */state[/* scaleIndex */7],
+              /* scale */state[/* scale */7],
               /* isPlaying */state[/* isPlaying */8],
               /* scheduler */state[/* scheduler */9],
               /* soundBuffer */state[/* soundBuffer */10]
@@ -94,7 +81,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */state[/* offset */5],
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -109,7 +96,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */state[/* offset */5],
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -124,7 +111,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */state[/* offset */5],
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -139,7 +126,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */state[/* offset */5],
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -154,7 +141,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */Curry._1(fn, state[/* chance */4]),
           /* offset */state[/* offset */5],
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -169,7 +156,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */Curry._1(fn, state[/* offset */5]),
           /* length */state[/* length */6],
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -184,7 +171,7 @@ function applyToLane(state, laneValue, fn) {
           /* chance */state[/* chance */4],
           /* offset */state[/* offset */5],
           /* length */Curry._1(fn, state[/* length */6]),
-          /* scaleIndex */state[/* scaleIndex */7],
+          /* scale */state[/* scale */7],
           /* isPlaying */state[/* isPlaying */8],
           /* scheduler */state[/* scheduler */9],
           /* soundBuffer */state[/* soundBuffer */10]
@@ -245,17 +232,18 @@ function make() {
                                   onClick: (function () {
                                       return Curry._1(self[/* send */3], /* SetPlayback */Block.__(2, [!self[/* state */1][/* isPlaying */8]]));
                                     })
-                                }, match ? "Stop" : "Play"), React.createElement("div", undefined, $$Array.mapi((function (i, param) {
+                                }, match ? "Stop" : "Play"), React.createElement("div", undefined, $$Array.map((function (param) {
+                                        var scale = param[1];
                                         var label = param[0];
                                         return React.createElement("label", {
                                                     key: label
                                                   }, React.createElement("input", {
-                                                        checked: i === self[/* state */1][/* scaleIndex */7],
+                                                        checked: scale === self[/* state */1][/* scale */7],
                                                         name: "scale",
                                                         type: "radio",
                                                         value: label,
                                                         onChange: (function () {
-                                                            return Curry._1(self[/* send */3], /* SetScaleIndex */Block.__(5, [i]));
+                                                            return Curry._1(self[/* send */3], /* SetScale */Block.__(5, [scale]));
                                                           })
                                                       }), label);
                                       }), scales))), React.createElement("div", {
@@ -374,7 +362,7 @@ function make() {
                       /* chance */Lane$ReactTemplate.emptyLane(/* Chance */4),
                       /* offset */Lane$ReactTemplate.emptyLane(/* Offset */5),
                       /* length */Lane$ReactTemplate.emptyLane(/* Length */6),
-                      /* scaleIndex */1,
+                      /* scale : Chromatic */0,
                       /* isPlaying */false,
                       /* scheduler */[/* None */0],
                       /* soundBuffer */[/* None */0]
@@ -404,9 +392,7 @@ function make() {
                                         var pan = Lane$ReactTemplate.getValue(self[/* state */1][/* pan */3]);
                                         var offset = Lane$ReactTemplate.getValue(self[/* state */1][/* offset */5]);
                                         var length = Lane$ReactTemplate.getValue(self[/* state */1][/* length */6]);
-                                        var match = Caml_array.caml_array_get(scales, self[/* state */1][/* scaleIndex */7]);
-                                        var scale = match[1];
-                                        var transposeScaled = Caml_array.caml_array_get(scale, Caml_int32.mod_(transpose, scale.length));
+                                        var transposeScaled = Scales$ReactTemplate.getScaleValue(transpose, self[/* state */1][/* scale */7]);
                                         var note = Caml_int32.imul(octave, 12) + transposeScaled | 0;
                                         var gain = velocity / 100;
                                         var panValue = pan / 100;
@@ -438,7 +424,7 @@ function make() {
                                   /* chance */state[/* chance */4],
                                   /* offset */state[/* offset */5],
                                   /* length */state[/* length */6],
-                                  /* scaleIndex */state[/* scaleIndex */7],
+                                  /* scale */state[/* scale */7],
                                   /* isPlaying */action[0],
                                   /* scheduler */state[/* scheduler */9],
                                   /* soundBuffer */state[/* soundBuffer */10]
@@ -474,7 +460,7 @@ function make() {
                                   /* chance */state[/* chance */4],
                                   /* offset */state[/* offset */5],
                                   /* length */state[/* length */6],
-                                  /* scaleIndex */action[0],
+                                  /* scale */action[0],
                                   /* isPlaying */state[/* isPlaying */8],
                                   /* scheduler */state[/* scheduler */9],
                                   /* soundBuffer */state[/* soundBuffer */10]
