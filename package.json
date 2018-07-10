@@ -3,7 +3,7 @@
   "repository": "git@github.com:stuartkeith/reasonml-sequencer.git",
   "version": "0.1.0",
   "scripts": {
-    "start": "bsb -make-world -w",
+    "watch": "bsb -make-world -w",
     "clean": "bsb -clean-world",
     "serve": "parcel src/index.html",
     "build": "parcel build src/index.html"
