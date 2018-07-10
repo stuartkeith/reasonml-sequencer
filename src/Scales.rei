@@ -1,3 +1,4 @@
 type t = Chromatic | Major | Dorian | Phrygian | Lydian | Mixolydian | Minor | Locrian;
 
-let getScaleValue: (int, t) => int;
+let max: (t) => int;
+let value: (int, t) => int;

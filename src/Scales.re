@@ -43,7 +43,13 @@ let getScale = (t) => switch (t) {
   | Locrian => transposeLocrian
 };
 
-let getScaleValue = (note, t) => {
+let max = (t) => {
+  let array = getScale(t);
+
+  Array.length(array) - 1;
+}
+
+let value = (note, t) => {
   let array = getScale(t);
 
   array[note mod Array.length(array)];
