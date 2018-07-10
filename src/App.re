@@ -1,4 +1,4 @@
-[@bs.module] external sound : string = "./assets/guitar.mp3";
+[@bs.module] external sound : string = "./assets/electric-piano.mp3";
 
 let scales = [|
   ("Chromatic", Scales.Chromatic),
