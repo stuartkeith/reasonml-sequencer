@@ -147,9 +147,13 @@ let make = (_children) => {
       self.state.soundBuffer := Some(buffer);
     });
 
-    self.state.scheduler := Some(WebAudio.createSchedule((beatTime, beatLength) => {
+    let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
       self.send(Playback(beatTime, beatLength));
-    }));
+    });
+
+    self.state.scheduler := Some(scheduler);
+
+    self.onUnmount(() => scheduler.stop());
   },
 
   didUpdate: ({ oldSelf, newSelf }) => {
