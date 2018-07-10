@@ -6,7 +6,7 @@
     "watch": "bsb -make-world -w",
     "clean": "bsb -clean-world",
     "serve": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "bsb -make-world && parcel build src/index.html"
   },
   "keywords": [
     "BuckleScript"
