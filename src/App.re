@@ -99,7 +99,16 @@ let make = (_children) => {
   ...component,
 
   initialState: () => {
-    let scale = Scales.Chromatic;
+    let scale = switch (Random.int(7)) {
+      | 0 => Scales.Major
+      | 1 => Scales.Dorian
+      | 2 => Scales.Phrygian
+      | 3 => Scales.Lydian
+      | 4 => Scales.Mixolydian
+      | 5 => Scales.Minor
+      | 6 => Scales.Locrian
+      | _ => raise(Not_found)
+    };
 
     {
       lanes: {
