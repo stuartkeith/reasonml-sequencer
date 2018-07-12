@@ -8,7 +8,7 @@ let make = (~label, ~lane:Lane.t, ~onSetValue, ~onSetLength, ~onRandomiseAbsolut
       <div className="w1" />
       <div className="flex">
         (ReasonReact.array(Array.mapi((i, value) =>
-          <div key=(string_of_int(i)) className=("w2 relative " ++ (i > Lane.loopAfterIndex(lane) ? "o-50" : ""))>
+          <div key=(string_of_int(i)) className=("w3 relative " ++ (i > Lane.loopAfterIndex(lane) ? "o-50" : ""))>
             <button
               disabled=(value === Lane.max(lane))
               className=("input-reset db w-100 h1 " ++ (Lane.visualIndex(lane) === i ? "bg-red" : "bg-gray"))
@@ -19,7 +19,11 @@ let make = (~label, ~lane:Lane.t, ~onSetValue, ~onSetLength, ~onRandomiseAbsolut
               className=("input-reset db w-100 h1 " ++ (Lane.visualIndex(lane) === i ? "bg-red" : "bg-gray"))
               onClick=(_event => onSetValue(i, value - 1))
             />
-            <p className="relative tc ma0">(ReasonReact.string(string_of_int(value)))</p>
+            <input
+              _type="number"
+              className="relative db w-100 tc ma0"value=string_of_int(value)
+              onChange=(event => onSetValue(i, ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value))
+            />
             <button
               className="input-reset db w-100 h1"
               onClick=(_event => onSetLength(i))
