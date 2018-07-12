@@ -34,14 +34,18 @@ type laneValue =
   | Offset
   | Length;
 
-type state = {
+type lanes = {
   octave: Lane.t,
   transpose: Lane.t,
   velocity: Lane.t,
   pan: Lane.t,
   chance: Lane.t,
   offset: Lane.t,
-  length: Lane.t,
+  length: Lane.t
+};
+
+type state = {
+  lanes,
   scale: Scales.t,
   globalTranspose: int,
   isPlaying: bool,
@@ -68,8 +72,7 @@ type action =
 let component = ReasonReact.reducerComponent("App");
 
 /* apply a function to all lanes */
-let applyToAllLanes = (state, fn) => ReasonReact.Update({
-  ...state,
+let applyToAllLanes = (state, fn) => {
   octave: fn(state.octave),
   transpose: fn(state.transpose),
   velocity: fn(state.velocity),
@@ -77,20 +80,18 @@ let applyToAllLanes = (state, fn) => ReasonReact.Update({
   chance: fn(state.chance),
   offset: fn(state.offset),
   length: fn(state.length)
-});
+};
 
 /* apply a function to one lane */
-let applyToLane = (state, laneValue, fn) => ReasonReact.Update(
-  switch (laneValue) {
-    | Octave => { ...state, octave: fn(state.octave) }
-    | Transpose => { ...state, transpose: fn(state.transpose) }
-    | Velocity => { ...state, velocity: fn(state.velocity) }
-    | Pan => { ...state, pan: fn(state.pan) }
-    | Chance => { ...state, chance: fn(state.chance) }
-    | Offset => { ...state, offset: fn(state.offset) }
-    | Length => { ...state, length: fn(state.length) }
-  }
-);
+let applyToLane = (state, laneValue, fn) => switch (laneValue) {
+  | Octave => { ...state, octave: fn(state.octave) }
+  | Transpose => { ...state, transpose: fn(state.transpose) }
+  | Velocity => { ...state, velocity: fn(state.velocity) }
+  | Pan => { ...state, pan: fn(state.pan) }
+  | Chance => { ...state, chance: fn(state.chance) }
+  | Offset => { ...state, offset: fn(state.offset) }
+  | Length => { ...state, length: fn(state.length) }
+};
 
 let make = (_children) => {
   ...component,
@@ -99,14 +100,16 @@ let make = (_children) => {
     let scale = Scales.Chromatic;
 
     {
+      lanes: {
+        octave: Lane.empty(0, -2, 2),
+        transpose: Lane.empty(0, 0, Scales.max(scale)),
+        velocity: Lane.empty(100, 0, 100),
+        pan: Lane.empty(0, -100, 100),
+        chance: Lane.empty(100, 0, 100),
+        offset: Lane.empty(0, 0, 100),
+        length: Lane.empty(100, 0, 100)
+      },
       isPlaying: false,
-      octave: Lane.empty(0, -2, 2),
-      transpose: Lane.empty(0, 0, Scales.max(scale)),
-      velocity: Lane.empty(100, 0, 100),
-      pan: Lane.empty(0, -100, 100),
-      chance: Lane.empty(100, 0, 100),
-      offset: Lane.empty(0, 0, 100),
-      length: Lane.empty(100, 0, 100),
       scale,
       globalTranspose: 0,
       scheduler: ref(None),
@@ -116,19 +119,22 @@ let make = (_children) => {
 
   reducer: (action, state) =>
     switch (action) {
-      | RestartLanes => applyToAllLanes(state, Lane.restart)
+      | RestartLanes => ReasonReact.Update({
+        ...state,
+        lanes: applyToAllLanes(state.lanes, Lane.restart)
+      })
       | Playback(beatTime, _beatLength) => switch(state.soundBuffer^) {
         | None => ReasonReact.NoUpdate
         | Some(buffer) => ReasonReact.SideEffects((self) => {
             let chance = Random.int(101);
 
-            if (chance <= Lane.value(self.state.chance)) {
-              let octave = Lane.value(self.state.octave);
-              let transpose = Lane.value(self.state.transpose);
-              let velocity = Lane.value(self.state.velocity);
-              let pan = Lane.value(self.state.pan);
-              let offset = Lane.value(self.state.offset);
-              let length = Lane.value(self.state.length);
+            if (chance <= Lane.value(self.state.lanes.chance)) {
+              let octave = Lane.value(self.state.lanes.octave);
+              let transpose = Lane.value(self.state.lanes.transpose);
+              let velocity = Lane.value(self.state.lanes.velocity);
+              let pan = Lane.value(self.state.lanes.pan);
+              let offset = Lane.value(self.state.lanes.offset);
+              let length = Lane.value(self.state.lanes.length);
 
               let transposeScaled = Scales.value(transpose, self.state.scale);
 
@@ -144,20 +150,41 @@ let make = (_children) => {
             self.send(AdvancePlayback);
         })
       }
-      | AdvancePlayback => applyToAllLanes(state, Lane.advance)
+      | AdvancePlayback => ReasonReact.Update({
+        ...state,
+        lanes: applyToAllLanes(state.lanes, Lane.advance)
+      })
       | SetPlayback(value) => ReasonReact.Update({
         ...state,
         isPlaying: value
       })
-      | SetLoopAfterIndex(laneValue, index) => applyToLane(state, laneValue, Lane.setLoopAfterIndex(index))
-      | SetLaneValue(laneValue, index, value) => applyToLane(state, laneValue, Lane.setValue(index, value))
-      | RandomiseLaneAbsolute(laneValue) => applyToLane(state, laneValue, Lane.randomiseAbsolute)
-      | ResetLane(laneValue) => applyToLane(state, laneValue, Lane.reset)
-      | RandomiseLaneRelative(laneValue, delta) => applyToLane(state, laneValue, Lane.randomiseRelative(delta))
+      | SetLoopAfterIndex(laneValue, index) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.setLoopAfterIndex(index))
+      })
+      | SetLaneValue(laneValue, index, value) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.setValue(index, value))
+      })
+      | RandomiseLaneAbsolute(laneValue) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.randomiseAbsolute)
+      })
+      | ResetLane(laneValue) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.reset)
+      })
+      | RandomiseLaneRelative(laneValue, delta) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.randomiseRelative(delta))
+      })
       | SetScale(scale) => ReasonReact.Update({
         ...state,
-        transpose: Lane.setMax(Scales.max(scale), state.transpose),
-        scale
+        scale,
+        lanes: {
+          ...state.lanes,
+          transpose: Lane.setMax(Scales.max(scale), state.lanes.transpose),
+        }
       })
       | SetGlobalTranspose(globalTranspose) => ReasonReact.Update({
         ...state,
@@ -234,7 +261,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Octave"
-        lane=self.state.octave
+        lane=self.state.lanes.octave
         onSetValue=((index, value) => self.send(SetLaneValue(Octave, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Octave, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Octave)))
@@ -244,7 +271,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Transpose"
-        lane=self.state.transpose
+        lane=self.state.lanes.transpose
         onSetValue=((index, value) => self.send(SetLaneValue(Transpose, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Transpose, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Transpose)))
@@ -254,7 +281,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Velocity"
-        lane=self.state.velocity
+        lane=self.state.lanes.velocity
         onSetValue=((index, value) => self.send(SetLaneValue(Velocity, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Velocity, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Velocity)))
@@ -264,7 +291,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Pan"
-        lane=self.state.pan
+        lane=self.state.lanes.pan
         onSetValue=((index, value) => self.send(SetLaneValue(Pan, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Pan, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Pan)))
@@ -274,7 +301,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Chance"
-        lane=self.state.chance
+        lane=self.state.lanes.chance
         onSetValue=((index, value) => self.send(SetLaneValue(Chance, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Chance, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Chance)))
@@ -284,7 +311,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Offset"
-        lane=self.state.offset
+        lane=self.state.lanes.offset
         onSetValue=((index, value) => self.send(SetLaneValue(Offset, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Offset, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Offset)))
@@ -294,7 +321,7 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Length"
-        lane=self.state.length
+        lane=self.state.lanes.length
         onSetValue=((index, value) => self.send(SetLaneValue(Length, index, value)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Length, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Length)))
