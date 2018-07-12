@@ -1,4 +1,5 @@
 [@bs.module] external sound : string = "./assets/electric-piano.mp3";
+[@bs.module] external hihat : string = "./assets/hihat.mp3";
 
 let scales = [|
   ("Chromatic", Scales.Chromatic),
@@ -50,7 +51,8 @@ type state = {
   globalTranspose: int,
   isPlaying: bool,
   scheduler: ref(option(WebAudio.schedule)),
-  soundBuffer: ref(option(WebAudio.buffer))
+  soundBuffer: ref(option(WebAudio.buffer)),
+  hihatBuffer: ref(option(WebAudio.buffer))
 };
 
 type arrayIndex = int;
@@ -113,7 +115,8 @@ let make = (_children) => {
       scale,
       globalTranspose: 0,
       scheduler: ref(None),
-      soundBuffer: ref(None)
+      soundBuffer: ref(None),
+      hihatBuffer: ref(None)
     }
   },
 
@@ -123,33 +126,38 @@ let make = (_children) => {
         ...state,
         lanes: applyToAllLanes(state.lanes, Lane.restart)
       })
-      | Playback(beatTime, _beatLength) => switch(state.soundBuffer^) {
-        | None => ReasonReact.NoUpdate
-        | Some(buffer) => ReasonReact.SideEffects((self) => {
-            let chance = Random.int(101);
+      | Playback(beatTime, _beatLength) => ReasonReact.SideEffects((self) => {
+        let chance = Random.int(101);
 
-            if (chance <= Lane.value(self.state.lanes.chance)) {
-              let octave = Lane.value(self.state.lanes.octave);
-              let transpose = Lane.value(self.state.lanes.transpose);
-              let velocity = Lane.value(self.state.lanes.velocity);
-              let pan = Lane.value(self.state.lanes.pan);
-              let offset = Lane.value(self.state.lanes.offset);
-              let length = Lane.value(self.state.lanes.length);
+        if (chance < Lane.value(self.state.lanes.chance)) {
+          let octave = Lane.value(self.state.lanes.octave);
+          let transpose = Lane.value(self.state.lanes.transpose);
+          let velocity = Lane.value(self.state.lanes.velocity);
+          let pan = Lane.value(self.state.lanes.pan);
+          let offset = Lane.value(self.state.lanes.offset);
+          let length = Lane.value(self.state.lanes.length);
 
-              let transposeScaled = Scales.value(transpose, self.state.scale);
+          let transposeScaled = Scales.value(transpose, self.state.scale);
 
-              let note = self.state.globalTranspose + (octave * 12) + transposeScaled;
-              let gain = float_of_int(velocity) /. 100.;
-              let panValue = float_of_int(pan) /. 100.;
-              let offsetValue = float_of_int(offset) /. 100.;
-              let durationValue = float_of_int(length) /. 100.;
+          let note = self.state.globalTranspose + (octave * 12) + transposeScaled;
+          let gain = float_of_int(velocity) /. 100.;
+          let panValue = float_of_int(pan) /. 100.;
+          let offsetValue = float_of_int(offset) /. 100.;
+          let durationValue = float_of_int(length) /. 100.;
 
-              WebAudio.playBuffer(buffer, note, gain, panValue, beatTime, offsetValue, durationValue);
-            };
+          switch(state.soundBuffer^) {
+            | None => ()
+            | Some(buffer) => WebAudio.playBuffer(buffer, note, gain, panValue, beatTime, offsetValue, durationValue)
+          };
+        };
 
-            self.send(AdvancePlayback);
-        })
-      }
+        switch(state.hihatBuffer^) {
+          | None => ()
+          | Some(buffer) => WebAudio.playBuffer(buffer, 0, 1. -. Random.float(0.5), 0., beatTime, 0., 1.);
+        };
+
+        self.send(AdvancePlayback);
+      })
       | AdvancePlayback => ReasonReact.Update({
         ...state,
         lanes: applyToAllLanes(state.lanes, Lane.advance)
@@ -195,6 +203,10 @@ let make = (_children) => {
   didMount: (self) => {
     WebAudio.loadSound(sound, (buffer) => {
       self.state.soundBuffer := Some(buffer);
+    });
+
+    WebAudio.loadSound(hihat, (buffer) => {
+      self.state.hihatBuffer := Some(buffer);
     });
 
     let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
