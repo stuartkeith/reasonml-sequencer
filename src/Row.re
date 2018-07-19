@@ -1,4 +1,4 @@
-let component = ReasonReact.statelessComponent("Lane");
+let component = ReasonReact.statelessComponent("Row");
 
 let make = (~label, ~lane:Lane.t, ~onSetValue, ~onSetLength, ~onRandomiseAbsolute, ~onRandomiseRelative, ~onResetLane, _children) => {
   ...component,
