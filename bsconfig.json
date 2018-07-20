@@ -18,6 +18,7 @@
   "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
+    "bs-webapi",
     "reason-react"
   ],
   "refmt": 3
