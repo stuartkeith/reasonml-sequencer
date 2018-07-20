@@ -1,5 +1,10 @@
 type t;
 
+type random =
+  | Absolute
+  | Relative(int)
+  | Range(int, int);
+
 let empty:(int, int, int) => t;
 let restart:(t) => t;
 let reset:(t) => t;
@@ -12,6 +17,5 @@ let visualIndex:(t) => int;
 let values:(t) => array(int);
 let setLoopAfterIndex:(int, t) => t;
 let setValue:(int, int, t) => t;
-let randomiseAbsolute:(t) => t;
-let randomiseRelative:(int, t) => t;
+let randomise:(random, t) => t;
 let setMax:(int, t) => t;

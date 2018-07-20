@@ -185,7 +185,7 @@ let make = (_children) => {
       })
       | RandomiseLaneAbsolute(laneValue) => ReasonReact.Update({
         ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.randomiseAbsolute)
+        lanes: applyToLane(state.lanes, laneValue, Lane.randomise(Lane.Absolute))
       })
       | ResetLane(laneValue) => ReasonReact.Update({
         ...state,
@@ -193,7 +193,7 @@ let make = (_children) => {
       })
       | RandomiseLaneRelative(laneValue, delta) => ReasonReact.Update({
         ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.randomiseRelative(delta))
+        lanes: applyToLane(state.lanes, laneValue, Lane.randomise(Lane.Relative(delta)))
       })
       | SetScale(scale) => ReasonReact.Update({
         ...state,

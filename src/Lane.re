@@ -8,6 +8,11 @@ type t = {
   loopAfterIndex: int
 };
 
+type random =
+  | Absolute
+  | Relative(int)
+  | Range(int, int);
+
 let createValues = (default) => Array.make(16, default);
 
 let empty = (default, min, max) => {
@@ -64,24 +69,25 @@ let setValue = (index, value, lane) => {
   };
 };
 
-let randomiseAbsolute = (lane) => {
-  for (i in 0 to Array.length(lane.values) - 1) {
-    lane.values[i] = lane.min + Random.int(lane.max - lane.min + 1);
+let randomise = (random, lane) => {
+  let (min, max, delta) = switch (random) {
+    | Absolute => (lane.min, lane.max, lane.max)
+    | Relative(delta) => (lane.min, lane.max, delta)
+    | Range(min, max) => (Pervasives.max(lane.min, min), Pervasives.min(lane.max, max), lane.max)
   };
 
-  lane;
-};
-
-let randomiseRelative = (delta, lane) => {
   for (i in 0 to Array.length(lane.values) - 1) {
-    let min = Pervasives.max(lane.min, lane.values[i] - delta);
-    let max = Pervasives.min(lane.max, lane.values[i] + delta);
-    let range = max - min + 1;
+    let cellMin = Pervasives.max(min, lane.values[i] - delta);
+    let cellMax = Pervasives.min(max, lane.values[i] + delta);
+    let range = cellMax - cellMin + 1;
 
     lane.values[i] = min + Random.int(range);
   };
 
-  lane;
+  {
+    ...lane,
+    loopAfterIndex: Random.int(Array.length(lane.values))
+  };
 };
 
 let setMax = (max, lane) => {
