@@ -65,9 +65,10 @@ type action =
   | RestartLanes
   | SetLoopAfterIndex(laneValue, arrayIndex)
   | SetPlayback(bool)
-  | SetLaneValue(laneValue, arrayIndex, arrayValue)
+  | SetLaneValue(laneValue, arrayIndex, arrayValue, bool)
   | RandomiseLaneAbsolute(laneValue)
   | RandomiseLaneRelative(laneValue, int)
+  | RandomiseAll
   | ResetLane(laneValue)
   | SetScale(Scales.t)
   | SetGlobalTranspose(int)
@@ -114,7 +115,7 @@ let make = (_children) => {
 
     {
       lanes: {
-        octave: Lane.empty(0, -2, 2),
+        octave: Lane.empty(0, -2, 1),
         transpose: Lane.empty(0, 0, Scales.max(scale)),
         velocity: Lane.empty(100, 0, 100),
         pan: Lane.empty(0, -100, 100),
@@ -182,13 +183,25 @@ let make = (_children) => {
         ...state,
         lanes: applyToLane(state.lanes, laneValue, Lane.setLoopAfterIndex(index))
       })
-      | SetLaneValue(laneValue, index, value) => ReasonReact.Update({
+      | SetLaneValue(laneValue, index, value, setLength) => ReasonReact.Update({
         ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.setValue(index, value))
+        lanes: applyToLane(state.lanes, laneValue, Lane.setValue(index, value, setLength))
       })
       | RandomiseLaneAbsolute(laneValue) => ReasonReact.Update({
         ...state,
         lanes: applyToLane(state.lanes, laneValue, Lane.randomise(Lane.Absolute))
+      })
+      | RandomiseAll => ReasonReact.Update({
+        ...state,
+        lanes: {
+          octave: Lane.randomise(Lane.Absolute, state.lanes.octave),
+          transpose: Lane.randomise(Lane.Absolute, state.lanes.transpose),
+          velocity: Lane.randomise(Lane.Range(10, 100), state.lanes.velocity),
+          chance: Lane.randomise(Lane.Range(40, 100), state.lanes.chance),
+          pan: Lane.reset(state.lanes.pan),
+          offset: Lane.reset(state.lanes.offset),
+          length: Lane.reset(state.lanes.length)
+        }
       })
       | ResetLane(laneValue) => ReasonReact.Update({
         ...state,
@@ -217,6 +230,8 @@ let make = (_children) => {
     },
 
   didMount: (self) => {
+    self.send(RandomiseAll);
+
     WebAudio.loadSound(sound, (buffer) => {
       self.state.soundBuffer := Some(buffer);
     });
@@ -266,40 +281,52 @@ let make = (_children) => {
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
-        <div>
-          (ReasonReact.array(Array.mapi((i, key) =>
-            <label key=key>
-              <input
-                _type="radio"
-                name="key"
-                value=key
-                checked=(i === self.state.globalTranspose)
-                onChange=((_event) => self.send(SetGlobalTranspose(i)))
-              />
-              (ReasonReact.string(key))
-            </label>
-          , keys)))
-        </div>
-        <div>
-          (ReasonReact.array(Array.map(((label, scale)) =>
-            <label key=label>
-              <input
-                _type="radio"
-                name="scale"
-                value=label
-                checked=(scale === self.state.scale)
-                onChange=((_event) => self.send(SetScale(scale)))
-              />
-              (ReasonReact.string(label))
-            </label>
-          , scales)))
-        </div>
+        <Slider
+          cells=[|self.state.bpm|]
+          min=20
+          max=200
+          highlightedIndex=0
+          disabledAfterIndex=1
+          onSetValue=((_, value, _) => self.send(SetBpm(value)))
+          onSetLength=((_length) => ())
+        />
+        <button className="w4" onClick=(_event => self.send(RandomiseAll))>
+          (ReasonReact.string("Randomise All"))
+        </button>
+      </div>
+      <div>
+        (ReasonReact.array(Array.mapi((i, key) =>
+          <label key=key>
+            <input
+              _type="radio"
+              name="key"
+              value=key
+              checked=(i === self.state.globalTranspose)
+              onChange=((_event) => self.send(SetGlobalTranspose(i)))
+            />
+            (ReasonReact.string(key))
+          </label>
+        , keys)))
+      </div>
+      <div>
+        (ReasonReact.array(Array.map(((label, scale)) =>
+          <label key=label>
+            <input
+              _type="radio"
+              name="scale"
+              value=label
+              checked=(scale === self.state.scale)
+              onChange=((_event) => self.send(SetScale(scale)))
+            />
+            (ReasonReact.string(label))
+          </label>
+        , scales)))
       </div>
       <div className="h1" />
       <Row
         label="Octave"
         lane=self.state.lanes.octave
-        onSetValue=((index, value) => self.send(SetLaneValue(Octave, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Octave, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Octave, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Octave)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Octave, 1)))
@@ -309,7 +336,7 @@ let make = (_children) => {
       <Row
         label="Transpose"
         lane=self.state.lanes.transpose
-        onSetValue=((index, value) => self.send(SetLaneValue(Transpose, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Transpose, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Transpose, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Transpose)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Transpose, 3)))
@@ -319,7 +346,7 @@ let make = (_children) => {
       <Row
         label="Velocity"
         lane=self.state.lanes.velocity
-        onSetValue=((index, value) => self.send(SetLaneValue(Velocity, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Velocity, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Velocity, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Velocity)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Velocity, 20)))
@@ -329,7 +356,7 @@ let make = (_children) => {
       <Row
         label="Pan"
         lane=self.state.lanes.pan
-        onSetValue=((index, value) => self.send(SetLaneValue(Pan, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Pan, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Pan, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Pan)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Pan, 20)))
@@ -339,7 +366,7 @@ let make = (_children) => {
       <Row
         label="Chance"
         lane=self.state.lanes.chance
-        onSetValue=((index, value) => self.send(SetLaneValue(Chance, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Chance, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Chance, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Chance)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Chance, 10)))
@@ -349,7 +376,7 @@ let make = (_children) => {
       <Row
         label="Offset"
         lane=self.state.lanes.offset
-        onSetValue=((index, value) => self.send(SetLaneValue(Offset, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Offset, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Offset, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Offset)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Offset, 10)))
@@ -359,7 +386,7 @@ let make = (_children) => {
       <Row
         label="Length"
         lane=self.state.lanes.length
-        onSetValue=((index, value) => self.send(SetLaneValue(Length, index, value)))
+        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Length, index, value, setLength)))
         onSetLength=((index) => self.send(SetLoopAfterIndex(Length, index)))
         onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Length)))
         onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Length, 10)))

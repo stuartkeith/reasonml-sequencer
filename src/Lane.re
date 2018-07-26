@@ -58,14 +58,14 @@ let setLoopAfterIndex = (loopAfterIndex, lane) => {
   loopAfterIndex
 };
 
-let setValue = (index, value, lane) => {
+let setValue = (index, value, setLength, lane) => {
   if (value >= lane.min && value <= lane.max) {
     lane.values[index] = value;
   };
 
   {
     ...lane,
-    loopAfterIndex: Pervasives.max(lane.loopAfterIndex, index)
+    loopAfterIndex: setLength ? Pervasives.max(lane.loopAfterIndex, index) : lane.loopAfterIndex
   };
 };
 

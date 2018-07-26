@@ -6,3 +6,17 @@ html {
 *:before,*:after {
   box-sizing: inherit;
 }
+
+.absolute--center {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.opacity-transition-1 {
+  transition: opacity 120ms ease-in;
+}
+
+.no-select {
+  user-select: none;
+}

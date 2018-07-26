@@ -16,6 +16,6 @@ let loopAfterIndex:(t) => int;
 let visualIndex:(t) => int;
 let values:(t) => array(int);
 let setLoopAfterIndex:(int, t) => t;
-let setValue:(int, int, t) => t;
+let setValue:(int, int, bool, t) => t;
 let randomise:(random, t) => t;
 let setMax:(int, t) => t;
