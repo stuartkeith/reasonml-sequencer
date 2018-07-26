@@ -43,18 +43,19 @@ let playBuffer: (buffer, int, float, float, float, float, float) => unit = [%bs.
 
 type schedule = {
   start: (unit) => unit,
-  stop: (unit) => unit
+  stop: (unit) => unit,
+  setBpm: (float) => unit
 };
 
 let createSchedule = (callback) => {
   let beatTime = ref(0.);
   let timeoutId = ref(None);
-  let bpm = 120.;
+  let bpm = ref(120.);
   let ticksPerBeat = 4.;
-  let beatLength = 60. /. bpm /. ticksPerBeat;
 
   let rec onTimeout = () => {
     let targetTime = getCurrentTime(audioContext) +. 0.2;
+    let beatLength = 60. /. bpm^ /. ticksPerBeat;
 
     while (beatTime^ < targetTime) {
       callback(beatTime^, beatLength);
@@ -83,8 +84,13 @@ let createSchedule = (callback) => {
       };
   };
 
+  let setBpm = (value) => {
+    bpm := value;
+  };
+
   {
     start,
-    stop
+    stop,
+    setBpm
   }
 };

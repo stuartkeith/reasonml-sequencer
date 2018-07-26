@@ -50,6 +50,7 @@ type state = {
   scale: Scales.t,
   globalTranspose: int,
   isPlaying: bool,
+  bpm: int,
   scheduler: ref(option(WebAudio.schedule)),
   soundBuffer: ref(option(WebAudio.buffer)),
   hihatBuffer: ref(option(WebAudio.buffer))
@@ -69,7 +70,8 @@ type action =
   | RandomiseLaneRelative(laneValue, int)
   | ResetLane(laneValue)
   | SetScale(Scales.t)
-  | SetGlobalTranspose(int);
+  | SetGlobalTranspose(int)
+  | SetBpm(int);
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -122,6 +124,7 @@ let make = (_children) => {
       },
       isPlaying: false,
       scale,
+      bpm: 120,
       globalTranspose: 0,
       scheduler: ref(None),
       soundBuffer: ref(None),
@@ -207,6 +210,10 @@ let make = (_children) => {
         ...state,
         globalTranspose
       })
+      | SetBpm(bpm) => ReasonReact.Update({
+        ...state,
+        bpm
+      });
     },
 
   didMount: (self) => {
@@ -222,9 +229,11 @@ let make = (_children) => {
       self.send(Playback(beatTime, beatLength));
     });
 
-    self.state.scheduler := Some(scheduler);
+    scheduler.setBpm(float_of_int(self.state.bpm));
 
     self.onUnmount(() => scheduler.stop());
+
+    self.state.scheduler := Some(scheduler);
   },
 
   didUpdate: ({ oldSelf, newSelf }) => {
@@ -241,7 +250,14 @@ let make = (_children) => {
           }
         }
       }
-    }
+    };
+
+    if (oldSelf.state.bpm !== newSelf.state.bpm) {
+      switch (newSelf.state.scheduler^) {
+        | None => ()
+        | Some(scheduler) => scheduler.setBpm(float_of_int(newSelf.state.bpm))
+      }
+    };
   },
 
   render: self => {
