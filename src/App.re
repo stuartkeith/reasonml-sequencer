@@ -298,7 +298,7 @@ let make = (_children) => {
         (ReasonReact.array(Array.mapi((i, key) =>
           <label key=key>
             <input
-              _type="radio"
+              type_="radio"
               name="key"
               value=key
               checked=(i === self.state.globalTranspose)
@@ -312,7 +312,7 @@ let make = (_children) => {
         (ReasonReact.array(Array.map(((label, scale)) =>
           <label key=label>
             <input
-              _type="radio"
+              type_="radio"
               name="scale"
               value=label
               checked=(scale === self.state.scale)

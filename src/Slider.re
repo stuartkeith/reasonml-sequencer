@@ -13,7 +13,7 @@ type state = {
   rootRef: ref(option(Dom.element)),
   onMouseMoveDom: ref((Webapi.Dom.MouseEvent.t) => unit),
   onMouseUpDom: ref((Webapi.Dom.MouseEvent.t) => unit),
-  onMouseMoveReact: ref((ReactEventRe.Mouse.t) => unit)
+  onMouseMoveReact: ref((ReactEvent.Mouse.t) => unit)
 };
 
 let round = value => floor(value +. 0.5);
@@ -159,7 +159,7 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
     didMount: (self) => {
       self.state.onMouseMoveDom := onMouseMove(Webapi.Dom.MouseEvent.pageX, Webapi.Dom.MouseEvent.pageY, self);
       self.state.onMouseUpDom := onMouseUp(Webapi.Dom.MouseEvent.pageX, Webapi.Dom.MouseEvent.pageY, self);
-      self.state.onMouseMoveReact := onMouseMove(ReactEventRe.Mouse.pageX, ReactEventRe.Mouse.pageY, self);
+      self.state.onMouseMoveReact := onMouseMove(ReactEvent.Mouse.pageX, ReactEvent.Mouse.pageY, self);
 
       self.onUnmount(() => {
         Webapi.Dom.Document.removeMouseMoveEventListener(self.state.onMouseMoveDom^, Webapi.Dom.document);
@@ -200,15 +200,15 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
           ~height=string_of_int(cellSize) ++ "px",
           ()
         ))
-        onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEventRe.Mouse.pageX(event), ReactEventRe.Mouse.pageY(event), min, max))))
+        onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max))))
         onMouseDown=(event => {
-          if (ReactEventRe.Mouse.shiftKey(event)) {
+          if (ReactEvent.Mouse.shiftKey(event)) {
             /* add state instead for mouseMove etc? */
-            let (x, _) = getIndexAndValue(self.state, cells, ReactEventRe.Mouse.pageX(event), ReactEventRe.Mouse.pageY(event), min, max);
+            let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max);
 
             onSetLength(x);
           } else {
-            self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEventRe.Mouse.pageX(event), ReactEventRe.Mouse.pageY(event), min, max)));
+            self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max)));
           }
         })
         onMouseLeave=(_event => self.send(MouseLeave))
