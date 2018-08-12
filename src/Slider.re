@@ -236,7 +236,7 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
             className=("absolute absolute--fill " ++ (isDisabled ? "bg-moon-gray" : "bg-dark-gray"))
             style=(ReactDOMRe.Style.make(
               ~transformOrigin="0 100%",
-              ~transform="scale3d(1, " ++ string_of_float(scale) ++ ", 1)",
+              ~transform=Printf.sprintf("scale3d(1, %g, 1)", scale),
               ()
             ))
           />
@@ -244,7 +244,7 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
             className=("absolute absolute--fill bg-hot-pink o-50")
             style=(ReactDOMRe.Style.make(
               ~transformOrigin="0 100%",
-              ~transform="scale3d(1, " ++ string_of_float(previewScale) ++ ", 1)",
+              ~transform=Printf.sprintf("scale3d(1, %g, 1)", previewScale),
               ()
             ))
           />
