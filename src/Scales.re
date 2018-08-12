@@ -7,17 +7,17 @@ type steps =
 let majorScale = [|Whole, Whole, Half, Whole, Whole, Whole, Half|];
 
 let generateTranspose = (majorScaleOffset) => {
-  let result = Array.make(Array.length(majorScale) + 1, 0);
+  let result = Array.make(Array.length(majorScale), 0);
 
-  for (i in 1 to Array.length(majorScale) - 1) {
-    let value = majorScale[(i + majorScaleOffset) mod Array.length(majorScale)];
+  for (i in 1 to Array.length(result) - 1) {
+    let value = majorScale[(i - 1 + majorScaleOffset) mod Array.length(majorScale)];
 
     let increment = switch (value) {
       | Whole => 2
       | Half => 1
     };
 
-    result[i + 1] = result[i] + increment;
+    result[i] = result[i - 1] + increment;
   };
 
   result;
