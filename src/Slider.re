@@ -1,3 +1,20 @@
+/*
+
+NOTE:
+
+this component has two state refs - min and max - which mirror the
+min/max props.
+
+this is to avoid the onMouseMove and onMouseUp functions closing over the
+initial props and not being able to access updated values - instead they
+access them via state.
+
+see https://github.com/reasonml/reason-react/issues/102
+
+hopefully this can be cleaned up on a later reason-react release.
+
+*/
+
 type index = int;
 type value = int;
 type mouseOver = bool;
@@ -10,6 +27,8 @@ type mouseState =
 type state = {
   cellSize: int,
   mouseState,
+  min: ref(int),
+  max: ref(int),
   rootRef: ref(option(Dom.element)),
   onMouseMoveDom: ref((Webapi.Dom.MouseEvent.t) => unit),
   onMouseUpDom: ref((Webapi.Dom.MouseEvent.t) => unit),
@@ -20,11 +39,11 @@ let round = value => floor(value +. 0.5);
 
 let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value));
 
-let getIndexAndValue = (state, cells, pageX, pageY, min, max) => {
+let getIndexAndValue = (state, cells, pageX, pageY) => {
   let (x, y) = Utils.getOffset(state.rootRef^, pageX, pageY);
 
   let index = limit(x / state.cellSize, 0, Array.length(cells) - 1);
-  let range = float_of_int(max - min);
+  let range = float_of_int(state.max^ - state.min^);
   let deadZonePixels = 3;
 
   let ratio = if (y <= deadZonePixels) {
@@ -37,7 +56,7 @@ let getIndexAndValue = (state, cells, pageX, pageY, min, max) => {
     limit(ratio, 0., 1.);
   };
 
-  let value = min + int_of_float(round(range *. ratio));
+  let value = state.min^ + int_of_float(round(range *. ratio));
 
   (index, value);
 };
@@ -67,11 +86,11 @@ let useGlobalMouseEvents = (mouseState) => switch (mouseState) {
 
 let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetValue, ~onSetLength, _children) => {
   let onMouseMove = (getPageX, getPageY, self, event) => {
-    self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), min, max)));
+    self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event))));
   };
 
   let onMouseUp = (getPageX, getPageY, self, event) => {
-    self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), min, max)));
+    self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event))));
   };
 
   {
@@ -79,6 +98,8 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
 
     initialState: () => {
       cellSize: 48,
+      min: ref(min),
+      max: ref(max),
       mouseState: Idle,
       rootRef: ref(None),
       onMouseMoveDom: ref(noOpEventHandler),
@@ -168,6 +189,9 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
     },
 
     didUpdate: ({ oldSelf, newSelf }) => {
+      newSelf.state.min := min;
+      newSelf.state.max := max;
+
       switch (useGlobalMouseEvents(oldSelf.state.mouseState), useGlobalMouseEvents(newSelf.state.mouseState)) {
         | (false, true) => {
           Webapi.Dom.Document.addMouseMoveEventListener(newSelf.state.onMouseMoveDom^, Webapi.Dom.document);
@@ -200,15 +224,15 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
           ~height=string_of_int(cellSize) ++ "px",
           ()
         ))
-        onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max))))
+        onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event)))))
         onMouseDown=(event => {
           if (ReactEvent.Mouse.shiftKey(event)) {
             /* add state instead for mouseMove etc? */
-            let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max);
+            let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
 
             onSetLength(x);
           } else {
-            self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), min, max)));
+            self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event))));
           }
         })
         onMouseLeave=(_event => self.send(MouseLeave))
@@ -216,7 +240,7 @@ let make = (~cells, ~min, ~max, ~highlightedIndex, ~disabledAfterIndex, ~onSetVa
       >
       (ReasonReact.array(Array.mapi((i, value) => {
         let (scale, previewScale) = switch (self.state.mouseState) {
-          | Preview(index, _, backupValue) when index == i => (getScale(backupValue, min, max), getScale(value, min, max))
+          | Preview(index, _, backupValue) when index == i => (getScale(backupValue, self.state.min^, self.state.max^), getScale(value, self.state.min^, self.state.max^))
           | Idle | Preview(_) | Active(_) => (getScale(value, min, max), 0.)
         }
 
