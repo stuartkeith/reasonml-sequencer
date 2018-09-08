@@ -189,27 +189,38 @@ let make = (_children) => {
       })
       | RandomiseLaneAbsolute(laneValue) => ReasonReact.Update({
         ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.randomise(Lane.Absolute))
+        lanes: applyToLane(state.lanes, laneValue, (lane) =>
+          Lane.map((_, min, max) => min + Random.int(max - min + 1), lane)
+          |> Lane.randomLoopAfterIndex)
       })
       | RandomiseAll => ReasonReact.Update({
         ...state,
         lanes: {
-          octave: Lane.randomise(Lane.Absolute, state.lanes.octave),
-          transpose: Lane.randomise(Lane.Absolute, state.lanes.transpose),
-          velocity: Lane.randomise(Lane.Range(10, 100), state.lanes.velocity),
-          chance: Lane.randomise(Lane.Range(40, 100), state.lanes.chance),
+          octave: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.octave)
+            |> Lane.randomLoopAfterIndex,
+          transpose: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
+            |> Lane.randomLoopAfterIndex,
+          velocity: Lane.map((_, _, _) => 10 + Random.int(100 - 10 + 1), state.lanes.velocity)
+            |> Lane.randomLoopAfterIndex,
+          chance: Lane.map((_, _, _) => 40 + Random.int(100 - 40 + 1), state.lanes.chance)
+            |> Lane.randomLoopAfterIndex,
           pan: Lane.reset(state.lanes.pan),
           offset: Lane.reset(state.lanes.offset),
           length: Lane.reset(state.lanes.length)
         }
       })
+      | RandomiseLaneRelative(laneValue, delta) => ReasonReact.Update({
+        ...state,
+        lanes: applyToLane(state.lanes, laneValue, Lane.map((value, min, max) => {
+          let min = Pervasives.max(value - delta, min);
+          let max = Pervasives.min(value + delta, max);
+
+          min + Random.int(max - min + 1);
+        }))
+      })
       | ResetLane(laneValue) => ReasonReact.Update({
         ...state,
         lanes: applyToLane(state.lanes, laneValue, Lane.reset)
-      })
-      | RandomiseLaneRelative(laneValue, delta) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.randomise(Lane.Relative(delta)))
       })
       | SetScale(scale) => ReasonReact.Update({
         ...state,

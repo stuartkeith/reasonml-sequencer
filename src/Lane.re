@@ -8,11 +8,6 @@ type t = {
   loopAfterIndex: int
 };
 
-type random =
-  | Absolute
-  | Relative(int)
-  | Range(int, int);
-
 let createValues = (default) => Array.make(16, default);
 
 let empty = (default, min, max) => {
@@ -58,6 +53,11 @@ let setLoopAfterIndex = (loopAfterIndex, lane) => {
   loopAfterIndex
 };
 
+let randomLoopAfterIndex = (lane) => {
+  ...lane,
+  loopAfterIndex: Random.int(Array.length(lane.values))
+};
+
 let setValue = (index, value, setLength, lane) => {
   if (value >= lane.min && value <= lane.max) {
     lane.values[index] = value;
@@ -69,24 +69,20 @@ let setValue = (index, value, setLength, lane) => {
   };
 };
 
-let randomise = (random, lane) => {
-  let (min, max, delta) = switch (random) {
-    | Absolute => (lane.min, lane.max, lane.max)
-    | Relative(delta) => (lane.min, lane.max, delta)
-    | Range(min, max) => (Pervasives.max(lane.min, min), Pervasives.min(lane.max, max), lane.max)
-  };
-
-  for (i in 0 to Array.length(lane.values) - 1) {
-    let cellMin = Pervasives.max(min, lane.values[i] - delta);
-    let cellMax = Pervasives.min(max, lane.values[i] + delta);
-    let range = cellMax - cellMin + 1;
-
-    lane.values[i] = min + Random.int(range);
-  };
-
+let map = (fn, lane) => {
   {
     ...lane,
-    loopAfterIndex: Random.int(Array.length(lane.values))
+    values: Array.map(value => {
+      let value = fn(value, lane.min, lane.max);
+
+      if (value < lane.min) {
+        lane.min;
+      } else if (value > lane.max) {
+        lane.max;
+      } else {
+        value;
+      };
+    }, lane.values)
   };
 };
 
