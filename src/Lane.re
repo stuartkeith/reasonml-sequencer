@@ -8,16 +8,14 @@ type t = {
   loopAfterIndex: int
 };
 
-let createValues = (default) => Array.make(16, default);
-
-let empty = (default, min, max) => {
-  values: createValues(default),
+let create = (default, min, max, length) => {
+  values: Array.make(length, default),
   default,
   min,
   max,
   index: 0,
   visualIndex: 0,
-  loopAfterIndex: 7
+  loopAfterIndex: length > 2 ? (length / 2) - 1 : 0
 };
 
 let advance = (lane) => {
@@ -38,7 +36,7 @@ let restart = (lane) => {
 
 let reset = (lane) => {
   ...lane,
-  values: createValues(lane.default)
+  values: Array.map(_ => lane.default, lane.values)
 };
 
 let value = (lane) => lane.values[lane.index];

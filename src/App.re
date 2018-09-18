@@ -113,15 +113,17 @@ let make = (_children) => {
       | _ => raise(Not_found)
     };
 
+    let length = 16;
+
     {
       lanes: {
-        octave: Lane.empty(0, -2, 1),
-        transpose: Lane.empty(0, 0, Scales.max(scale)),
-        velocity: Lane.empty(100, 0, 100),
-        pan: Lane.empty(0, -100, 100),
-        chance: Lane.empty(100, 0, 100),
-        offset: Lane.empty(0, 0, 100),
-        length: Lane.empty(100, 0, 100)
+        octave: Lane.create(0, -2, 1, length),
+        transpose: Lane.create(0, 0, Scales.max(scale), length),
+        velocity: Lane.create(100, 0, 100, length),
+        pan: Lane.create(0, -100, 100, length),
+        chance: Lane.create(100, 0, 100, length),
+        offset: Lane.create(0, 0, 100, length),
+        length: Lane.create(100, 0, 100, length)
       },
       isPlaying: false,
       scale,

@@ -1,6 +1,6 @@
 type t;
 
-let empty:(int, int, int) => t;
+let create:(int, int, int, int) => t;
 let restart:(t) => t;
 let reset:(t) => t;
 let value:(t) => int;
