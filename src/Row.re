@@ -6,10 +6,11 @@ let make = (~label, ~lane:Lane.t, ~onSetValue, ~onSetLength, ~onRandomiseAbsolut
     <div className="flex items-center">
       <p className="w4">{ReasonReact.string(label)}</p>
       <div className="w1" />
-      <Slider
+      <Slider.SliderInt
         cells=Lane.values(lane)
-        min=Lane.min(lane)
-        max=Lane.max(lane)
+        toFloat=(value => float_of_int(value - Lane.min(lane)) /. float_of_int(Lane.max(lane) - Lane.min(lane)))
+        fromFloat=(value => Lane.min(lane) + int_of_float(float_of_int(Lane.max(lane) - Lane.min(lane)) *. value))
+        getLabel=string_of_int
         highlightedIndex=Lane.visualIndex(lane)
         disabledAfterIndex=Lane.loopAfterIndex(lane)
         onSetValue

@@ -292,10 +292,11 @@ let make = (_children) => {
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
-        <Slider
+        <Slider.SliderInt
           cells=[|self.state.bpm|]
-          min=20
-          max=200
+          toFloat=(value => float_of_int(value - 40) /. 160.)
+          fromFloat=(value => 40 + int_of_float(160.0 *. value))
+          getLabel=string_of_int
           highlightedIndex=0
           disabledAfterIndex=1
           onSetValue=((_, value, _) => self.send(SetBpm(value)))
