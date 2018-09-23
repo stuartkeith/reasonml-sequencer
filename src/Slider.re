@@ -11,6 +11,7 @@ let module Slider (Config: { type value }) = {
   type state = {
     cellSize: int,
     mouseState,
+    offset: ref((int, int)),
     fromFloat: ref(float => value),
     rootRef: ref(option(Dom.element)),
     onMouseMoveDom: ref((Webapi.Dom.MouseEvent.t) => unit),
@@ -18,8 +19,15 @@ let module Slider (Config: { type value }) = {
     onMouseMoveReact: ref((ReactEvent.Mouse.t) => unit)
   };
 
-  let getIndexAndValue = (state, cells, pageX, pageY, fromFloat) => {
-    let (x, y) = Utils.getOffset(state.rootRef^, pageX, pageY);
+  let getIndexAndValue = (state, cells, pageX, pageY, fromFloat, getOffset) => {
+    if (getOffset) {
+      state.offset := Utils.getOffset(state.rootRef^, 0, 0);
+    };
+
+    let (offsetX, offsetY) = state.offset^;
+
+    let x = pageX + offsetX;
+    let y = pageY + offsetY;
 
     let index = Utils.limit(x / state.cellSize, 0, Array.length(cells) - 1);
     let deadZonePixels = 3;
@@ -64,11 +72,11 @@ let module Slider (Config: { type value }) = {
 
   let make = (~cells, ~highlightedIndex, ~disabledAfterIndex, ~toFloat:(value => float), ~fromFloat:(float => value), ~getLabel:(value => string), ~onSetValue, ~onSetLength, _children) => {
     let onMouseMove = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^)));
+      self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^, false)));
     };
 
     let onMouseUp = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^)));
+      self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^, false)));
     };
 
     {
@@ -77,6 +85,7 @@ let module Slider (Config: { type value }) = {
       initialState: () => {
         cellSize: 48,
         mouseState: Idle,
+        offset: ref((0, 0)),
         rootRef: ref(None),
         fromFloat: ref(fromFloat),
         onMouseMoveDom: ref(noOpEventHandler),
@@ -200,15 +209,15 @@ let module Slider (Config: { type value }) = {
             ~height=string_of_int(cellSize) ++ "px",
             ()
           ))
-          onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat))))
+          onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, true))))
           onMouseDown=(event => {
             if (ReactEvent.Mouse.shiftKey(event)) {
               /* add state instead for mouseMove etc? */
-              let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat);
+              let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, false);
 
               onSetLength(x);
             } else {
-              self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat)));
+              self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, false)));
             }
           })
           onMouseLeave=(_event => self.send(MouseLeave))
