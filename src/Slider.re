@@ -11,18 +11,17 @@ let module Slider (Config: { type value }) = {
   type state = {
     cellSize: int,
     mouseState,
+    fromFloat: ref(float => value),
     rootRef: ref(option(Dom.element)),
     onMouseMoveDom: ref((Webapi.Dom.MouseEvent.t) => unit),
     onMouseUpDom: ref((Webapi.Dom.MouseEvent.t) => unit),
     onMouseMoveReact: ref((ReactEvent.Mouse.t) => unit)
   };
 
-  let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value));
-
   let getIndexAndValue = (state, cells, pageX, pageY, fromFloat) => {
     let (x, y) = Utils.getOffset(state.rootRef^, pageX, pageY);
 
-    let index = limit(x / state.cellSize, 0, Array.length(cells) - 1);
+    let index = Utils.limit(x / state.cellSize, 0, Array.length(cells) - 1);
     let deadZonePixels = 3;
 
     let ratio = if (y <= deadZonePixels) {
@@ -32,7 +31,7 @@ let module Slider (Config: { type value }) = {
     } else {
       let ratio = 1. -. (float_of_int(y) /. float_of_int(state.cellSize));
 
-      limit(ratio, 0., 1.);
+      Utils.limit(ratio, 0., 1.);
     };
 
     let value = fromFloat(ratio);
@@ -65,11 +64,11 @@ let module Slider (Config: { type value }) = {
 
   let make = (~cells, ~highlightedIndex, ~disabledAfterIndex, ~toFloat:(value => float), ~fromFloat:(float => value), ~getLabel:(value => string), ~onSetValue, ~onSetLength, _children) => {
     let onMouseMove = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), fromFloat)));
+      self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^)));
     };
 
     let onMouseUp = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), fromFloat)));
+      self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^)));
     };
 
     {
@@ -79,6 +78,7 @@ let module Slider (Config: { type value }) = {
         cellSize: 48,
         mouseState: Idle,
         rootRef: ref(None),
+        fromFloat: ref(fromFloat),
         onMouseMoveDom: ref(noOpEventHandler),
         onMouseUpDom: ref(noOpEventHandler),
         onMouseMoveReact: ref(noOpEventHandler)
@@ -166,6 +166,8 @@ let module Slider (Config: { type value }) = {
       },
 
       didUpdate: ({ oldSelf, newSelf }) => {
+        newSelf.state.fromFloat := fromFloat;
+
         switch (useGlobalMouseEvents(oldSelf.state.mouseState), useGlobalMouseEvents(newSelf.state.mouseState)) {
           | (false, true) => {
             Webapi.Dom.Document.addMouseMoveEventListener(newSelf.state.onMouseMoveDom^, Webapi.Dom.document);

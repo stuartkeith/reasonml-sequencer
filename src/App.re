@@ -26,28 +26,18 @@ let keys = [|
   "11"
 |];
 
-type laneValue =
-  | Octave
-  | Transpose
-  | Velocity
-  | Pan
-  | Chance
-  | Offset
-  | Length;
-
 type lanes = {
-  octave: Lane.t,
-  transpose: Lane.t,
-  velocity: Lane.t,
-  pan: Lane.t,
-  chance: Lane.t,
-  offset: Lane.t,
-  length: Lane.t
+  octave: Lane.t(int, unit),
+  transpose: Lane.t(int, Scales.t),
+  velocity: Lane.t(float, unit),
+  pan: Lane.t(float, unit),
+  chance: Lane.t(float, unit),
+  offset: Lane.t(float, unit),
+  length: Lane.t(float, unit)
 };
 
 type state = {
   lanes,
-  scale: Scales.t,
   globalTranspose: int,
   isPlaying: bool,
   bpm: int,
@@ -57,46 +47,59 @@ type state = {
 };
 
 type arrayIndex = int;
-type arrayValue = int;
+
+type laneAction('a) =
+  | SetLaneValue(arrayIndex, 'a, bool)
+  | SetLoopAfterIndex(arrayIndex)
+  | RandomiseLaneAbsolute
+  | RandomiseLaneRelative('a)
+  | ResetLane;
 
 type action =
   | Playback(float, float)
   | AdvancePlayback
   | RestartLanes
-  | SetLoopAfterIndex(laneValue, arrayIndex)
   | SetPlayback(bool)
-  | SetLaneValue(laneValue, arrayIndex, arrayValue, bool)
-  | RandomiseLaneAbsolute(laneValue)
-  | RandomiseLaneRelative(laneValue, int)
   | RandomiseAll
-  | ResetLane(laneValue)
   | SetScale(Scales.t)
   | SetGlobalTranspose(int)
-  | SetBpm(int);
+  | SetBpm(int)
+  | Octave(laneAction(int))
+  | Transpose(laneAction(int))
+  | Velocity(laneAction(float))
+  | Pan(laneAction(float))
+  | Chance(laneAction(float))
+  | Offset(laneAction(float))
+  | Length(laneAction(float));
 
 let component = ReasonReact.reducerComponent("App");
 
-/* apply a function to all lanes */
-let applyToAllLanes = (state, fn) => {
-  octave: fn(state.octave),
-  transpose: fn(state.transpose),
-  velocity: fn(state.velocity),
-  pan: fn(state.pan),
-  chance: fn(state.chance),
-  offset: fn(state.offset),
-  length: fn(state.length)
+/* put explanatory link here */
+type fnWrap = {
+  fnWrap: 'a 'b . Lane.t('a, 'b) => Lane.t('a, 'b)
 };
 
-/* apply a function to one lane */
-let applyToLane = (state, laneValue, fn) => switch (laneValue) {
-  | Octave => { ...state, octave: fn(state.octave) }
-  | Transpose => { ...state, transpose: fn(state.transpose) }
-  | Velocity => { ...state, velocity: fn(state.velocity) }
-  | Pan => { ...state, pan: fn(state.pan) }
-  | Chance => { ...state, chance: fn(state.chance) }
-  | Offset => { ...state, offset: fn(state.offset) }
-  | Length => { ...state, length: fn(state.length) }
+let applyToAllLanes = (state, { fnWrap }) => {
+  octave: fnWrap(state.octave),
+  transpose: fnWrap(state.transpose),
+  velocity: fnWrap(state.velocity),
+  pan: fnWrap(state.pan),
+  chance: fnWrap(state.chance),
+  offset: fnWrap(state.offset),
+  length: fnWrap(state.length)
 };
+
+let handleLaneAction = (laneAction, lane) => {
+  switch (laneAction) {
+    | SetLaneValue(index, value, setLength) => Lane.setValue(index, value, setLength, lane)
+    | SetLoopAfterIndex(index) => Lane.setLoopAfterIndex(index, lane)
+    | RandomiseLaneAbsolute => Lane.randomAbsolute(lane)
+    | RandomiseLaneRelative(delta) => Lane.randomRelative(delta, lane)
+    | ResetLane => Lane.reset(lane)
+  };
+};
+
+let bpmParameter = Parameter.createInt(120, 40, 200);
 
 let make = (_children) => {
   ...component,
@@ -117,16 +120,15 @@ let make = (_children) => {
 
     {
       lanes: {
-        octave: Lane.create(0, -2, 1, length),
-        transpose: Lane.create(0, 0, Scales.max(scale), length),
-        velocity: Lane.create(100, 0, 100, length),
-        pan: Lane.create(0, -100, 100, length),
-        chance: Lane.create(100, 0, 100, length),
-        offset: Lane.create(0, 0, 100, length),
-        length: Lane.create(100, 0, 100, length)
+        octave: Lane.create(Parameter.createInt(0, -2, 1), length),
+        transpose: Lane.create(Parameter.createScale(scale), length),
+        velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length),
+        pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), length),
+        chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length),
+        offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), length),
+        length: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length)
       },
       isPlaying: false,
-      scale,
       bpm: 120,
       globalTranspose: 0,
       scheduler: ref(None),
@@ -139,10 +141,10 @@ let make = (_children) => {
     switch (action) {
       | RestartLanes => ReasonReact.Update({
         ...state,
-        lanes: applyToAllLanes(state.lanes, Lane.restart)
+        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) })
       })
       | Playback(beatTime, _beatLength) => ReasonReact.SideEffects((self) => {
-        let chance = Random.int(101);
+        let chance = Random.float(1.);
 
         if (chance < Lane.value(self.state.lanes.chance)) {
           let octave = Lane.value(self.state.lanes.octave);
@@ -152,17 +154,13 @@ let make = (_children) => {
           let offset = Lane.value(self.state.lanes.offset);
           let length = Lane.value(self.state.lanes.length);
 
-          let transposeScaled = Scales.value(transpose, self.state.scale);
-
+          let scale = Lane.getParameter(self.state.lanes.transpose).value;
+          let transposeScaled = Scales.value(transpose, scale);
           let note = self.state.globalTranspose + (octave * 12) + transposeScaled;
-          let gain = float_of_int(velocity) /. 100.;
-          let panValue = float_of_int(pan) /. 100.;
-          let offsetValue = float_of_int(offset) /. 100.;
-          let durationValue = float_of_int(length) /. 100.;
 
           switch(state.soundBuffer^) {
             | None => ()
-            | Some(buffer) => WebAudio.playBuffer(buffer, note, gain, panValue, beatTime, offsetValue, durationValue)
+            | Some(buffer) => WebAudio.playBuffer(buffer, note, velocity, pan, beatTime, offset, length)
           };
         };
 
@@ -175,25 +173,11 @@ let make = (_children) => {
       })
       | AdvancePlayback => ReasonReact.Update({
         ...state,
-        lanes: applyToAllLanes(state.lanes, Lane.advance)
+        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.advance(lane) })
       })
       | SetPlayback(value) => ReasonReact.Update({
         ...state,
         isPlaying: value
-      })
-      | SetLoopAfterIndex(laneValue, index) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.setLoopAfterIndex(index))
-      })
-      | SetLaneValue(laneValue, index, value, setLength) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.setValue(index, value, setLength))
-      })
-      | RandomiseLaneAbsolute(laneValue) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, (lane) =>
-          Lane.map((_, min, max) => min + Random.int(max - min + 1), lane)
-          |> Lane.randomLoopAfterIndex)
       })
       | RandomiseAll => ReasonReact.Update({
         ...state,
@@ -202,34 +186,20 @@ let make = (_children) => {
             |> Lane.randomLoopAfterIndex,
           transpose: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
             |> Lane.randomLoopAfterIndex,
-          velocity: Lane.map((_, _, _) => 10 + Random.int(100 - 10 + 1), state.lanes.velocity)
+          velocity: Lane.map((_, _, _) => 0.9 +. Random.float(0.1), state.lanes.velocity)
             |> Lane.randomLoopAfterIndex,
-          chance: Lane.map((_, _, _) => 40 + Random.int(100 - 40 + 1), state.lanes.chance)
+          chance: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.chance)
             |> Lane.randomLoopAfterIndex,
           pan: Lane.reset(state.lanes.pan),
           offset: Lane.reset(state.lanes.offset),
           length: Lane.reset(state.lanes.length)
         }
       })
-      | RandomiseLaneRelative(laneValue, delta) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.map((value, min, max) => {
-          let min = Pervasives.max(value - delta, min);
-          let max = Pervasives.min(value + delta, max);
-
-          min + Random.int(max - min + 1);
-        }))
-      })
-      | ResetLane(laneValue) => ReasonReact.Update({
-        ...state,
-        lanes: applyToLane(state.lanes, laneValue, Lane.reset)
-      })
       | SetScale(scale) => ReasonReact.Update({
         ...state,
-        scale,
         lanes: {
           ...state.lanes,
-          transpose: Lane.setMax(Scales.max(scale), state.lanes.transpose),
+          transpose: Lane.setParameter(Parameter.createScale(scale), state.lanes.transpose),
         }
       })
       | SetGlobalTranspose(globalTranspose) => ReasonReact.Update({
@@ -239,7 +209,56 @@ let make = (_children) => {
       | SetBpm(bpm) => ReasonReact.Update({
         ...state,
         bpm
-      });
+      })
+      | Octave(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          octave: handleLaneAction(laneAction, state.lanes.octave)
+        }
+      })
+      | Transpose(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          transpose: handleLaneAction(laneAction, state.lanes.transpose)
+        }
+      })
+      | Velocity(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          velocity: handleLaneAction(laneAction, state.lanes.velocity)
+        }
+      })
+      | Pan(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          pan: handleLaneAction(laneAction, state.lanes.pan)
+        }
+      })
+      | Chance(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          chance: handleLaneAction(laneAction, state.lanes.chance)
+        }
+      })
+      | Offset(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          offset: handleLaneAction(laneAction, state.lanes.offset)
+        }
+      })
+      | Length(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          length: handleLaneAction(laneAction, state.lanes.length)
+        }
+      })
     },
 
   didMount: (self) => {
@@ -289,6 +308,8 @@ let make = (_children) => {
   },
 
   render: self => {
+    let selectedScale = Lane.getParameter(self.state.lanes.transpose).value;
+
     <div className="ma4">
       <div>
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
@@ -296,9 +317,9 @@ let make = (_children) => {
         </button>
         <Slider.SliderInt
           cells=[|self.state.bpm|]
-          toFloat=(value => float_of_int(value - 40) /. 160.)
-          fromFloat=(value => 40 + int_of_float(160.0 *. value))
-          getLabel=string_of_int
+          toFloat=bpmParameter.toFloat
+          fromFloat=bpmParameter.fromFloat
+          getLabel=bpmParameter.toString
           highlightedIndex=0
           disabledAfterIndex=1
           onSetValue=((_, value, _) => self.send(SetBpm(value)))
@@ -329,7 +350,7 @@ let make = (_children) => {
               type_="radio"
               name="scale"
               value=label
-              checked=(scale === self.state.scale)
+              checked=(scale === selectedScale)
               onChange=((_event) => self.send(SetScale(scale)))
             />
             (ReasonReact.string(label))
@@ -339,73 +360,129 @@ let make = (_children) => {
       <div className="h1" />
       <Row
         label="Octave"
-        lane=self.state.lanes.octave
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Octave, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Octave, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Octave)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Octave, 1)))
-        onResetLane=(() => self.send(ResetLane(Octave)))
-      />
+        onRandomiseAbsolute=(() => self.send(Octave(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Octave(RandomiseLaneRelative(1))))
+        onResetLane=(() => self.send(Octave(ResetLane)))
+      >
+        ...<Slider.SliderInt
+          cells=Lane.values(self.state.lanes.octave)
+          toFloat=Lane.getParameter(self.state.lanes.octave).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.octave).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.octave).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.octave)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.octave)
+          onSetValue=((index, value, setLength) => self.send(Octave(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Octave(SetLoopAfterIndex(index))))
+        />
+      </Row>
       <div className="h1" />
       <Row
         label="Transpose"
-        lane=self.state.lanes.transpose
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Transpose, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Transpose, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Transpose)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Transpose, 3)))
-        onResetLane=(() => self.send(ResetLane(Transpose)))
+        onRandomiseAbsolute=(() => self.send(Transpose(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Transpose(RandomiseLaneRelative(3))))
+        onResetLane=(() => self.send(Transpose(ResetLane)))
+      >
+        ...<Slider.SliderInt
+        cells=Lane.values(self.state.lanes.transpose)
+        toFloat=Lane.getParameter(self.state.lanes.transpose).toFloat
+        fromFloat=Lane.getParameter(self.state.lanes.transpose).fromFloat
+        getLabel=Lane.getParameter(self.state.lanes.transpose).toString
+        highlightedIndex=Lane.visualIndex(self.state.lanes.transpose)
+        disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.transpose)
+        onSetValue=((index, value, setLength) => self.send(Transpose(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Transpose(SetLoopAfterIndex(index))))
       />
+      </Row>
       <div className="h1" />
       <Row
         label="Velocity"
-        lane=self.state.lanes.velocity
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Velocity, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Velocity, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Velocity)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Velocity, 20)))
-        onResetLane=(() => self.send(ResetLane(Velocity)))
-      />
+        onRandomiseAbsolute=(() => self.send(Velocity(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Velocity(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Velocity(ResetLane)))
+      >
+        ...<Slider.SliderFloat
+          cells=Lane.values(self.state.lanes.velocity)
+          toFloat=Lane.getParameter(self.state.lanes.velocity).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.velocity).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.velocity).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.velocity)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.velocity)
+          onSetValue=((index, value, setLength) => self.send(Velocity(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Velocity(SetLoopAfterIndex(index))))
+        />
+      </Row>
       <div className="h1" />
       <Row
         label="Pan"
-        lane=self.state.lanes.pan
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Pan, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Pan, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Pan)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Pan, 20)))
-        onResetLane=(() => self.send(ResetLane(Pan)))
-      />
+        onRandomiseAbsolute=(() => self.send(Pan(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Pan(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Pan(ResetLane)))
+      >
+        ...<Slider.SliderFloat
+          cells=Lane.values(self.state.lanes.pan)
+          toFloat=Lane.getParameter(self.state.lanes.pan).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.pan).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.pan).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.pan)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.pan)
+          onSetValue=((index, value, setLength) => self.send(Pan(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Pan(SetLoopAfterIndex(index))))
+        />
+      </Row>
       <div className="h1" />
       <Row
         label="Chance"
-        lane=self.state.lanes.chance
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Chance, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Chance, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Chance)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Chance, 10)))
-        onResetLane=(() => self.send(ResetLane(Chance)))
-      />
+        onRandomiseAbsolute=(() => self.send(Chance(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Chance(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Chance(ResetLane)))
+      >
+        ...<Slider.SliderFloat
+          cells=Lane.values(self.state.lanes.chance)
+          toFloat=Lane.getParameter(self.state.lanes.chance).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.chance).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.chance).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.chance)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.chance)
+          onSetValue=((index, value, setLength) => self.send(Chance(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Chance(SetLoopAfterIndex(index))))
+        />
+      </Row>
       <div className="h1" />
       <Row
         label="Offset"
-        lane=self.state.lanes.offset
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Offset, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Offset, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Offset)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Offset, 10)))
-        onResetLane=(() => self.send(ResetLane(Offset)))
-      />
+        onRandomiseAbsolute=(() => self.send(Offset(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Offset(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Offset(ResetLane)))
+      >
+        ...<Slider.SliderFloat
+          cells=Lane.values(self.state.lanes.offset)
+          toFloat=Lane.getParameter(self.state.lanes.offset).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.offset).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.offset).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.offset)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.offset)
+          onSetValue=((index, value, setLength) => self.send(Offset(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Offset(SetLoopAfterIndex(index))))
+        />
+      </Row>
       <div className="h1" />
       <Row
         label="Length"
-        lane=self.state.lanes.length
-        onSetValue=((index, value, setLength) => self.send(SetLaneValue(Length, index, value, setLength)))
-        onSetLength=((index) => self.send(SetLoopAfterIndex(Length, index)))
-        onRandomiseAbsolute=(() => self.send(RandomiseLaneAbsolute(Length)))
-        onRandomiseRelative=(() => self.send(RandomiseLaneRelative(Length, 10)))
-        onResetLane=(() => self.send(ResetLane(Length)))
-      />
+        onRandomiseAbsolute=(() => self.send(Length(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Length(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Length(ResetLane)))
+      >
+        ...<Slider.SliderFloat
+          cells=Lane.values(self.state.lanes.length)
+          toFloat=Lane.getParameter(self.state.lanes.length).toFloat
+          fromFloat=Lane.getParameter(self.state.lanes.length).fromFloat
+          getLabel=Lane.getParameter(self.state.lanes.length).toString
+          highlightedIndex=Lane.visualIndex(self.state.lanes.length)
+          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.length)
+          onSetValue=((index, value, setLength) => self.send(Length(SetLaneValue(index, value, setLength))))
+          onSetLength=((index) => self.send(Length(SetLoopAfterIndex(index))))
+        />
+      </Row>
     </div>
   },
 };

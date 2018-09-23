@@ -1,18 +1,14 @@
-type t = {
-  values: array(int),
-  default: int,
-  min: int,
-  max: int,
+type t('a, 'b) = {
+  parameter: Parameter.t('a, 'b),
+  values: array('a),
   index: int,
   visualIndex: int,
   loopAfterIndex: int
 };
 
-let create = (default, min, max, length) => {
-  values: Array.make(length, default),
-  default,
-  min,
-  max,
+let create = (parameter, length) => {
+  parameter,
+  values: Array.make(length, parameter.default),
   index: 0,
   visualIndex: 0,
   loopAfterIndex: length > 2 ? (length / 2) - 1 : 0
@@ -36,14 +32,12 @@ let restart = (lane) => {
 
 let reset = (lane) => {
   ...lane,
-  values: Array.map(_ => lane.default, lane.values)
+  values: Array.map(_ => lane.parameter.default, lane.values)
 };
 
 let value = (lane) => lane.values[lane.index];
 let loopAfterIndex = (lane) => lane.loopAfterIndex;
 let visualIndex = (lane) => lane.visualIndex;
-let min = (lane) => lane.min;
-let max = (lane) => lane.max;
 let values = (lane) => lane.values;
 
 let setLoopAfterIndex = (loopAfterIndex, lane) => {
@@ -57,7 +51,7 @@ let randomLoopAfterIndex = (lane) => {
 };
 
 let setValue = (index, value, setLength, lane) => {
-  if (value >= lane.min && value <= lane.max) {
+  if (value >= lane.parameter.min && value <= lane.parameter.max) {
     lane.values[index] = value;
   };
 
@@ -71,12 +65,12 @@ let map = (fn, lane) => {
   {
     ...lane,
     values: Array.map(value => {
-      let value = fn(value, lane.min, lane.max);
+      let value = fn(value, lane.parameter.min, lane.parameter.max);
 
-      if (value < lane.min) {
-        lane.min;
-      } else if (value > lane.max) {
-        lane.max;
+      if (value < lane.parameter.min) {
+        lane.parameter.min;
+      } else if (value > lane.parameter.max) {
+        lane.parameter.max;
       } else {
         value;
       };
@@ -84,13 +78,25 @@ let map = (fn, lane) => {
   };
 };
 
-let setMax = (max, lane) => {
-  for (i in 0 to Array.length(lane.values) - 1) {
-    lane.values[i] = Pervasives.min(lane.values[i], max);
+let randomAbsolute = (lane) => {
+  ...lane,
+  values: Array.map(_ => lane.parameter.randomValue(), lane.values)
+};
+
+let randomRelative = (delta, lane) => {
+  ...lane,
+  values: Array.map(value => lane.parameter.randomValueRelative(delta, value), lane.values)
+};
+
+let getParameter = (lane) => {
+  lane.parameter;
+};
+
+let setParameter = (parameter, lane) => {
+  let newLane = {
+    ...lane,
+    parameter
   };
 
-  {
-    ...lane,
-    max
-  };
+  map((x, _, _) => x, newLane);
 };
