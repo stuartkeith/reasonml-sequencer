@@ -358,131 +358,75 @@ let make = (_children) => {
         , scales)))
       </div>
       <div className="h1" />
-      <Row
+      <Row.RowInt
         label="Octave"
+        lane=self.state.lanes.octave
         onRandomiseAbsolute=(() => self.send(Octave(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Octave(RandomiseLaneRelative(1))))
         onResetLane=(() => self.send(Octave(ResetLane)))
-      >
-        ...<Slider.SliderInt
-          cells=Lane.values(self.state.lanes.octave)
-          toFloat=Lane.getParameter(self.state.lanes.octave).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.octave).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.octave).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.octave)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.octave)
-          onSetValue=((index, value, setLength) => self.send(Octave(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Octave(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Octave(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Octave(SetLoopAfterIndex(index))))
+      />
       <div className="h1" />
-      <Row
+      <Row.RowInt
         label="Transpose"
+        lane=self.state.lanes.transpose
         onRandomiseAbsolute=(() => self.send(Transpose(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Transpose(RandomiseLaneRelative(3))))
         onResetLane=(() => self.send(Transpose(ResetLane)))
-      >
-        ...<Slider.SliderInt
-        cells=Lane.values(self.state.lanes.transpose)
-        toFloat=Lane.getParameter(self.state.lanes.transpose).toFloat
-        fromFloat=Lane.getParameter(self.state.lanes.transpose).fromFloat
-        getLabel=Lane.getParameter(self.state.lanes.transpose).toString
-        highlightedIndex=Lane.visualIndex(self.state.lanes.transpose)
-        disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.transpose)
         onSetValue=((index, value, setLength) => self.send(Transpose(SetLaneValue(index, value, setLength))))
         onSetLength=((index) => self.send(Transpose(SetLoopAfterIndex(index))))
       />
-      </Row>
       <div className="h1" />
-      <Row
+      <Row.RowFloat
         label="Velocity"
+        lane=self.state.lanes.velocity
         onRandomiseAbsolute=(() => self.send(Velocity(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Velocity(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Velocity(ResetLane)))
-      >
-        ...<Slider.SliderFloat
-          cells=Lane.values(self.state.lanes.velocity)
-          toFloat=Lane.getParameter(self.state.lanes.velocity).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.velocity).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.velocity).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.velocity)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.velocity)
-          onSetValue=((index, value, setLength) => self.send(Velocity(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Velocity(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Velocity(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Velocity(SetLoopAfterIndex(index))))
+      />
       <div className="h1" />
-      <Row
+      <Row.RowFloat
         label="Pan"
+        lane=self.state.lanes.pan
         onRandomiseAbsolute=(() => self.send(Pan(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Pan(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Pan(ResetLane)))
-      >
-        ...<Slider.SliderFloat
-          cells=Lane.values(self.state.lanes.pan)
-          toFloat=Lane.getParameter(self.state.lanes.pan).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.pan).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.pan).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.pan)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.pan)
-          onSetValue=((index, value, setLength) => self.send(Pan(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Pan(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Pan(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Pan(SetLoopAfterIndex(index))))
+      />
       <div className="h1" />
-      <Row
+      <Row.RowFloat
         label="Chance"
+        lane=self.state.lanes.chance
         onRandomiseAbsolute=(() => self.send(Chance(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Chance(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Chance(ResetLane)))
-      >
-        ...<Slider.SliderFloat
-          cells=Lane.values(self.state.lanes.chance)
-          toFloat=Lane.getParameter(self.state.lanes.chance).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.chance).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.chance).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.chance)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.chance)
-          onSetValue=((index, value, setLength) => self.send(Chance(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Chance(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Chance(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Chance(SetLoopAfterIndex(index))))
+      />
       <div className="h1" />
-      <Row
+      <Row.RowFloat
         label="Offset"
+        lane=self.state.lanes.offset
         onRandomiseAbsolute=(() => self.send(Offset(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Offset(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Offset(ResetLane)))
-      >
-        ...<Slider.SliderFloat
-          cells=Lane.values(self.state.lanes.offset)
-          toFloat=Lane.getParameter(self.state.lanes.offset).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.offset).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.offset).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.offset)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.offset)
-          onSetValue=((index, value, setLength) => self.send(Offset(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Offset(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Offset(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Offset(SetLoopAfterIndex(index))))
+      />
       <div className="h1" />
-      <Row
+      <Row.RowFloat
         label="Length"
+        lane=self.state.lanes.length
         onRandomiseAbsolute=(() => self.send(Length(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Length(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Length(ResetLane)))
-      >
-        ...<Slider.SliderFloat
-          cells=Lane.values(self.state.lanes.length)
-          toFloat=Lane.getParameter(self.state.lanes.length).toFloat
-          fromFloat=Lane.getParameter(self.state.lanes.length).fromFloat
-          getLabel=Lane.getParameter(self.state.lanes.length).toString
-          highlightedIndex=Lane.visualIndex(self.state.lanes.length)
-          disabledAfterIndex=Lane.loopAfterIndex(self.state.lanes.length)
-          onSetValue=((index, value, setLength) => self.send(Length(SetLaneValue(index, value, setLength))))
-          onSetLength=((index) => self.send(Length(SetLoopAfterIndex(index))))
-        />
-      </Row>
+        onSetValue=((index, value, setLength) => self.send(Length(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Length(SetLoopAfterIndex(index))))
+      />
     </div>
   },
 };
