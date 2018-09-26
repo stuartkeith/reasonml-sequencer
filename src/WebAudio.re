@@ -112,7 +112,7 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~
 
     const lowpass = audioContext.createBiquadFilter();
     lowpass.type = 'lowpass';
-    lowpass.frequency.value = (22000 - 200) + (22000 * filter);
+    lowpass.frequency.value = 200 + ((22000 - 200) * filter);
 
     const gainNode = audioContext.createGain();
     gainNode.gain.value = gain;
