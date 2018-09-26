@@ -1,6 +1,3 @@
-[@bs.module] external sound : string = "./assets/electric-piano.mp3";
-[@bs.module] external hihat : string = "./assets/hihat.mp3";
-
 let scales = [|
   ("Chromatic", Scales.Chromatic),
   ("Major", Scales.Major),
@@ -33,7 +30,8 @@ type lanes = {
   pan: Lane.t(float, unit),
   chance: Lane.t(float, unit),
   offset: Lane.t(float, unit),
-  length: Lane.t(float, unit)
+  length: Lane.t(float, unit),
+  filter: Lane.t(float, unit)
 };
 
 type state = {
@@ -41,9 +39,7 @@ type state = {
   globalTranspose: int,
   isPlaying: bool,
   bpm: int,
-  scheduler: ref(option(WebAudio.schedule)),
-  soundBuffer: ref(option(WebAudio.buffer)),
-  hihatBuffer: ref(option(WebAudio.buffer))
+  scheduler: ref(option(WebAudio.schedule))
 };
 
 type arrayIndex = int;
@@ -70,7 +66,8 @@ type action =
   | Pan(laneAction(float))
   | Chance(laneAction(float))
   | Offset(laneAction(float))
-  | Length(laneAction(float));
+  | Length(laneAction(float))
+  | Filter(laneAction(float));
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -86,7 +83,8 @@ let applyToAllLanes = (state, { fnWrap }) => {
   pan: fnWrap(state.pan),
   chance: fnWrap(state.chance),
   offset: fnWrap(state.offset),
-  length: fnWrap(state.length)
+  length: fnWrap(state.length),
+  filter: fnWrap(state.filter)
 };
 
 let handleLaneAction = (laneAction, lane) => {
@@ -126,14 +124,13 @@ let make = (_children) => {
         pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), length),
         chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length),
         offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), length),
-        length: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length)
+        length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), length),
+        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), length)
       },
       isPlaying: false,
       bpm: 120,
       globalTranspose: 0,
-      scheduler: ref(None),
-      soundBuffer: ref(None),
-      hihatBuffer: ref(None)
+      scheduler: ref(None)
     }
   },
 
@@ -143,7 +140,7 @@ let make = (_children) => {
         ...state,
         lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) })
       })
-      | Playback(beatTime, _beatLength) => ReasonReact.SideEffects((self) => {
+      | Playback(beatTime, beatLength) => ReasonReact.SideEffects((self) => {
         let chance = Random.float(1.);
 
         if (chance < Lane.value(self.state.lanes.chance)) {
@@ -153,21 +150,16 @@ let make = (_children) => {
           let pan = Lane.value(self.state.lanes.pan);
           let offset = Lane.value(self.state.lanes.offset);
           let length = Lane.value(self.state.lanes.length);
+          let filter = Lane.value(self.state.lanes.filter);
 
           let scale = Lane.getParameter(self.state.lanes.transpose).value;
           let transposeScaled = Scales.value(transpose, scale);
           let note = self.state.globalTranspose + (octave * 12) + transposeScaled;
 
-          switch(state.soundBuffer^) {
-            | None => ()
-            | Some(buffer) => WebAudio.playBuffer(buffer, note, velocity, pan, beatTime, offset, length)
-          };
+          WebAudio.playSynth(~note, ~gain=velocity, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
         };
 
-        switch(state.hihatBuffer^) {
-          | None => ()
-          | Some(buffer) => WebAudio.playBuffer(buffer, 0, 1. -. Random.float(0.5), 0., beatTime, 0., 1.);
-        };
+        WebAudio.playHihat(~start=beatTime);
 
         self.send(AdvancePlayback);
       })
@@ -192,7 +184,9 @@ let make = (_children) => {
             |> Lane.randomLoopAfterIndex,
           pan: Lane.reset(state.lanes.pan),
           offset: Lane.reset(state.lanes.offset),
-          length: Lane.reset(state.lanes.length)
+          length: Lane.reset(state.lanes.length),
+          filter: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
+            |> Lane.randomLoopAfterIndex
         }
       })
       | SetScale(scale) => ReasonReact.Update({
@@ -259,18 +253,17 @@ let make = (_children) => {
           length: handleLaneAction(laneAction, state.lanes.length)
         }
       })
+      | Filter(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          filter: handleLaneAction(laneAction, state.lanes.filter)
+        }
+      })
     },
 
   didMount: (self) => {
     self.send(RandomiseAll);
-
-    WebAudio.loadSound(sound, (buffer) => {
-      self.state.soundBuffer := Some(buffer);
-    });
-
-    WebAudio.loadSound(hihat, (buffer) => {
-      self.state.hihatBuffer := Some(buffer);
-    });
 
     let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
       self.send(Playback(beatTime, beatLength));
@@ -426,6 +419,16 @@ let make = (_children) => {
         onResetLane=(() => self.send(Length(ResetLane)))
         onSetValue=((index, value, setLength) => self.send(Length(SetLaneValue(index, value, setLength))))
         onSetLength=((index) => self.send(Length(SetLoopAfterIndex(index))))
+      />
+      <div className="h1" />
+      <Row.RowFloat
+        label="Filter"
+        lane=self.state.lanes.filter
+        onRandomiseAbsolute=(() => self.send(Filter(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Filter(RandomiseLaneRelative(0.2))))
+        onResetLane=(() => self.send(Filter(ResetLane)))
+        onSetValue=((index, value, setLength) => self.send(Filter(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Filter(SetLoopAfterIndex(index))))
       />
     </div>
   },
