@@ -184,7 +184,8 @@ let make = (_children) => {
             |> Lane.randomLoopAfterIndex,
           pan: Lane.reset(state.lanes.pan),
           offset: Lane.reset(state.lanes.offset),
-          length: Lane.reset(state.lanes.length),
+          length: Lane.map((_, _, _) => 0.2 +. Random.float(1.4), state.lanes.length)
+            |> Lane.randomLoopAfterIndex,
           filter: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
             |> Lane.randomLoopAfterIndex
         }
