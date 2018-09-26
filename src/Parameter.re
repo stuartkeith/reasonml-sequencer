@@ -32,7 +32,7 @@ let createFloat = (default, min, max) => {
   min,
   max,
   value: (),
-  randomValue: () => Random.float(1.),
+  randomValue: () => min +. Random.float(max -. min),
   randomValueRelative: (delta, value) => {
     let deltaMin = Pervasives.max(min, value -. delta);
     let deltaMax = Pervasives.min(max, value +. delta);
