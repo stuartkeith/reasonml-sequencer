@@ -93,7 +93,7 @@ let handleLaneAction = (laneAction, lane) => {
   switch (laneAction) {
     | SetLaneValue(index, value, setLength) => Lane.setValue(index, value, setLength, lane)
     | SetLoopAfterIndex(index) => Lane.setLoopAfterIndex(index, lane)
-    | RandomiseLaneAbsolute => Lane.randomAbsolute(lane)
+    | RandomiseLaneAbsolute => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex
     | RandomiseLaneRelative(delta) => Lane.randomRelative(delta, lane)
     | ResetLane => Lane.reset(lane)
   };
