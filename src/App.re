@@ -9,23 +9,10 @@ let scales = [|
   ("Locrian", Scales.Locrian)
 |];
 
-let keys = [|
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11"
-|];
-
 type lanes = {
   octave: Lane.t(int, unit),
-  transpose: Lane.t(int, Scales.t),
+  transpose: Lane.t(int, unit),
+  pitch: Lane.t(int, Scales.t),
   velocity: Lane.t(float, unit),
   pan: Lane.t(float, unit),
   chance: Lane.t(float, unit),
@@ -36,7 +23,6 @@ type lanes = {
 
 type state = {
   lanes,
-  globalTranspose: int,
   isPlaying: bool,
   bpm: int,
   scheduler: ref(option(WebAudio.schedule))
@@ -58,7 +44,6 @@ type action =
   | SetPlayback(bool)
   | RandomiseAll
   | SetScale(Scales.t)
-  | SetGlobalTranspose(int)
   | SetBpm(int)
   | Octave(laneAction(int))
   | Transpose(laneAction(int))
@@ -67,7 +52,8 @@ type action =
   | Chance(laneAction(float))
   | Offset(laneAction(float))
   | Length(laneAction(float))
-  | Filter(laneAction(float));
+  | Filter(laneAction(float))
+  | Pitch(laneAction(int));
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -79,6 +65,7 @@ type fnWrap = {
 let applyToAllLanes = (state, { fnWrap }) => {
   octave: fnWrap(state.octave),
   transpose: fnWrap(state.transpose),
+  pitch: fnWrap(state.pitch),
   velocity: fnWrap(state.velocity),
   pan: fnWrap(state.pan),
   chance: fnWrap(state.chance),
@@ -118,18 +105,18 @@ let make = (_children) => {
 
     {
       lanes: {
-        octave: Lane.create(Parameter.createInt(0, -2, 1), length),
-        transpose: Lane.create(Parameter.createScale(scale), length),
-        velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length),
-        pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), length),
-        chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), length),
-        offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), length),
-        length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), length),
-        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), length)
+        octave: Lane.create(Parameter.createInt(0, -2, 1), 1, length),
+        transpose: Lane.create(Parameter.createInt(0, 0, 11), 64, length),
+        pitch: Lane.create(Parameter.createScale(scale), 1, length),
+        velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
+        pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), 1, length),
+        chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
+        offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), 1, length),
+        length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), 1, length),
+        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length)
       },
       isPlaying: false,
       bpm: 120,
-      globalTranspose: 0,
       scheduler: ref(None)
     }
   },
@@ -146,15 +133,16 @@ let make = (_children) => {
         if (chance < Lane.value(self.state.lanes.chance)) {
           let octave = Lane.value(self.state.lanes.octave);
           let transpose = Lane.value(self.state.lanes.transpose);
+          let pitch = Lane.value(self.state.lanes.pitch);
           let velocity = Lane.value(self.state.lanes.velocity);
           let pan = Lane.value(self.state.lanes.pan);
           let offset = Lane.value(self.state.lanes.offset);
           let length = Lane.value(self.state.lanes.length);
           let filter = Lane.value(self.state.lanes.filter);
 
-          let scale = Lane.getParameter(self.state.lanes.transpose).value;
-          let transposeScaled = Scales.value(transpose, scale);
-          let note = self.state.globalTranspose + (octave * 12) + transposeScaled;
+          let scale = Lane.getParameter(self.state.lanes.pitch).value;
+          let pitchScaled = Scales.value(pitch, scale);
+          let note = (octave * 12) + transpose + pitchScaled;
 
           WebAudio.playSynth(~note, ~gain=velocity, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
         };
@@ -178,6 +166,8 @@ let make = (_children) => {
             |> Lane.randomLoopAfterIndex,
           transpose: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
             |> Lane.randomLoopAfterIndex,
+          pitch: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.pitch)
+            |> Lane.randomLoopAfterIndex,
           velocity: Lane.map((_, _, _) => 0.9 +. Random.float(0.1), state.lanes.velocity)
             |> Lane.randomLoopAfterIndex,
           chance: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.chance)
@@ -194,12 +184,8 @@ let make = (_children) => {
         ...state,
         lanes: {
           ...state.lanes,
-          transpose: Lane.setParameter(Parameter.createScale(scale), state.lanes.transpose),
+          pitch: Lane.setParameter(Parameter.createScale(scale), state.lanes.pitch),
         }
-      })
-      | SetGlobalTranspose(globalTranspose) => ReasonReact.Update({
-        ...state,
-        globalTranspose
       })
       | SetBpm(bpm) => ReasonReact.Update({
         ...state,
@@ -261,6 +247,13 @@ let make = (_children) => {
           filter: handleLaneAction(laneAction, state.lanes.filter)
         }
       })
+      | Pitch(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          pitch: handleLaneAction(laneAction, state.lanes.pitch)
+        }
+      })
     },
 
   didMount: (self) => {
@@ -302,12 +295,15 @@ let make = (_children) => {
   },
 
   render: self => {
-    let selectedScale = Lane.getParameter(self.state.lanes.transpose).value;
+    let selectedScale = Lane.getParameter(self.state.lanes.pitch).value;
 
     <div className="ma4">
       <div>
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
+        </button>
+        <button className="w4" onClick=(_event => self.send(RestartLanes))>
+          (ReasonReact.string("Restart"))
         </button>
         <Slider.SliderInt
           cells=[|self.state.bpm|]
@@ -322,20 +318,6 @@ let make = (_children) => {
         <button className="w4" onClick=(_event => self.send(RandomiseAll))>
           (ReasonReact.string("Randomise All"))
         </button>
-      </div>
-      <div>
-        (ReasonReact.array(Array.mapi((i, key) =>
-          <label key=key>
-            <input
-              type_="radio"
-              name="key"
-              value=key
-              checked=(i === self.state.globalTranspose)
-              onChange=((_event) => self.send(SetGlobalTranspose(i)))
-            />
-            (ReasonReact.string(key))
-          </label>
-        , keys)))
       </div>
       <div>
         (ReasonReact.array(Array.map(((label, scale)) =>
@@ -370,6 +352,16 @@ let make = (_children) => {
         onResetLane=(() => self.send(Transpose(ResetLane)))
         onSetValue=((index, value, setLength) => self.send(Transpose(SetLaneValue(index, value, setLength))))
         onSetLength=((index) => self.send(Transpose(SetLoopAfterIndex(index))))
+      />
+      <div className="h1" />
+      <Row.RowInt
+        label="Pitch"
+        lane=self.state.lanes.pitch
+        onRandomiseAbsolute=(() => self.send(Pitch(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Pitch(RandomiseLaneRelative(3))))
+        onResetLane=(() => self.send(Pitch(ResetLane)))
+        onSetValue=((index, value, setLength) => self.send(Pitch(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Pitch(SetLoopAfterIndex(index))))
       />
       <div className="h1" />
       <Row.RowFloat

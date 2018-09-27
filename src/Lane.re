@@ -1,32 +1,46 @@
 type t('a, 'b) = {
   parameter: Parameter.t('a, 'b),
   values: array('a),
+  subTicks: int,
   index: int,
+  subIndex: int,
   visualIndex: int,
   loopAfterIndex: int
 };
 
-let create = (parameter, length) => {
+let create = (parameter, subTicks, length) => {
   parameter,
   values: Array.make(length, parameter.default),
+  subTicks,
   index: 0,
+  subIndex: 0,
   visualIndex: 0,
   loopAfterIndex: length > 2 ? (length / 2) - 1 : 0
 };
 
 let advance = (lane) => {
-  let nextIndex = lane.index + 1;
+  let nextSubIndex = lane.subIndex + 1;
+
+  let (subIndex, index, visualIndex) = if (nextSubIndex >= lane.subTicks) {
+    let nextIndex = lane.index >= lane.loopAfterIndex ? 0 : lane.index + 1;
+
+    (0, nextIndex, lane.index);
+  } else {
+    (nextSubIndex, lane.index, lane.visualIndex);
+  };
 
   {
     ...lane,
-    index: nextIndex > lane.loopAfterIndex ? 0 : nextIndex,
-    visualIndex: lane.index
+    index,
+    subIndex,
+    visualIndex
   }
 };
 
 let restart = (lane) => {
   ...lane,
   index: 0,
+  subIndex: 0,
   visualIndex: 0
 };
 

@@ -1,6 +1,6 @@
 type t('a, 'b);
 
-let create:(Parameter.t('a, 'b), int) => t('a, 'b);
+let create:(Parameter.t('a, 'b), int, int) => t('a, 'b);
 let restart:(t('a, 'b)) => t('a, 'b);
 let reset:(t('a, 'b)) => t('a, 'b);
 let value:(t('a, 'b)) => 'a;
