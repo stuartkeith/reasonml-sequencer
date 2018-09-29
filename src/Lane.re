@@ -21,20 +21,20 @@ let create = (parameter, subTicks, length) => {
 let advance = (lane) => {
   let nextSubIndex = lane.subIndex + 1;
 
-  let (subIndex, index, visualIndex) = if (nextSubIndex >= lane.subTicks) {
+  let (subIndex, index) = if (nextSubIndex >= lane.subTicks) {
     let nextIndex = lane.index >= lane.loopAfterIndex ? 0 : lane.index + 1;
 
-    (0, nextIndex, lane.index);
+    (0, nextIndex);
   } else {
-    (nextSubIndex, lane.index, lane.visualIndex);
+    (nextSubIndex, lane.index);
   };
 
   {
     ...lane,
     index,
     subIndex,
-    visualIndex
-  }
+    visualIndex: lane.index
+  };
 };
 
 let restart = (lane) => {
