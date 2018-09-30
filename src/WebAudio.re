@@ -101,8 +101,8 @@ let playHihat: (~start:float) => unit = [%bs.raw {|
   }
 |}];
 
-let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~filter:float) => unit = [%bs.raw {|
-  function (note, gain, pan, start, time, filter) {
+let playOsc: unit => unit = [%bs.raw {|
+  function (note, start, time, gain, output) {
     const frequency = 440 * Math.pow(2, note / 12);
 
     // create nodes
@@ -110,9 +110,34 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~
     osc.type = 'square';
     osc.frequency.value = frequency;
 
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = gain;
+
+    osc.start(start);
+    osc.stop(start + time);
+
+    // routing
+    osc.connect(gainNode);
+    gainNode.connect(output);
+
+    globalFx.warbleOsc.connect(osc.frequency);
+  }
+|}];
+
+let synthFilterMin = 100.0;
+let synthFilterMax = 22000.0;
+let synthFilterRange = synthFilterMax -. synthFilterMin;
+let synthFilterLog = log(synthFilterMax /. synthFilterMin) /. log(2.0);
+
+let playSynth: (~note:int, ~chord:array(int), ~gain:float, ~pan:float, ~start:float, ~time:float, ~filter:float) => unit = [%bs.raw {|
+  function (note, chords, gain, pan, start, time, filter) {
+    const filterLogScale = synthFilterMin + (synthFilterRange * Math.pow(2, synthFilterLog * (filter - 1)));
+
     const lowpass = audioContext.createBiquadFilter();
     lowpass.type = 'lowpass';
-    lowpass.frequency.value = 200 + ((22000 - 200) * filter);
+    lowpass.frequency.value = filterLogScale;
+
+    gain = Math.pow(gain, 1.6);
 
     const gainNode = audioContext.createGain();
     gainNode.gain.value = gain;
@@ -124,12 +149,6 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~
     gainNode.gain.setValueAtTime(gain, start);
     gainNode.gain.setTargetAtTime(0, start, Math.max(0.05, time - 0.05));
 
-    osc.start(start);
-    osc.stop(start + time);
-
-    // routing
-    osc.connect(gainNode);
-
     gainNode.connect(lowpass);
 
     lowpass.connect(stereoPannerNode);
@@ -137,7 +156,13 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~
     stereoPannerNode.connect(globalFx.masterGain);
     stereoPannerNode.connect(globalFx.convolver);
 
-    globalFx.warbleOsc.connect(osc.frequency);
+    const voiceGain = chords.length === 0 ? 1 : 1 / chords.length;
+
+    playOsc(note, start, time, voiceGain, gainNode);
+
+    chords.forEach(function (noteOffset) {
+      playOsc(note + noteOffset, start, time, voiceGain, gainNode);
+    });
   }
 |}];
 

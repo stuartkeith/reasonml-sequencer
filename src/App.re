@@ -9,6 +9,19 @@ let scales = [|
   ("Locrian", Scales.Locrian)
 |];
 
+let chords = [|
+  ("None", Chords.Solo),
+  ("Maj", Chords.Major),
+  ("Min", Chords.Minor),
+  ("Dom", Chords.Diminished),
+  ("Maj7", Chords.MajorSeventh),
+  ("Min7", Chords.MinorSeventh),
+  ("Dom7", Chords.DominantSeventh),
+  ("Sus2", Chords.Suspended2),
+  ("Sus4", Chords.Suspened4),
+  ("Aug", Chords.Augmented)
+|];
+
 type lanes = {
   octave: Lane.t(int, unit),
   transpose: Lane.t(int, unit),
@@ -18,7 +31,8 @@ type lanes = {
   chance: Lane.t(float, unit),
   offset: Lane.t(float, unit),
   length: Lane.t(float, unit),
-  filter: Lane.t(float, unit)
+  filter: Lane.t(float, unit),
+  chord: Lane.t(int, array((string, Chords.t)))
 };
 
 type state = {
@@ -54,7 +68,8 @@ type action =
   | Offset(laneAction(float))
   | Length(laneAction(float))
   | Filter(laneAction(float))
-  | Pitch(laneAction(int));
+  | Pitch(laneAction(int))
+  | Chord(laneAction(int));
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -72,7 +87,8 @@ let applyToAllLanes = (state, { fnWrap }) => {
   chance: fnWrap(state.chance),
   offset: fnWrap(state.offset),
   length: fnWrap(state.length),
-  filter: fnWrap(state.filter)
+  filter: fnWrap(state.filter),
+  chord: fnWrap(state.chord)
 };
 
 let handleLaneAction = (laneAction, lane) => {
@@ -108,14 +124,15 @@ let make = (_children) => {
     {
       lanes: {
         octave: Lane.create(Parameter.createInt(0, -2, 1), 1, length),
-        transpose: Lane.create(Parameter.createInt(0, 0, 11), 64, length),
+        transpose: Lane.create(Parameter.createInt(0, 0, 11), 16, length),
         pitch: Lane.create(Parameter.createScale(scale), 1, length),
         velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
         pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), 1, length),
         chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
         offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), 1, length),
         length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), 1, length),
-        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length)
+        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length),
+        chord: Lane.create(Parameter.createArray(chords), 1, length)
       },
       isPlaying: false,
       bpm: 120,
@@ -132,24 +149,29 @@ let make = (_children) => {
       | Playback(beatTime, beatLength) => ReasonReact.SideEffects((self) => {
         let chance = Random.float(1.);
 
+        let offset = Lane.value(self.state.lanes.offset);
+
         if (chance < Lane.value(self.state.lanes.chance)) {
           let octave = Lane.value(self.state.lanes.octave);
           let transpose = Lane.value(self.state.lanes.transpose);
           let pitch = Lane.value(self.state.lanes.pitch);
           let velocity = Lane.value(self.state.lanes.velocity);
           let pan = Lane.value(self.state.lanes.pan);
-          let offset = Lane.value(self.state.lanes.offset);
           let length = Lane.value(self.state.lanes.length);
           let filter = Lane.value(self.state.lanes.filter);
+          let chordIndex = Lane.value(self.state.lanes.chord);
+
+          let (_, chordType) = chords[chordIndex];
+          let chord = Chords.value(chordType);
 
           let scale = Lane.getParameter(self.state.lanes.pitch).value;
           let pitchScaled = Scales.value(pitch, scale);
           let note = (octave * 12) + transpose + pitchScaled;
 
-          WebAudio.playSynth(~note, ~gain=velocity, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
+          WebAudio.playSynth(~note, ~chord, ~gain=velocity, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
         };
 
-        WebAudio.playHihat(~start=beatTime);
+        WebAudio.playHihat(~start=beatTime +. (beatLength *. offset));
 
         self.send(AdvancePlayback);
       })
@@ -179,7 +201,8 @@ let make = (_children) => {
           length: Lane.map((_, _, _) => 0.2 +. Random.float(1.4), state.lanes.length)
             |> Lane.randomLoopAfterIndex,
           filter: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
-            |> Lane.randomLoopAfterIndex
+            |> Lane.randomLoopAfterIndex,
+          chord: state.lanes.chord
         }
       })
       | SetScale(scale) => ReasonReact.Update({
@@ -254,6 +277,13 @@ let make = (_children) => {
         lanes: {
           ...state.lanes,
           pitch: handleLaneAction(laneAction, state.lanes.pitch)
+        }
+      })
+      | Chord(laneAction) => ReasonReact.Update({
+        ...state,
+        lanes: {
+          ...state.lanes,
+          chord: handleLaneAction(laneAction, state.lanes.chord)
         }
       })
     },
@@ -433,6 +463,17 @@ let make = (_children) => {
         onResetLane=(() => self.send(Filter(ResetLane)))
         onSetValue=((index, value, setLength) => self.send(Filter(SetLaneValue(index, value, setLength))))
         onSetLength=((index) => self.send(Filter(SetLoopAfterIndex(index))))
+      />
+      <div className="h1" />
+      <Row.RowInt
+        label="Chord"
+        lane=self.state.lanes.chord
+        onSetSubTicks=((value) => self.send(Chord(SetSubTicks(value))))
+        onRandomiseAbsolute=(() => self.send(Chord(RandomiseLaneAbsolute)))
+        onRandomiseRelative=(() => self.send(Chord(RandomiseLaneRelative(3))))
+        onResetLane=(() => self.send(Chord(ResetLane)))
+        onSetValue=((index, value, setLength) => self.send(Chord(SetLaneValue(index, value, setLength))))
+        onSetLength=((index) => self.send(Chord(SetLoopAfterIndex(index))))
       />
     </div>
   },

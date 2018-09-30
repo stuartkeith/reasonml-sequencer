@@ -64,3 +64,28 @@ let createScale = (scale) => {
     toString: string_of_int
   };
 };
+
+let createArray = (array) => {
+  let max = Array.length(array) - 1;
+
+  {
+    default: 0,
+    min: 0,
+    max,
+    value: array,
+    randomValue: () => Random.int(max + 1),
+    randomValueRelative: (delta, value) => {
+      let deltaMin = Pervasives.max(0, value - delta);
+      let deltaMax = Pervasives.min(max, value + delta);
+
+      deltaMin + Random.int(deltaMax - deltaMin + 1);
+    },
+    toFloat: (value) => float_of_int(value) /. float_of_int(max),
+    fromFloat: (value) => int_of_float(value *. float_of_int(max)),
+    toString: (value) => {
+      let (label, _type) = array[value];
+
+      label;
+    }
+  };
+};
