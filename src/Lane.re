@@ -51,8 +51,14 @@ let reset = (lane) => {
 
 let value = (lane) => lane.values[lane.index];
 let loopAfterIndex = (lane) => lane.loopAfterIndex;
+let subTicks = (lane) => lane.subTicks;
 let visualIndex = (lane) => lane.visualIndex;
 let values = (lane) => lane.values;
+
+let setSubTicks = (subTicks, lane) => {
+  ...lane,
+  subTicks
+};
 
 let setLoopAfterIndex = (loopAfterIndex, lane) => {
   ...lane,

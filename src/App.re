@@ -35,7 +35,8 @@ type laneAction('a) =
   | SetLoopAfterIndex(arrayIndex)
   | RandomiseLaneAbsolute
   | RandomiseLaneRelative('a)
-  | ResetLane;
+  | ResetLane
+  | SetSubTicks(int);
 
 type action =
   | Playback(float, float)
@@ -81,6 +82,7 @@ let handleLaneAction = (laneAction, lane) => {
     | RandomiseLaneAbsolute => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex
     | RandomiseLaneRelative(delta) => Lane.randomRelative(delta, lane)
     | ResetLane => Lane.reset(lane)
+    | SetSubTicks(value) => Lane.setSubTicks(value, lane)
   };
 };
 
@@ -337,6 +339,7 @@ let make = (_children) => {
       <Row.RowInt
         label="Octave"
         lane=self.state.lanes.octave
+        onSetSubTicks=((value) => self.send(Octave(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Octave(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Octave(RandomiseLaneRelative(1))))
         onResetLane=(() => self.send(Octave(ResetLane)))
@@ -347,6 +350,7 @@ let make = (_children) => {
       <Row.RowInt
         label="Transpose"
         lane=self.state.lanes.transpose
+        onSetSubTicks=((value) => self.send(Transpose(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Transpose(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Transpose(RandomiseLaneRelative(3))))
         onResetLane=(() => self.send(Transpose(ResetLane)))
@@ -357,6 +361,7 @@ let make = (_children) => {
       <Row.RowInt
         label="Pitch"
         lane=self.state.lanes.pitch
+        onSetSubTicks=((value) => self.send(Pitch(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Pitch(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Pitch(RandomiseLaneRelative(3))))
         onResetLane=(() => self.send(Pitch(ResetLane)))
@@ -367,6 +372,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Velocity"
         lane=self.state.lanes.velocity
+        onSetSubTicks=((value) => self.send(Velocity(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Velocity(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Velocity(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Velocity(ResetLane)))
@@ -377,6 +383,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Pan"
         lane=self.state.lanes.pan
+        onSetSubTicks=((value) => self.send(Pan(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Pan(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Pan(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Pan(ResetLane)))
@@ -387,6 +394,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Chance"
         lane=self.state.lanes.chance
+        onSetSubTicks=((value) => self.send(Chance(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Chance(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Chance(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Chance(ResetLane)))
@@ -397,6 +405,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Offset"
         lane=self.state.lanes.offset
+        onSetSubTicks=((value) => self.send(Offset(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Offset(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Offset(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Offset(ResetLane)))
@@ -407,6 +416,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Length"
         lane=self.state.lanes.length
+        onSetSubTicks=((value) => self.send(Length(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Length(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Length(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Length(ResetLane)))
@@ -417,6 +427,7 @@ let make = (_children) => {
       <Row.RowFloat
         label="Filter"
         lane=self.state.lanes.filter
+        onSetSubTicks=((value) => self.send(Filter(SetSubTicks(value))))
         onRandomiseAbsolute=(() => self.send(Filter(RandomiseLaneAbsolute)))
         onRandomiseRelative=(() => self.send(Filter(RandomiseLaneRelative(0.2))))
         onResetLane=(() => self.send(Filter(ResetLane)))
