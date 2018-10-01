@@ -51,7 +51,7 @@ let createGlobalFx: unit => unit = [%bs.raw {|
     globalFx.warbleOsc.connect(globalFx.warbleGain);
     globalFx.warbleOsc.start();
 
-    globalFx.warbleGain.gain.value = 3.2;
+    globalFx.warbleGain.gain.value = 2.1;
 
     return globalFx;
   }
@@ -120,7 +120,7 @@ let playOsc: unit => unit = [%bs.raw {|
     osc.connect(gainNode);
     gainNode.connect(output);
 
-    globalFx.warbleOsc.connect(osc.frequency);
+    globalFx.warbleGain.connect(osc.frequency);
   }
 |}];
 
