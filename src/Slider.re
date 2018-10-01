@@ -273,5 +273,3 @@ let module Slider (Config: { type value }) = {
     }
   };
 };
-
-module SliderInt = Slider({ type value = int });

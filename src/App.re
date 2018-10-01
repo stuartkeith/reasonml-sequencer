@@ -331,22 +331,20 @@ let make = (_children) => {
 
     <div className="ma4">
       <div>
+        <Range
+          value=float_of_int(self.state.bpm)
+          label=("BPM: " ++ string_of_int(self.state.bpm))
+          min=40.0
+          max=200.0
+          step=1.0
+          onChange=(value => self.send(SetBpm(int_of_float(value))))
+        />
         <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
         <button className="w4" onClick=(_event => self.send(RestartLanes))>
           (ReasonReact.string("Restart"))
         </button>
-        <Slider.SliderInt
-          cells=[|self.state.bpm|]
-          toFloat=bpmParameter.toFloat
-          fromFloat=bpmParameter.fromFloat
-          getLabel=bpmParameter.toString
-          highlightedIndex=0
-          disabledAfterIndex=1
-          onSetValue=((_, value, _) => self.send(SetBpm(value)))
-          onSetLength=((_length) => ())
-        />
         <button className="w4" onClick=(_event => self.send(RandomiseAll))>
           (ReasonReact.string("Randomise All"))
         </button>

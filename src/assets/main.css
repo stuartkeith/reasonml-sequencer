@@ -20,3 +20,14 @@ html {
 .no-select {
   user-select: none;
 }
+
+.input-range-reset {
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+.input-range-reset::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+}
