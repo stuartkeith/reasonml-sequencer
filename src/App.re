@@ -38,6 +38,7 @@ type lanes = {
 type state = {
   lanes,
   isPlaying: bool,
+  volume: float,
   bpm: int,
   scheduler: ref(option(WebAudio.schedule))
 };
@@ -59,6 +60,7 @@ type action =
   | SetPlayback(bool)
   | RandomiseAll
   | SetScale(Scales.t)
+  | SetVolume(float)
   | SetBpm(int)
   | Octave(laneAction(int))
   | Transpose(laneAction(int))
@@ -135,6 +137,7 @@ let make = (_children) => {
         chord: Lane.create(Parameter.createArray(chords), 1, length)
       },
       isPlaying: false,
+      volume: 1.0,
       bpm: 120,
       scheduler: ref(None)
     }
@@ -211,6 +214,10 @@ let make = (_children) => {
           ...state.lanes,
           pitch: Lane.setParameter(Parameter.createScale(scale), state.lanes.pitch),
         }
+      })
+      | SetVolume(volume) => ReasonReact.Update({
+        ...state,
+        volume
       })
       | SetBpm(bpm) => ReasonReact.Update({
         ...state,
@@ -318,6 +325,10 @@ let make = (_children) => {
       }
     };
 
+    if (oldSelf.state.volume !== newSelf.state.volume) {
+      WebAudio.setGlobalVolume(newSelf.state.volume);
+    }
+
     if (oldSelf.state.bpm !== newSelf.state.bpm) {
       switch (newSelf.state.scheduler^) {
         | None => ()
@@ -330,7 +341,7 @@ let make = (_children) => {
     let selectedScale = Lane.getParameter(self.state.lanes.pitch).value;
 
     <div className="ma4">
-      <div>
+      <div className="flex items-center">
         <Range
           value=float_of_int(self.state.bpm)
           label=("BPM: " ++ string_of_int(self.state.bpm))
@@ -339,13 +350,21 @@ let make = (_children) => {
           step=1.0
           onChange=(value => self.send(SetBpm(int_of_float(value))))
         />
-        <button className="w4" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
+        <Range
+          value=self.state.volume
+          label=("Volume: " ++ Utils.round(self.state.volume *. 100.0) ++ "%")
+          min=0.0
+          max=1.0
+          step=0.01
+          onChange=(value => self.send(SetVolume(value)))
+        />
+        <button className="w4 h2" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
-        <button className="w4" onClick=(_event => self.send(RestartLanes))>
+        <button className="w4 h2" onClick=(_event => self.send(RestartLanes))>
           (ReasonReact.string("Restart"))
         </button>
-        <button className="w4" onClick=(_event => self.send(RandomiseAll))>
+        <button className="w4 h2" onClick=(_event => self.send(RandomiseAll))>
           (ReasonReact.string("Randomise All"))
         </button>
       </div>

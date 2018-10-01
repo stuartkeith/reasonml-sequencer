@@ -57,6 +57,12 @@ let createGlobalFx: unit => unit = [%bs.raw {|
   }
 |}];
 
+let setGlobalVolume: float => unit = [%bs.raw {|
+  function (volume) {
+    globalFx.masterGain.gain.value = Math.pow(volume, 1.6);
+  }
+|}];
+
 let globalFx = createGlobalFx();
 
 let fundamental = 40;
