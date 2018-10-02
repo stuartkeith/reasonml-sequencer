@@ -1,3 +1,7 @@
+type sync =
+  | Sync(int)
+  | NoSync;
+
 type t('a, 'b) = {
   parameter: Parameter.t('a, 'b),
   values: array('a),
@@ -18,15 +22,25 @@ let create = (parameter, subTicks, length) => {
   loopAfterIndex: length > 2 ? (length / 2) - 1 : 0
 };
 
-let advance = (lane) => {
-  let nextSubIndex = lane.subIndex + 1;
+let advance = (sync, lane) => {
+  let (index, subIndex) = switch (sync) {
+    | Sync(tick) => {
+      let index = (tick / lane.subTicks) mod (lane.loopAfterIndex + 1);
+      let subIndex = tick mod lane.subTicks;
 
-  let (subIndex, index) = if (nextSubIndex >= lane.subTicks) {
-    let nextIndex = lane.index >= lane.loopAfterIndex ? 0 : lane.index + 1;
+      (index, subIndex);
+    }
+    | NoSync => {
+      let nextSubIndex = lane.subIndex + 1;
 
-    (0, nextIndex);
-  } else {
-    (nextSubIndex, lane.index);
+      if (nextSubIndex >= lane.subTicks) {
+        let nextIndex = lane.index >= lane.loopAfterIndex ? 0 : lane.index + 1;
+
+        (nextIndex, 0);
+      } else {
+        (lane.index, nextSubIndex);
+      };
+    }
   };
 
   {

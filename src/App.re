@@ -40,6 +40,8 @@ type state = {
   isPlaying: bool,
   volume: float,
   bpm: int,
+  tick: int,
+  sync: bool,
   scheduler: ref(option(WebAudio.schedule))
 };
 
@@ -58,6 +60,7 @@ type action =
   | AdvancePlayback
   | RestartLanes
   | SetPlayback(bool)
+  | SetSync(bool)
   | RandomiseAll
   | SetScale(Scales.t)
   | SetVolume(float)
@@ -139,6 +142,8 @@ let make = (_children) => {
       isPlaying: false,
       volume: 1.0,
       bpm: 120,
+      tick: 0,
+      sync: false,
       scheduler: ref(None)
     }
   },
@@ -147,7 +152,8 @@ let make = (_children) => {
     switch (action) {
       | RestartLanes => ReasonReact.Update({
         ...state,
-        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) })
+        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) }),
+        tick: 0
       })
       | Playback(beatTime, beatLength) => ReasonReact.SideEffects((self) => {
         let chance = Random.float(1.);
@@ -178,13 +184,23 @@ let make = (_children) => {
 
         self.send(AdvancePlayback);
       })
-      | AdvancePlayback => ReasonReact.Update({
-        ...state,
-        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.advance(lane) })
-      })
+      | AdvancePlayback => {
+        let nextTick = state.tick + 1;
+        let sync = state.sync ? Lane.Sync(nextTick) : Lane.NoSync;
+
+        ReasonReact.Update({
+          ...state,
+          lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.advance(sync, lane) }),
+          tick: nextTick
+        });
+      }
       | SetPlayback(value) => ReasonReact.Update({
         ...state,
         isPlaying: value
+      })
+      | SetSync(value) => ReasonReact.Update({
+        ...state,
+        sync: value
       })
       | RandomiseAll => ReasonReact.Update({
         ...state,
@@ -367,6 +383,12 @@ let make = (_children) => {
         <button className="w4 h2" onClick=(_event => self.send(RandomiseAll))>
           (ReasonReact.string("Randomise All"))
         </button>
+        <label>
+          <input type_="checkbox" checked=self.state.sync onChange=(event => {
+            self.send(SetSync(event->ReactEvent.Form.target##checked));
+          }) />
+          (ReasonReact.string("Sync"))
+        </label>
       </div>
       <div>
         (ReasonReact.array(Array.map(((label, scale)) =>
