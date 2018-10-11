@@ -5,7 +5,7 @@ let module Row (Config: { type value }) = {
 
   let component = ReasonReact.statelessComponent("Row");
 
-  let make = (~label, ~lane, ~onSetSubTicks, ~onRandomiseAbsolute, ~onRandomiseRelative, ~onResetLane, ~onSetValue, ~onSetLength, _children) => {
+  let make = (~label, ~lane, ~laneType, ~relativeValue, ~sendLaneAction, _children) => {
     ...component,
     render: _self => {
       <div className="flex items-center">
@@ -14,7 +14,7 @@ let module Row (Config: { type value }) = {
           <select value=(string_of_int(Lane.subTicks(lane))) onChange=((event) => {
             let value = int_of_string(event->ReactEvent.Form.target##value);
 
-            onSetSubTicks(value);
+            sendLaneAction(laneType, Actions.SetSubTicks(value));
           })>
             (ReasonReact.array(Array.map(((label, _value)) =>
               <option key=label value=label>(ReasonReact.string(label))</option>
@@ -28,14 +28,14 @@ let module Row (Config: { type value }) = {
           getLabel=Lane.getParameter(lane).toString
           highlightedIndex=Lane.visualIndex(lane)
           disabledAfterIndex=Lane.loopAfterIndex(lane)
-          onSetValue
-          onSetLength
+          onSetValue=((index, value, setLength) => sendLaneAction(laneType, SetLaneValue(index, value, setLength)))
+          onSetLength=((index) => sendLaneAction(laneType, SetLoopAfterIndex(index)))
         />
         <div className="w1" />
         <div className="flex">
-          <button onClick=(_event => onRandomiseAbsolute())>(ReasonReact.string("Random Absolute"))</button>
-          <button onClick=(_event => onRandomiseRelative())>(ReasonReact.string("Random Relative"))</button>
-          <button onClick=(_event => onResetLane())>(ReasonReact.string("Reset"))</button>
+          <button onClick=(_event => sendLaneAction(laneType, RandomiseLaneAbsolute))>(ReasonReact.string("Random Absolute"))</button>
+          <button onClick=(_event => sendLaneAction(laneType, RandomiseLaneRelative(relativeValue)))>(ReasonReact.string("Random Relative"))</button>
+          <button onClick=(_event => sendLaneAction(laneType, ResetLane))>(ReasonReact.string("Reset"))</button>
         </div>
       </div>
     }

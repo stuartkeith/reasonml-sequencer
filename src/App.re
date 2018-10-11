@@ -45,16 +45,6 @@ type state = {
   scheduler: ref(option(WebAudio.schedule))
 };
 
-type arrayIndex = int;
-
-type laneAction('a) =
-  | SetLaneValue(arrayIndex, 'a, bool)
-  | SetLoopAfterIndex(arrayIndex)
-  | RandomiseLaneAbsolute
-  | RandomiseLaneRelative('a)
-  | ResetLane
-  | SetSubTicks(int);
-
 type lane(_, _) =
   | Octave: lane(int, unit)
   | Transpose: lane(int, unit)
@@ -117,14 +107,14 @@ let updateLane = (type a, type b, lane:lane(a, b), lanes, fn: Lane.t(a, b) => La
 let handleLaneAction = (lane, laneAction, state) => {
   let partial = updateLane(lane, state.lanes);
 
-  switch (laneAction) {
+  Actions.(switch (laneAction) {
     | SetLaneValue(index, value, setLength) => partial(lane => Lane.setValue(index, value, setLength, lane))
     | SetLoopAfterIndex(index) => partial(lane => Lane.setLoopAfterIndex(index, lane))
     | RandomiseLaneAbsolute => partial(lane => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex)
     | RandomiseLaneRelative(delta) => partial(lane => Lane.randomRelative(delta, lane))
     | ResetLane => partial(lane => Lane.reset(lane))
     | SetSubTicks(value) => partial(lane => Lane.setSubTicks(value, lane))
-  };
+  });
 };
 
 let make = (_children) => {
@@ -362,111 +352,81 @@ let make = (_children) => {
       <Row.RowInt
         label="Octave"
         lane=self.state.lanes.octave
-        onSetSubTicks=((value) => sendLaneAction(Octave, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Octave, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Octave, RandomiseLaneRelative(1)))
-        onResetLane=(() => sendLaneAction(Octave, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Octave, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Octave, SetLoopAfterIndex(index)))
+        laneType=Octave
+        relativeValue=1
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowInt
         label="Transpose"
         lane=self.state.lanes.transpose
-        onSetSubTicks=((value) => sendLaneAction(Transpose, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Transpose, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Transpose, RandomiseLaneRelative(3)))
-        onResetLane=(() => sendLaneAction(Transpose, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Transpose, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Transpose, SetLoopAfterIndex(index)))
+        laneType=Transpose
+        relativeValue=3
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowInt
         label="Pitch"
         lane=self.state.lanes.pitch
-        onSetSubTicks=((value) => sendLaneAction(Pitch, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Pitch, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Pitch, RandomiseLaneRelative(3)))
-        onResetLane=(() => sendLaneAction(Pitch, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Pitch, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Pitch, SetLoopAfterIndex(index)))
+        laneType=Pitch
+        relativeValue=3
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Velocity"
         lane=self.state.lanes.velocity
-        onSetSubTicks=((value) => sendLaneAction(Velocity, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Velocity, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Velocity, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Velocity, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Velocity, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Velocity, SetLoopAfterIndex(index)))
+        laneType=Velocity
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Pan"
         lane=self.state.lanes.pan
-        onSetSubTicks=((value) => sendLaneAction(Pan, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Pan, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Pan, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Pan, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Pan, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Pan, SetLoopAfterIndex(index)))
+        laneType=Pan
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Chance"
         lane=self.state.lanes.chance
-        onSetSubTicks=((value) => sendLaneAction(Chance, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Chance, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Chance, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Chance, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Chance, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Chance, SetLoopAfterIndex(index)))
+        laneType=Chance
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Offset"
         lane=self.state.lanes.offset
-        onSetSubTicks=((value) => sendLaneAction(Offset, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Offset, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Offset, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Offset, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Offset, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Offset, SetLoopAfterIndex(index)))
+        laneType=Offset
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Length"
         lane=self.state.lanes.length
-        onSetSubTicks=((value) => sendLaneAction(Length, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Length, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Length, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Length, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Length, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Length, SetLoopAfterIndex(index)))
+        laneType=Length
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowFloat
         label="Filter"
         lane=self.state.lanes.filter
-        onSetSubTicks=((value) => sendLaneAction(Filter, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Filter, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Filter, RandomiseLaneRelative(0.2)))
-        onResetLane=(() => sendLaneAction(Filter, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Filter, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Filter, SetLoopAfterIndex(index)))
+        laneType=Filter
+        relativeValue=0.2
+        sendLaneAction
       />
       <div className="h1" />
       <Row.RowInt
         label="Chord"
         lane=self.state.lanes.chord
-        onSetSubTicks=((value) => sendLaneAction(Chord, SetSubTicks(value)))
-        onRandomiseAbsolute=(() => sendLaneAction(Chord, RandomiseLaneAbsolute))
-        onRandomiseRelative=(() => sendLaneAction(Chord, RandomiseLaneRelative(3)))
-        onResetLane=(() => sendLaneAction(Chord, ResetLane))
-        onSetValue=((index, value, setLength) => sendLaneAction(Chord, SetLaneValue(index, value, setLength)))
-        onSetLength=((index) => sendLaneAction(Chord, SetLoopAfterIndex(index)))
+        laneType=Chord
+        relativeValue=3
+        sendLaneAction
       />
     </div>
   },
