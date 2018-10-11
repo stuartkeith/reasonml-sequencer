@@ -47,8 +47,6 @@ let module Slider (Config: { type value }) = {
     (index, value);
   };
 
-  let getScale = (value, min, max) => float_of_int(value - min) /. float_of_int(max - min);
-
   let setRootRef = (ref, { ReasonReact.state }) => {
     state.rootRef := Js.Nullable.toOption(ref);
   };
