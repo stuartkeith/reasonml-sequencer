@@ -2,6 +2,7 @@
 .merlin
 .bsb.lock
 *.bs.js
+*.swp
 npm-debug.log
 /dist/
 /lib/bs/
