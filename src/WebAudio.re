@@ -1,12 +1,13 @@
 type audioContext;
+type globalFx;
 
 [@bs.new] external create_audioContext : unit => audioContext = "AudioContext";
 [@bs.get] external getCurrentTime : (audioContext) => float = "currentTime";
 
 let audioContext = create_audioContext();
 
-let createGlobalFx: unit => unit = [%bs.raw {|
-  function () {
+let createGlobalFx: unit => globalFx = [%bs.raw {|
+  function (_) {
     function createConvolver () {
       const seconds = 2;
       const decay = 2; // to 100?
