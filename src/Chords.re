@@ -12,7 +12,7 @@ type t =
 
 let solo = [||];
 let major = [|4, 7|];
-let minor = [|3, 5|];
+let minor = [|3, 7|];
 let diminished = [|3, 6|];
 let majorSeventh = [|4, 7, 11|];
 let minorSeventh = [|3, 7, 10|];
