@@ -37,6 +37,8 @@ type lanes = {
 
 type state = {
   lanes,
+  lanesUndoBuffer: UndoBuffer.t(lanes),
+  lanesRedoBuffer: UndoBuffer.t(lanes),
   isPlaying: bool,
   volume: float,
   bpm: int,
@@ -63,11 +65,13 @@ type action =
   | RestartLanes
   | SetPlayback(bool)
   | SetSync(bool)
-  | RandomiseAll
+  | RandomiseAll(bool)
   | SetScale(Scales.t)
   | SetVolume(float)
   | SetBpm(int)
-  | UpdateLanes(lanes);
+  | UpdateLanes(lanes => (lanes, option(lanes)))
+  | Undo
+  | Redo;
 
 let component = ReasonReact.reducerComponent("App");
 
@@ -89,6 +93,19 @@ let applyToAllLanes = (state, { fnWrap }) => {
   chord: fnWrap(state.chord)
 };
 
+let mergeUndo = (source, target) => {
+  octave: Lane.merge(source.octave, target.octave),
+  transpose: Lane.merge(source.transpose, target.transpose),
+  pitch: Lane.merge(source.pitch, target.pitch),
+  velocity: Lane.merge(source.velocity, target.velocity),
+  pan: Lane.merge(source.pan, target.pan),
+  chance: Lane.merge(source.chance, target.chance),
+  offset: Lane.merge(source.offset, target.offset),
+  length: Lane.merge(source.length, target.length),
+  filter: Lane.merge(source.filter, target.filter),
+  chord: Lane.merge(source.chord, target.chord),
+};
+
 let updateLane = (type a, type b, lane:lane(a, b), lanes, fn: Lane.t(a, b) => Lane.t(a, b)) => {
   switch (lane) {
     | Octave => { ...lanes, octave: fn(lanes.octave) }
@@ -104,16 +121,23 @@ let updateLane = (type a, type b, lane:lane(a, b), lanes, fn: Lane.t(a, b) => La
   }
 };
 
-let handleLaneAction = (lane, laneAction, state) => {
-  let partial = updateLane(lane, state.lanes);
+let handleLaneAction = (lane, laneAction, lanes) => {
+  let partial = updateLane(lane, lanes);
 
   Actions.(switch (laneAction) {
-    | SetLaneValue(index, value, setLength) => partial(lane => Lane.setValue(index, value, setLength, lane))
-    | SetLoopAfterIndex(index) => partial(lane => Lane.setLoopAfterIndex(index, lane))
-    | RandomiseLaneAbsolute => partial(lane => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex)
-    | RandomiseLaneRelative(delta) => partial(lane => Lane.randomRelative(delta, lane))
-    | ResetLane => partial(lane => Lane.reset(lane))
-    | SetSubTicks(value) => partial(lane => Lane.setSubTicks(value, lane))
+    | SetLaneValue(array, undoArray) => {
+      let undoLanes = switch (undoArray) {
+        | Some(undoArrayArray) => Some(partial(lane => Lane.setValues(undoArrayArray, lane)))
+        | None => None
+      };
+
+      (partial(lane => Lane.setValues(array, lane)), undoLanes);
+    }
+    | SetLoopAfterIndex(index) => (partial(lane => Lane.setLoopAfterIndex(index, lane)), None)
+    | RandomiseLaneAbsolute => (partial(lane => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex), Some(lanes))
+    | RandomiseLaneRelative(delta) => (partial(lane => Lane.randomRelative(delta, lane)), Some(lanes))
+    | ResetLane => (partial(lane => Lane.reset(lane)), Some(lanes))
+    | SetSubTicks(value) => (partial(lane => Lane.setSubTicks(value, lane)), None)
   });
 };
 
@@ -134,19 +158,23 @@ let make = (_children) => {
 
     let length = 16;
 
+    let lanes = {
+      octave: Lane.create(Parameter.createInt(0, -2, 1), 1, length),
+      transpose: Lane.create(Parameter.createInt(0, 0, 11), 16, length),
+      pitch: Lane.create(Parameter.createScale(scale), 1, length),
+      velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
+      pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), 1, length),
+      chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
+      offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), 1, length),
+      length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), 1, length),
+      filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length),
+      chord: Lane.create(Parameter.createArray(chords), 1, length)
+    };
+
     {
-      lanes: {
-        octave: Lane.create(Parameter.createInt(0, -2, 1), 1, length),
-        transpose: Lane.create(Parameter.createInt(0, 0, 11), 16, length),
-        pitch: Lane.create(Parameter.createScale(scale), 1, length),
-        velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
-        pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), 1, length),
-        chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
-        offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), 1, length),
-        length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), 1, length),
-        filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length),
-        chord: Lane.create(Parameter.createArray(chords), 1, length)
-      },
+      lanes,
+      lanesUndoBuffer: UndoBuffer.create(12, lanes),
+      lanesRedoBuffer: UndoBuffer.create(12, lanes),
       isPlaying: false,
       volume: 1.0,
       bpm: 120,
@@ -158,6 +186,24 @@ let make = (_children) => {
 
   reducer: (action, state) =>
     switch (action) {
+      | Undo => switch (UndoBuffer.read(state.lanesUndoBuffer)) {
+        | None => ReasonReact.NoUpdate
+        | Some(lanes) => ReasonReact.Update({
+          ...state,
+          lanes: mergeUndo(lanes, state.lanes),
+          lanesUndoBuffer: UndoBuffer.pop(state.lanesUndoBuffer),
+          lanesRedoBuffer: UndoBuffer.write(state.lanes, state.lanesRedoBuffer)
+        })
+      }
+      | Redo => switch (UndoBuffer.read(state.lanesRedoBuffer)) {
+        | None => ReasonReact.NoUpdate
+        | Some(lanes) => ReasonReact.Update({
+          ...state,
+          lanes: mergeUndo(lanes, state.lanes),
+          lanesUndoBuffer: UndoBuffer.write(state.lanes, state.lanesUndoBuffer),
+          lanesRedoBuffer: UndoBuffer.pop(state.lanesRedoBuffer)
+        })
+      }
       | RestartLanes => ReasonReact.Update({
         ...state,
         lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) }),
@@ -210,28 +256,31 @@ let make = (_children) => {
         ...state,
         sync: value
       })
-      | RandomiseAll => ReasonReact.Update({
-        ...state,
-        lanes: {
-          octave: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.octave)
-            |> Lane.randomLoopAfterIndex,
-          transpose: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
-            |> Lane.randomLoopAfterIndex,
-          pitch: Lane.map((_, min, max) => min + Random.int(max - min + 1), state.lanes.pitch)
-            |> Lane.randomLoopAfterIndex,
-          velocity: Lane.map((_, _, _) => 0.9 +. Random.float(0.1), state.lanes.velocity)
-            |> Lane.randomLoopAfterIndex,
-          chance: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.chance)
-            |> Lane.randomLoopAfterIndex,
-          pan: Lane.reset(state.lanes.pan),
-          offset: Lane.reset(state.lanes.offset),
-          length: Lane.map((_, _, _) => 0.2 +. Random.float(1.4), state.lanes.length)
-            |> Lane.randomLoopAfterIndex,
-          filter: Lane.map((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
-            |> Lane.randomLoopAfterIndex,
-          chord: state.lanes.chord
-        }
-      })
+      | RandomiseAll(canUndo) => {
+        ReasonReact.Update({
+          ...state,
+          lanesUndoBuffer: canUndo ? UndoBuffer.write(state.lanes, state.lanesUndoBuffer) : state.lanesUndoBuffer,
+          lanes: {
+            octave: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.octave)
+              |> Lane.randomLoopAfterIndex,
+            transpose: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
+              |> Lane.randomLoopAfterIndex,
+            pitch: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.pitch)
+              |> Lane.randomLoopAfterIndex,
+            velocity: Lane.mapTransform((_, _, _) => 0.9 +. Random.float(0.1), state.lanes.velocity)
+              |> Lane.randomLoopAfterIndex,
+            chance: Lane.mapTransform((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.chance)
+              |> Lane.randomLoopAfterIndex,
+            pan: Lane.reset(state.lanes.pan),
+            offset: Lane.reset(state.lanes.offset),
+            length: Lane.mapTransform((_, _, _) => 0.2 +. Random.float(1.4), state.lanes.length)
+              |> Lane.randomLoopAfterIndex,
+            filter: Lane.mapTransform((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
+              |> Lane.randomLoopAfterIndex,
+            chord: state.lanes.chord
+          }
+        })
+      }
       | SetScale(scale) => ReasonReact.Update({
         ...state,
         lanes: {
@@ -247,14 +296,24 @@ let make = (_children) => {
         ...state,
         bpm
       })
-      | UpdateLanes(lanes) => ReasonReact.Update({
-        ...state,
-        lanes
-      })
+      | UpdateLanes(updateFn) => {
+        let (newLanes, lanesToUndo) = updateFn(state.lanes);
+
+        let lanesUndoBuffer = switch (lanesToUndo) {
+          | Some(lanes) => UndoBuffer.write(lanes, state.lanesUndoBuffer)
+          | None => state.lanesUndoBuffer
+        };
+
+        ReasonReact.Update({
+          ...state,
+          lanes: newLanes,
+          lanesUndoBuffer
+        });
+      }
     },
 
   didMount: (self) => {
-    self.send(RandomiseAll);
+    self.send(RandomiseAll(false));
 
     let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
       self.send(Playback(beatTime, beatLength));
@@ -298,10 +357,26 @@ let make = (_children) => {
   render: self => {
     let selectedScale = Lane.getParameter(self.state.lanes.pitch).value;
 
-    let sendLaneAction = (lane, laneAction) => self.send(UpdateLanes(handleLaneAction(lane, laneAction, self.state)));
+    let sendLaneAction = (lane, laneAction) => {
+      self.send(UpdateLanes(lanes => handleLaneAction(lane, laneAction, lanes)));
+    };
 
     <div className="ma4">
       <div className="flex items-center">
+        <button
+          className="w4 h2"
+          disabled=(UndoBuffer.isEmpty(self.state.lanesUndoBuffer))
+          onClick=(_event => self.send(Undo))
+        >
+          (ReasonReact.string("Undo"))
+        </button>
+        <button
+          className="w4 h2"
+          disabled=(UndoBuffer.isEmpty(self.state.lanesRedoBuffer))
+          onClick=(_event => self.send(Redo))
+        >
+          (ReasonReact.string("Redo"))
+        </button>
         <Range
           value=float_of_int(self.state.bpm)
           label=("BPM: " ++ string_of_int(self.state.bpm))
@@ -324,7 +399,7 @@ let make = (_children) => {
         <button className="w4 h2" onClick=(_event => self.send(RestartLanes))>
           (ReasonReact.string("Restart"))
         </button>
-        <button className="w4 h2" onClick=(_event => self.send(RandomiseAll))>
+        <button className="w4 h2" onClick=(_event => self.send(RandomiseAll(true)))>
           (ReasonReact.string("Randomise All"))
         </button>
         <label>

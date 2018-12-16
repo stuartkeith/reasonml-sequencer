@@ -12,6 +12,8 @@ type t('a, 'b) = {
   loopAfterIndex: int
 };
 
+type values('a) = array('a);
+
 let create = (parameter, subTicks, length) => {
   parameter,
   values: Array.make(length, parameter.default),
@@ -84,20 +86,10 @@ let randomLoopAfterIndex = (lane) => {
   loopAfterIndex: Random.int(Array.length(lane.values))
 };
 
-let setValue = (index, value, setLength, lane) => {
-  if (value >= lane.parameter.min && value <= lane.parameter.max) {
-    lane.values[index] = value;
-  };
-
+let transform = (fn, values, parameter, lane) => {
   {
     ...lane,
-    loopAfterIndex: setLength ? Pervasives.max(lane.loopAfterIndex, index) : lane.loopAfterIndex
-  };
-};
-
-let map = (fn, lane) => {
-  {
-    ...lane,
+    parameter,
     values: Array.map(value => {
       let value = fn(value, lane.parameter.min, lane.parameter.max);
 
@@ -108,9 +100,11 @@ let map = (fn, lane) => {
       } else {
         value;
       };
-    }, lane.values)
+    }, values)
   };
 };
+
+let mapTransform = (fn, lane) => transform(fn, lane.values, lane.parameter, lane);
 
 let randomAbsolute = (lane) => {
   ...lane,
@@ -126,11 +120,45 @@ let getParameter = (lane) => {
   lane.parameter;
 };
 
-let setParameter = (parameter, lane) => {
-  let newLane = {
-    ...lane,
-    parameter
+let setParameter = (parameter, lane) => transform((x, _, _) => x, lane.values, parameter, lane);
+
+let setValues = (values, lane) => transform((x, _, _) => x, values, lane.parameter, lane);
+
+let merge = (source, target) => {
+  let loopAfterIndex = min(target.loopAfterIndex, Array.length(source.values) - 1);
+
+  let (index, subIndex, visualIndex) = switch (source, target) {
+    | (_source, target) when target.index > loopAfterIndex => (0, 0, 0)
+    | (source, target) when target.subIndex >= source.subTicks => {
+      let nextIndex = target.index + 1;
+      let nextIndex = nextIndex > loopAfterIndex ? 0 : nextIndex;
+
+      (nextIndex, 0, nextIndex);
+    }
+    | (_source, target) => (target.index, target.subIndex, target.visualIndex)
   };
 
-  map((x, _, _) => x, newLane);
+  {
+    parameter: source.parameter,
+    values: source.values,
+    subTicks: source.subTicks,
+    index,
+    subIndex,
+    visualIndex,
+    loopAfterIndex
+  };
 };
+
+let setValue = (values, index, value) => {
+  let newArray = Array.copy(values);
+
+  newArray[index] = value;
+
+  newArray;
+};
+
+let mapi = Array.mapi;
+
+let get = (index, values) => values[index];
+
+let length = Array.length;

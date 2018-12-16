@@ -1,7 +1,7 @@
 type arrayIndex = int;
 
 type laneAction('a) =
-  | SetLaneValue(arrayIndex, 'a, bool)
+  | SetLaneValue(Lane.values('a), option(Lane.values('a)))
   | SetLoopAfterIndex(arrayIndex)
   | RandomiseLaneAbsolute
   | RandomiseLaneRelative('a)

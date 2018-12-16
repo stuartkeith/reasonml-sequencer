@@ -1,12 +1,18 @@
 let module Slider (Config: { type value }) = {
   type index = int;
   type value = Config.value;
-  type mouseOver = bool;
+
+  type cellUpdate =
+    | NoUpdate
+    | UpdateUndo(Lane.values(value), Lane.values(value))
+    | UpdateNoUndo(Lane.values(value));
+
+  type mousePosition = Inside | Outside;
 
   type mouseState =
     | Idle
-    | Preview(index, value, value)
-    | Active(index, value, mouseOver);
+    | Preview(index, value, Lane.values(value))
+    | Active(index, value, mousePosition, Lane.values(value));
 
   type state = {
     cellSize: int,
@@ -29,7 +35,7 @@ let module Slider (Config: { type value }) = {
     let x = pageX + offsetX;
     let y = pageY + offsetY;
 
-    let index = Utils.limit(x / state.cellSize, 0, Array.length(cells) - 1);
+    let index = Utils.limit(x / state.cellSize, 0, Lane.length(cells) - 1);
     let deadZonePixels = 3;
 
     let ratio = if (y <= deadZonePixels) {
@@ -92,73 +98,40 @@ let module Slider (Config: { type value }) = {
       },
 
       reducer: (action, state) => {
-        let noOp = state.mouseState;
+        let noOp = (state.mouseState, NoUpdate);
 
-        let mouseState = switch (state.mouseState, action) {
-          | (Idle, MouseEnter((index, value))) => Preview(index, value, cells[index])
+        let (mouseState, cellsToDispatch) = switch (state.mouseState, action) {
+          | (Idle, MouseEnter((index, value))) => (Preview(index, value, cells), UpdateNoUndo(Lane.setValue(cells, index, value)))
           | (Idle, MouseDown(_)) => noOp
-          | (Idle, MouseMove((index, value))) => Preview(index, value, cells[index])
+          | (Idle, MouseMove((index, value))) => (Preview(index, value, cells), UpdateNoUndo(Lane.setValue(cells, index, value)))
           | (Idle, MouseUp(_)) => noOp
           | (Idle, MouseLeave) => noOp
           | (Preview(_), MouseEnter(_)) => noOp
-          | (Preview(_), MouseDown((index, value))) => Active(index, value, true)
-          | (Preview(pIndex, _pValue, _backupValue), MouseMove((index, value))) when pIndex != index => Preview(index, value, cells[index])
-          | (Preview(_pIndex, pValue, backupValue), MouseMove((index, value))) when pValue != value => Preview(index, value, backupValue)
+          | (Preview(_, _, pCells), MouseDown((index, value))) => (Active(index, value, Inside, pCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
+          | (Preview(pIndex, _, pCells), MouseMove((index, value))) when pIndex != index => (Preview(index, value, pCells), UpdateNoUndo(pCells))
+          | (Preview(_, pValue, pCells), MouseMove((index, value))) when pValue != value => (Preview(index, value, pCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
           | (Preview(_), MouseMove(_)) => noOp
           | (Preview(_), MouseUp(_)) => noOp
-          | (Preview(_), MouseLeave) => Idle
-          | (Active(index, value, _), MouseEnter(_)) => Active(index, value, true)
+          | (Preview(_, _, pCells), MouseLeave) => (Idle, UpdateNoUndo(pCells))
+          | (Active(index, value, _, undoCells), MouseEnter(_)) => (Active(index, value, Inside, undoCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
           | (Active(_), MouseDown(_)) => noOp
-          | (Active(_, _, mouseOver), MouseMove((index, value))) => Active(index, value, mouseOver)
-          | (Active(_, _, mouseOver), MouseUp((index, value))) when mouseOver => Preview(index, value, value)
-          | (Active(_, _, mouseOver), MouseUp(_)) when !mouseOver => Idle
+          | (Active(_, _, _, undoCells), MouseMove((index, value))) => (Active(index, value, Inside, undoCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
+          | (Active(_, _, mousePosition, undoCells), MouseUp((index, value))) when mousePosition == Inside => (Preview(index, value, cells), UpdateUndo(cells, undoCells))
+          | (Active(_, _, mousePosition, undoCells), MouseUp(_)) when mousePosition == Outside => (Idle, UpdateUndo(cells, undoCells))
           | (Active(_), MouseUp(_)) => noOp
-          | (Active(index, value, _), MouseLeave) => Active(index, value, false)
+          | (Active(index, value, _, undoCells), MouseLeave) => (Active(index, value, Outside, undoCells), NoUpdate)
         };
 
-        let valueToUndo = switch (state.mouseState, mouseState) {
-          | (Idle, Idle) => None
-          | (Idle, Preview(_)) => None
-          | (Idle, Active(_)) =>  None
-          | (Preview(index, _, backupValue), Idle) => Some((index, backupValue, false))
-          | (Preview(pIndex, _, backupValue), Preview(index, _, _)) when pIndex != index => Some((pIndex, backupValue, false))
-          | (Preview(_), Preview(_)) => None
-          | (Preview(_), Active(_)) => None
-          | (Active(_), Idle) => None
-          | (Active(_), Preview(_)) => None
-          | (Active(_), Active(_)) => None
-        };
-
-        let valueToDo = switch (state.mouseState, mouseState) {
-          | (Idle, Idle) => None
-          | (Idle, Preview(index, value, _)) => Some((index, value, false))
-          | (Idle, Active(index, value, _)) =>  Some((index, value, true))
-          | (Preview(_), Idle) => None
-          | (Preview(_), Preview(index, value, _backupValue)) => Some((index, value, false))
-          | (Preview(_), Active(index, value, _)) => Some((index, value, true))
-          | (Active(_), Idle) => None
-          | (Active(_), Preview(_)) => None
-          | (Active(_), Active(index, value, _)) => Some((index, value, true))
-        };
-
-        if (mouseState == state.mouseState) {
-          ReasonReact.NoUpdate;
-        } else {
-          ReasonReact.UpdateWithSideEffects({
-            ...state,
-            mouseState
-          }, (_state) => {
-            switch (valueToUndo) {
-              | Some((index, value, setLength)) => onSetValue(index, value, setLength)
-              | None => ()
-            };
-
-            switch (valueToDo) {
-              | Some((index, value, setLength)) => onSetValue(index, value, setLength)
-              | None => ()
-            };
-          });
-        }
+        ReasonReact.UpdateWithSideEffects({
+          ...state,
+          mouseState
+        }, (_state) => {
+          switch (cellsToDispatch) {
+            | UpdateNoUndo(cellsToDispatch) => onSetValue(cellsToDispatch, None)
+            | UpdateUndo(cellsToDispatch, blah) => onSetValue(cellsToDispatch, Some(blah))
+            | NoUpdate => ()
+          };
+        });
       },
 
       didMount: (self) => {
@@ -203,7 +176,7 @@ let module Slider (Config: { type value }) = {
           ref={self.handle(setRootRef)}
           className="bg-white relative flex-none no-select"
           style=(ReactDOMRe.Style.make(
-            ~width=string_of_int(cellSize * Array.length(cells)) ++ "px",
+            ~width=string_of_int(cellSize * Lane.length(cells)) ++ "px",
             ~height=string_of_int(cellSize) ++ "px",
             ()
           ))
@@ -221,9 +194,9 @@ let module Slider (Config: { type value }) = {
           onMouseLeave=(_event => self.send(MouseLeave))
           onMouseMove
         >
-        (ReasonReact.array(Array.mapi((i, value) => {
+        (ReasonReact.array(Lane.mapi((i, value) => {
           let (scale, previewScale) = switch (self.state.mouseState) {
-            | Preview(index, _, backupValue) when index == i => (toFloat(backupValue), toFloat(value))
+            | Preview(index, _, previewCells) when index == i => (toFloat(Lane.get(i, previewCells)), toFloat(value))
             | Idle | Preview(_) | Active(_) => (toFloat(value), 0.)
           };
 

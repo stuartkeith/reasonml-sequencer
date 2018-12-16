@@ -28,7 +28,7 @@ let module Row (Config: { type value }) = {
           getLabel=Lane.getParameter(lane).toString
           highlightedIndex=Lane.visualIndex(lane)
           disabledAfterIndex=Lane.loopAfterIndex(lane)
-          onSetValue=((index, value, setLength) => sendLaneAction(laneType, SetLaneValue(index, value, setLength)))
+          onSetValue=((array, undoArray) => sendLaneAction(laneType, SetLaneValue(array, undoArray)))
           onSetLength=((index) => sendLaneAction(laneType, SetLoopAfterIndex(index)))
         />
         <div className="w1" />
