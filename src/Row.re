@@ -9,8 +9,8 @@ let module Row (Config: { type value }) = {
     ...component,
     render: _self => {
       <div className="flex items-center">
-        <p className="w4">{ReasonReact.string(label)}</p>
-        <div className="w1" />
+        <p className="w4 flex-none">{ReasonReact.string(label)}</p>
+        <div className="w1 flex-none" />
           <select value=(string_of_int(Lane.subTicks(lane))) onChange=((event) => {
             let value = int_of_string(event->ReactEvent.Form.target##value);
 
@@ -20,7 +20,7 @@ let module Row (Config: { type value }) = {
               <option key=label value=label>(ReasonReact.string(label))</option>
             , options)))
           </select>
-        <div className="w1" />
+        <div className="w1 flex-none" />
         <Slider
           cells=Lane.values(lane)
           toFloat=Lane.getParameter(lane).toFloat
@@ -31,8 +31,8 @@ let module Row (Config: { type value }) = {
           onSetValue=((array, undoArray) => sendLaneAction(laneType, SetLaneValue(array, undoArray)))
           onSetLength=((index) => sendLaneAction(laneType, SetLoopAfterIndex(index)))
         />
-        <div className="w1" />
-        <div className="flex">
+        <div className="w1 flex-none" />
+        <div className="flex flex-none">
           <button onClick=(_event => sendLaneAction(laneType, RandomiseLaneAbsolute))>(ReasonReact.string("Random Absolute"))</button>
           <button onClick=(_event => sendLaneAction(laneType, RandomiseLaneRelative(relativeValue)))>(ReasonReact.string("Random Relative"))</button>
           <button onClick=(_event => sendLaneAction(laneType, ResetLane))>(ReasonReact.string("Reset"))</button>

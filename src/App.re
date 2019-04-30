@@ -364,14 +364,14 @@ let make = (_children) => {
     <div className="ma4">
       <div className="flex items-center">
         <button
-          className="w4 h2"
+          className="w4 h2 flex-none"
           disabled=(UndoBuffer.isEmpty(self.state.lanesUndoBuffer))
           onClick=(_event => self.send(Undo))
         >
           (ReasonReact.string("Undo"))
         </button>
         <button
-          className="w4 h2"
+          className="w4 h2 flex-none"
           disabled=(UndoBuffer.isEmpty(self.state.lanesRedoBuffer))
           onClick=(_event => self.send(Redo))
         >
@@ -393,16 +393,16 @@ let make = (_children) => {
           step=0.01
           onChange=(value => self.send(SetVolume(value)))
         />
-        <button className="w4 h2" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
+        <button className="w4 h2 flex-none" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
-        <button className="w4 h2" onClick=(_event => self.send(RestartLanes))>
+        <button className="w4 h2 flex-none" onClick=(_event => self.send(RestartLanes))>
           (ReasonReact.string("Restart"))
         </button>
-        <button className="w4 h2" onClick=(_event => self.send(RandomiseAll(true)))>
+        <button className="w4 h2 flex-none" onClick=(_event => self.send(RandomiseAll(true)))>
           (ReasonReact.string("Randomise All"))
         </button>
-        <label>
+        <label className="flex-none">
           <input type_="checkbox" checked=self.state.sync onChange=(event => {
             self.send(SetSync(event->ReactEvent.Form.target##checked));
           }) />

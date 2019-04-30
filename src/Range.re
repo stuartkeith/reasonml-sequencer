@@ -11,7 +11,7 @@ let make = (~label: string, ~value:float, ~min:float, ~max:float, ~step:float, ~
       ()
     );
 
-    <div className="relative w4 h2">
+    <div className="relative w4 h2 flex-none">
       <div className="relative bg-light-gray dark-gray overflow-hidden h-100">
         <div className="absolute absolute--fill bg-gray" style />
       </div>
