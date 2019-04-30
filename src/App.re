@@ -248,10 +248,10 @@ let make = (_children) => {
           tick: nextTick
         });
       }
-      | SetPlayback(value) => ReasonReact.Update({
+      | SetPlayback(value) => ReasonReact.UpdateWithSideEffects({
         ...state,
         isPlaying: value
-      })
+      }, (_) => WebAudio.resume())
       | SetSync(value) => ReasonReact.Update({
         ...state,
         sync: value

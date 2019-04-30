@@ -6,6 +6,12 @@ type globalFx;
 
 let audioContext = create_audioContext();
 
+let resume: unit => unit = [%bs.raw {|
+  function () {
+    audioContext.resume();
+  }
+|}];
+
 let createGlobalFx: unit => globalFx = [%bs.raw {|
   function (_) {
     function createConvolver () {
