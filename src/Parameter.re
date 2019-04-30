@@ -23,7 +23,7 @@ let createInt = (default, min, max) => {
     deltaMin + Random.int(deltaMax - deltaMin + 1);
   },
   toFloat: (value) => float_of_int(value - min) /. float_of_int(max - min),
-  fromFloat: (value) => min + Utils.jsRound(float_of_int(max - min) *. value),
+  fromFloat: (value) => min + (Js.Math.round(float_of_int(max - min) *. value) |> int_of_float),
   toString: string_of_int
 };
 
@@ -41,7 +41,7 @@ let createFloat = (default, min, max) => {
   },
   toFloat: (value) => (value -. min) /. (max -. min),
   fromFloat: (value) => min +. ((max -. min) *. value),
-  toString: (value) => Utils.jsFloor(value *. 100.0)
+  toString: (value) => Js.Math.floor(value *. 100.0) |> string_of_int
 };
 
 let createScale = (scale) => {
@@ -60,7 +60,7 @@ let createScale = (scale) => {
       deltaMin + Random.int(deltaMax - deltaMin + 1);
     },
     toFloat: (value) => float_of_int(value) /. float_of_int(max),
-    fromFloat: (value) => Utils.jsRound(value *. float_of_int(max)),
+    fromFloat: (value) => Js.Math.round(value *. float_of_int(max)) |> int_of_float,
     toString: string_of_int
   };
 };
@@ -81,7 +81,7 @@ let createArray = (array) => {
       deltaMin + Random.int(deltaMax - deltaMin + 1);
     },
     toFloat: (value) => float_of_int(value) /. float_of_int(max),
-    fromFloat: (value) => Utils.jsRound(value *. float_of_int(max)),
+    fromFloat: (value) => Js.Math.round(value *. float_of_int(max)) |> int_of_float,
     toString: (value) => {
       let (label, _type) = array[value];
 

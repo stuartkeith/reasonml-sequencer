@@ -21,9 +21,9 @@ let make = (~label: string, ~value:float, ~min:float, ~max:float, ~step:float, ~
       <input
         type_="range"
         className="input-range-reset pointer absolute absolute--fill w-100"
-        value=Utils.jsFloatToString(value)
-        min=int_of_string(Utils.jsFloatToString(min))
-        max=Utils.jsFloatToString(max)
+        value=Js.Float.toString(value)
+        min=Js.Math.floor(min)
+        max=Js.Float.toString(max)
         step
         onChange=((event) => {
           let value = event->ReactEvent.Form.target##value;

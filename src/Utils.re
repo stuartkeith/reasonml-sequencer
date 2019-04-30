@@ -12,16 +12,4 @@ let rec getOffset = (element, x, y) => {
   }
 };
 
-let jsFloor: (float) => string = [%bs.raw {|
-  function (x) { return Math.floor(x).toString(); }
-|}];
-
-let jsRound: (float) => int = [%bs.raw {|
-  function (x) { return Math.round(x); }
-|}];
-
-let jsFloatToString: (float) => string = [%bs.raw {|
-  function (x) { return x.toString(); }
-|}];
-
 let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value));

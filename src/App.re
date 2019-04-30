@@ -387,7 +387,7 @@ let make = (_children) => {
         />
         <Range
           value=self.state.volume
-          label=("Volume: " ++ Utils.jsFloor(self.state.volume *. 100.0) ++ "%")
+          label=("Volume: " ++ (Js.Math.floor(self.state.volume *. 100.0) |> string_of_int) ++ "%")
           min=0.0
           max=1.0
           step=0.01
