@@ -1,56 +1,60 @@
 let module Slider (Config: { type value }) = {
-  type index = int;
   type value = Config.value;
+  type cells = Lane.values(value);
+  type index = int;
 
-  type cellUpdate =
-    | NoUpdate
-    | UpdateUndo(Lane.values(value), Lane.values(value))
-    | UpdateNoUndo(Lane.values(value));
+  type update = {
+    index,
+    value,
+    cells
+  };
+
+  let applyUpdate = (update, cells) => {
+    Lane.setValue(cells, update.index, update.value);
+  };
 
   type mousePosition = Inside | Outside;
 
   type mouseState =
     | Idle
-    | Preview(index, value, Lane.values(value))
-    | Active(index, value, mousePosition, Lane.values(value));
+    | Preview(cells, index)
+    | Active(mousePosition, cells);
 
   type state = {
-    cellSize: int,
     mouseState,
     offset: ref((int, int)),
     fromFloat: ref(float => value),
     rootRef: ref(option(Dom.element)),
     onMouseMoveDom: ref((Webapi.Dom.MouseEvent.t) => unit),
-    onMouseUpDom: ref((Webapi.Dom.MouseEvent.t) => unit),
-    onMouseMoveReact: ref((ReactEvent.Mouse.t) => unit)
+    onMouseUpDom: ref((Webapi.Dom.MouseEvent.t) => unit)
   };
 
-  let getIndexAndValue = (state, cells, pageX, pageY, fromFloat, getOffset) => {
-    if (getOffset) {
-      state.offset := Utils.getOffset(state.rootRef^, 0, 0);
-    };
-
+  let getUpdate = (state, cellSize, cells, fromFloat, pageX, pageY) => {
     let (offsetX, offsetY) = state.offset^;
 
     let x = pageX + offsetX;
     let y = pageY + offsetY;
 
-    let index = Utils.limit(x / state.cellSize, 0, Lane.length(cells) - 1);
+    let index = Utils.limit(x / cellSize, 0, Lane.length(cells) - 1);
     let deadZonePixels = 3;
 
     let ratio = if (y <= deadZonePixels) {
       1.;
-    } else if (y >= state.cellSize - deadZonePixels) {
+    } else if (y >= cellSize - deadZonePixels) {
       0.;
     } else {
-      let ratio = 1. -. (float_of_int(y) /. float_of_int(state.cellSize));
+      let ratio = 1. -. (float_of_int(y) /. float_of_int(cellSize));
 
       Utils.limit(ratio, 0., 1.);
     };
 
     let value = fromFloat(ratio);
 
-    (index, value);
+    {
+      index,
+      value,
+      cells
+    };
   };
 
   let setRootRef = (ref, { ReasonReact.state }) => {
@@ -60,84 +64,97 @@ let module Slider (Config: { type value }) = {
   let noOpEventHandler = (_) => ();
 
   type action =
-    | MouseEnter((index, value))
-    | MouseDown((index, value))
-    | MouseMove((index, value))
-    | MouseUp((index, value))
-    | MouseLeave;
+    | MouseEnter(update)
+    | MouseMove(update)
+    | MouseLeave(update)
+    | MouseDown(update)
+    | MouseUp(update);
+
+  let cellSize = 48;
 
   let component = ReasonReact.reducerComponent("Slider");
 
-  let useGlobalMouseEvents = (mouseState) => switch (mouseState) {
-    | Idle => false
-    | Preview(_) => false
-    | Active(_) => true
-  };
-
   let make = (~cells, ~highlightedIndex, ~disabledAfterIndex, ~toFloat:(value => float), ~fromFloat:(float => value), ~getLabel:(value => string), ~onSetValue, ~onSetLength, _children) => {
-    let onMouseMove = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseMove(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^, false)));
-    };
-
-    let onMouseUp = (getPageX, getPageY, self, event) => {
-      self.ReasonReact.send(MouseUp(getIndexAndValue(self.state, cells, getPageX(event), getPageY(event), self.state.fromFloat^, false)));
-    };
-
     {
       ...component,
 
       initialState: () => {
-        cellSize: 48,
         mouseState: Idle,
         offset: ref((0, 0)),
         rootRef: ref(None),
         fromFloat: ref(fromFloat),
         onMouseMoveDom: ref(noOpEventHandler),
-        onMouseUpDom: ref(noOpEventHandler),
-        onMouseMoveReact: ref(noOpEventHandler)
+        onMouseUpDom: ref(noOpEventHandler)
       },
 
-      reducer: (action, state) => {
-        let noOp = (state.mouseState, NoUpdate);
-
-        let (mouseState, cellsToDispatch) = switch (state.mouseState, action) {
-          | (Idle, MouseEnter((index, value))) => (Preview(index, value, cells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Idle, MouseDown(_)) => noOp
-          | (Idle, MouseMove((index, value))) => (Preview(index, value, cells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Idle, MouseUp(_)) => noOp
-          | (Idle, MouseLeave) => noOp
-          | (Preview(_), MouseEnter(_)) => noOp
-          | (Preview(_, _, pCells), MouseDown((index, value))) => (Active(index, value, Inside, pCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Preview(pIndex, _, pCells), MouseMove((index, value))) when pIndex != index => (Preview(index, value, pCells), UpdateNoUndo(pCells))
-          | (Preview(_, pValue, pCells), MouseMove((index, value))) when pValue != value => (Preview(index, value, pCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Preview(_), MouseMove(_)) => noOp
-          | (Preview(_), MouseUp(_)) => noOp
-          | (Preview(_, _, pCells), MouseLeave) => (Idle, UpdateNoUndo(pCells))
-          | (Active(index, value, _, undoCells), MouseEnter(_)) => (Active(index, value, Inside, undoCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Active(_), MouseDown(_)) => noOp
-          | (Active(_, _, _, undoCells), MouseMove((index, value))) => (Active(index, value, Inside, undoCells), UpdateNoUndo(Lane.setValue(cells, index, value)))
-          | (Active(_, _, mousePosition, undoCells), MouseUp((index, value))) when mousePosition == Inside => (Preview(index, value, cells), UpdateUndo(cells, undoCells))
-          | (Active(_, _, mousePosition, undoCells), MouseUp(_)) when mousePosition == Outside => (Idle, UpdateUndo(cells, undoCells))
-          | (Active(_), MouseUp(_)) => noOp
-          | (Active(index, value, _, undoCells), MouseLeave) => (Active(index, value, Outside, undoCells), NoUpdate)
-        };
-
-        ReasonReact.UpdateWithSideEffects({
+      reducer: (action, state) => switch (state.mouseState, action) {
+        | (Idle, MouseEnter(update)) => ReasonReact.UpdateWithSideEffects({
           ...state,
-          mouseState
-        }, (_state) => {
-          switch (cellsToDispatch) {
-            | UpdateNoUndo(cellsToDispatch) => onSetValue(cellsToDispatch, None)
-            | UpdateUndo(cellsToDispatch, blah) => onSetValue(cellsToDispatch, Some(blah))
-            | NoUpdate => ()
-          };
-        });
+          mouseState: Preview(update.cells, update.index)
+        }, (_) => onSetValue(applyUpdate(update, update.cells), None))
+        | (Idle, MouseMove(_)) => ReasonReact.NoUpdate
+        | (Idle, MouseLeave(_)) => ReasonReact.NoUpdate
+        | (Idle, MouseDown(_)) => ReasonReact.NoUpdate
+        | (Idle, MouseUp(_)) => ReasonReact.NoUpdate
+        | (Preview(_), MouseEnter(_)) => ReasonReact.NoUpdate
+        | (Preview(cells, index), MouseMove(update)) when index !== update.index => ReasonReact.UpdateWithSideEffects({
+          ...state,
+          mouseState: Preview(cells, update.index)
+        }, _ => {
+          onSetValue(applyUpdate(update, cells), None);
+        })
+        | (Preview(cells, _), MouseMove(update)) => ReasonReact.SideEffects(_ => {
+          onSetValue(applyUpdate(update, cells), None);
+        })
+        | (Preview(cells, _), MouseLeave(_)) => ReasonReact.UpdateWithSideEffects({
+          ...state,
+          mouseState: Idle
+        }, (_) => onSetValue(cells, None))
+        | (Preview(cells, _), MouseDown(_)) => ReasonReact.Update({
+          ...state,
+          mouseState: Active(Inside, cells)
+        })
+        | (Preview(_), MouseUp(_)) => ReasonReact.NoUpdate
+        | (Active(_, cells), MouseEnter(_)) => ReasonReact.Update({
+          ...state,
+          mouseState: Active(Inside, cells)
+        })
+        | (Active(_), MouseMove(update)) => ReasonReact.SideEffects(_ => {
+          onSetValue(applyUpdate(update, cells), None);
+        })
+        | (Active(_, cells), MouseLeave(_)) => ReasonReact.Update({
+          ...state,
+          mouseState: Active(Outside, cells)
+        })
+        | (Active(_), MouseDown(_)) => ReasonReact.NoUpdate
+        | (Active(mousePosition, cellsToUndo), MouseUp(update)) => ReasonReact.UpdateWithSideEffects({
+          ...state,
+          mouseState: switch (mousePosition) {
+            | Inside => Preview(cells, update.index)
+            | Outside => Idle
+          }
+        }, (_) => {
+          onSetValue(applyUpdate(update, cells), Some(cellsToUndo));
+        })
       },
 
       didMount: (self) => {
-        self.state.onMouseMoveDom := onMouseMove(Webapi.Dom.MouseEvent.pageX, Webapi.Dom.MouseEvent.pageY, self);
-        self.state.onMouseUpDom := onMouseUp(Webapi.Dom.MouseEvent.pageX, Webapi.Dom.MouseEvent.pageY, self);
-        self.state.onMouseMoveReact := onMouseMove(ReactEvent.Mouse.pageX, ReactEvent.Mouse.pageY, self);
+        let onMouseMove = (self, event) => {
+          let pageX = Webapi.Dom.MouseEvent.pageX(event);
+          let pageY = Webapi.Dom.MouseEvent.pageY(event);
+
+          self.ReasonReact.send(MouseMove(getUpdate(self.state, cellSize, cells, self.state.fromFloat^, pageX, pageY)));
+        };
+
+        let onMouseUp = (self, event) => {
+          let pageX = Webapi.Dom.MouseEvent.pageX(event);
+          let pageY = Webapi.Dom.MouseEvent.pageY(event);
+
+          self.ReasonReact.send(MouseUp(getUpdate(self.state, cellSize, cells, self.state.fromFloat^, pageX, pageY)));
+        };
+
+        self.state.onMouseMoveDom := onMouseMove(self);
+        self.state.onMouseUpDom := onMouseUp(self);
 
         self.onUnmount(() => {
           Webapi.Dom.Document.removeMouseMoveEventListener(self.state.onMouseMoveDom^, Webapi.Dom.document);
@@ -148,7 +165,17 @@ let module Slider (Config: { type value }) = {
       didUpdate: ({ oldSelf, newSelf }) => {
         newSelf.state.fromFloat := fromFloat;
 
-        switch (useGlobalMouseEvents(oldSelf.state.mouseState), useGlobalMouseEvents(newSelf.state.mouseState)) {
+        let wasUsingListeners = switch (oldSelf.state.mouseState) {
+          | Idle => false
+          | Preview(_) | Active(_) => true
+        };
+
+        let isUsingListeners = switch (newSelf.state.mouseState) {
+          | Idle => false
+          | Preview(_) | Active(_) => true
+        };
+
+        switch (wasUsingListeners, isUsingListeners) {
           | (false, true) => {
             Webapi.Dom.Document.addMouseMoveEventListener(newSelf.state.onMouseMoveDom^, Webapi.Dom.document);
             Webapi.Dom.Document.addMouseUpEventListener(newSelf.state.onMouseUpDom^, Webapi.Dom.document);
@@ -157,20 +184,19 @@ let module Slider (Config: { type value }) = {
             Webapi.Dom.Document.removeMouseMoveEventListener(newSelf.state.onMouseMoveDom^, Webapi.Dom.document);
             Webapi.Dom.Document.removeMouseUpEventListener(newSelf.state.onMouseUpDom^, Webapi.Dom.document);
           }
-          | (_, _) => ()
+          | (false, false) => ()
+          | (true, true) => ()
         };
       },
 
       render: self => {
-        let { cellSize } = self.state;
-
         let valueOpacity = switch (self.state.mouseState) {
           | Idle => "0"
           | Preview(_) => "1"
           | Active(_) => "1"
         };
 
-        let onMouseMove = useGlobalMouseEvents(self.state.mouseState) ? noOpEventHandler : self.state.onMouseMoveReact^;
+        let getUpdateFromMouse = (event) => getUpdate(self.state, cellSize, cells, fromFloat, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
 
         <div
           ref={self.handle(setRootRef)}
@@ -180,24 +206,27 @@ let module Slider (Config: { type value }) = {
             ~height=string_of_int(cellSize) ++ "px",
             ()
           ))
-          onMouseEnter=(event => self.send(MouseEnter(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, true))))
-          onMouseDown=(event => {
-            if (ReactEvent.Mouse.shiftKey(event)) {
-              /* add state instead for mouseMove etc? */
-              let (x, _) = getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, false);
+          onMouseEnter=(event => {
+            // update offset first
+            self.state.offset := Utils.getOffset(self.state.rootRef^, 0, 0);
 
-              onSetLength(x);
+            self.send(MouseEnter(getUpdateFromMouse(event)));
+          })
+          onMouseDown=(event => {
+            let update = getUpdateFromMouse(event);
+
+            if (ReactEvent.Mouse.shiftKey(event)) {
+              onSetLength(update.index);
             } else {
-              self.send(MouseDown(getIndexAndValue(self.state, cells, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event), fromFloat, false)));
+              self.send(MouseDown(update));
             }
           })
-          onMouseLeave=(_event => self.send(MouseLeave))
-          onMouseMove
+          onMouseLeave=(event => self.send(MouseLeave(getUpdateFromMouse(event))))
         >
         (ReasonReact.array(Lane.mapi((i, value) => {
           let (scale, previewScale) = switch (self.state.mouseState) {
-            | Preview(index, _, previewCells) when index == i => (toFloat(Lane.get(i, previewCells)), toFloat(value))
-            | Idle | Preview(_) | Active(_) => (toFloat(value), 0.)
+            | Preview(cells, index) when index === i => (toFloat(Lane.get(i, cells)), toFloat(value))
+            | Preview(_) | Idle | Active(_) => (toFloat(value), 0.)
           };
 
           let isDisabled = i > disabledAfterIndex;
