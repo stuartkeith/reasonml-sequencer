@@ -75,7 +75,7 @@ type action =
 
 let component = ReasonReact.reducerComponent("App");
 
-/* see https://bryangarza.github.io/universal-quantification-in-ocaml.html */
+// see https://bryangarza.github.io/universal-quantification-in-ocaml.html
 type fnWrap = {
   fnWrap: 'a 'b . Lane.t('a, 'b) => Lane.t('a, 'b)
 };
