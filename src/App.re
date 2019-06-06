@@ -1,250 +1,117 @@
-let scales = [|
-  ("Chromatic", Scales.Chromatic),
-  ("Major", Scales.Major),
-  ("Dorian", Scales.Dorian),
-  ("Phrygian", Scales.Phrygian),
-  ("Lydian", Scales.Lydian),
-  ("Mixolydian", Scales.Mixolydian),
-  ("Minor", Scales.Minor),
-  ("Locrian", Scales.Locrian)
-|];
-
-let chords = [|
-  ("None", Chords.Solo),
-  ("Maj", Chords.Major),
-  ("Min", Chords.Minor),
-  ("Dom", Chords.Diminished),
-  ("Maj7", Chords.MajorSeventh),
-  ("Min7", Chords.MinorSeventh),
-  ("Dom7", Chords.DominantSeventh),
-  ("Sus2", Chords.Suspended2),
-  ("Sus4", Chords.Suspened4),
-  ("Aug", Chords.Augmented)
-|];
-
-type lanes = {
-  octave: Lane.t(int, unit),
-  transpose: Lane.t(int, unit),
-  pitch: Lane.t(int, Scales.t),
-  velocity: Lane.t(float, unit),
-  pan: Lane.t(float, unit),
-  chance: Lane.t(float, unit),
-  offset: Lane.t(float, unit),
-  length: Lane.t(float, unit),
-  filter: Lane.t(float, unit),
-  chord: Lane.t(int, array((string, Chords.t)))
-};
-
 type state = {
-  lanes,
-  lanesUndoBuffer: UndoBuffer.t(lanes),
-  lanesRedoBuffer: UndoBuffer.t(lanes),
+  synthTracks: list(SynthTrack.t),
+  synthTracksUndoBuffer: UndoBuffer.t(list(SynthTrack.t)),
+  synthTracksRedoBuffer: UndoBuffer.t(list(SynthTrack.t)),
   isPlaying: bool,
   volume: float,
   bpm: int,
   tick: int,
   sync: bool,
+  globalParameters: SynthParameters.globalParameters,
   scheduler: ref(option(WebAudio.schedule))
 };
 
-type lane(_, _) =
-  | Octave: lane(int, unit)
-  | Transpose: lane(int, unit)
-  | Pitch: lane(int, Scales.t)
-  | Velocity: lane(float, unit)
-  | Pan: lane(float, unit)
-  | Chance: lane(float, unit)
-  | Offset: lane(float, unit)
-  | Length: lane(float, unit)
-  | Filter: lane(float, unit)
-  | Chord: lane(int, array((string, Chords.t)));
-
-type action =
-  | Playback(float, float)
-  | AdvancePlayback
-  | RestartLanes
-  | SetPlayback(bool)
-  | SetSync(bool)
-  | RandomiseAll(bool)
-  | SetScale(Scales.t)
-  | SetVolume(float)
-  | SetBpm(int)
-  | UpdateLanes(lanes => (lanes, option(lanes)))
-  | Undo
-  | Redo;
-
 let component = ReasonReact.reducerComponent("App");
-
-// see https://bryangarza.github.io/universal-quantification-in-ocaml.html
-type fnWrap = {
-  fnWrap: 'a 'b . Lane.t('a, 'b) => Lane.t('a, 'b)
-};
-
-let applyToAllLanes = (state, { fnWrap }) => {
-  octave: fnWrap(state.octave),
-  transpose: fnWrap(state.transpose),
-  pitch: fnWrap(state.pitch),
-  velocity: fnWrap(state.velocity),
-  pan: fnWrap(state.pan),
-  chance: fnWrap(state.chance),
-  offset: fnWrap(state.offset),
-  length: fnWrap(state.length),
-  filter: fnWrap(state.filter),
-  chord: fnWrap(state.chord)
-};
-
-let mergeUndo = (source, target) => {
-  octave: Lane.merge(source.octave, target.octave),
-  transpose: Lane.merge(source.transpose, target.transpose),
-  pitch: Lane.merge(source.pitch, target.pitch),
-  velocity: Lane.merge(source.velocity, target.velocity),
-  pan: Lane.merge(source.pan, target.pan),
-  chance: Lane.merge(source.chance, target.chance),
-  offset: Lane.merge(source.offset, target.offset),
-  length: Lane.merge(source.length, target.length),
-  filter: Lane.merge(source.filter, target.filter),
-  chord: Lane.merge(source.chord, target.chord),
-};
-
-let updateLane = (type a, type b, lane:lane(a, b), lanes, fn: Lane.t(a, b) => Lane.t(a, b)) => {
-  switch (lane) {
-    | Octave => { ...lanes, octave: fn(lanes.octave) }
-    | Transpose => { ...lanes, transpose: fn(lanes.transpose) }
-    | Velocity => { ...lanes, velocity: fn(lanes.velocity) }
-    | Pan => { ...lanes, pan: fn(lanes.pan) }
-    | Chance => { ...lanes, chance: fn(lanes.chance) }
-    | Length => { ...lanes, length: fn(lanes.length) }
-    | Filter => { ...lanes, filter: fn(lanes.filter) }
-    | Pitch => { ...lanes, pitch: fn(lanes.pitch) }
-    | Chord => { ...lanes, chord: fn(lanes.chord) }
-    | Offset => { ...lanes, offset: fn(lanes.offset) }
-  }
-};
-
-let handleLaneAction = (lane, laneAction, lanes) => {
-  let partial = updateLane(lane, lanes);
-
-  Actions.(switch (laneAction) {
-    | SetLaneValue(array, undoArray) => {
-      let undoLanes = switch (undoArray) {
-        | Some(undoArrayArray) => Some(partial(lane => Lane.setValues(undoArrayArray, lane)))
-        | None => None
-      };
-
-      (partial(lane => Lane.setValues(array, lane)), undoLanes);
-    }
-    | SetLoopAfterIndex(index) => (partial(lane => Lane.setLoopAfterIndex(index, lane)), None)
-    | RandomiseLaneAbsolute => (partial(lane => Lane.randomAbsolute(lane) |> Lane.randomLoopAfterIndex), Some(lanes))
-    | RandomiseLaneRelative(delta) => (partial(lane => Lane.randomRelative(delta, lane)), Some(lanes))
-    | ResetLane => (partial(lane => Lane.reset(lane)), Some(lanes))
-    | SetSubTicks(value) => (partial(lane => Lane.setSubTicks(value, lane)), None)
-  });
-};
 
 let make = (_children) => {
   ...component,
 
   initialState: () => {
-    let scale = switch (Random.int(7)) {
-      | 0 => Scales.Major
-      | 1 => Scales.Dorian
-      | 2 => Scales.Phrygian
-      | 3 => Scales.Lydian
-      | 4 => Scales.Mixolydian
-      | 5 => Scales.Minor
-      | 6 => Scales.Locrian
-      | _ => raise(Not_found)
+    let (_, initialScale) = Scales.scales[Random.int(Array.length(Scales.scales))];
+
+    let initialGlobalParameters = SynthParameters.{
+      scale: initialScale
     };
 
-    let length = 16;
-
-    let lanes = {
-      octave: Lane.create(Parameter.createInt(0, -2, 1), 1, length),
-      transpose: Lane.create(Parameter.createInt(0, 0, 11), 16, length),
-      pitch: Lane.create(Parameter.createScale(scale), 1, length),
-      velocity: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
-      pan: Lane.create(Parameter.createFloat(0.0, -1.0, 1.0), 1, length),
-      chance: Lane.create(Parameter.createFloat(1.0, 0.0, 1.0), 1, length),
-      offset: Lane.create(Parameter.createFloat(0.0, 0.0, 1.0), 1, length),
-      length: Lane.create(Parameter.createFloat(1.0, 0.0, 2.0), 1, length),
-      filter: Lane.create(Parameter.createFloat(0.5, 0.0, 1.0), 1, length),
-      chord: Lane.create(Parameter.createArray(chords), 1, length)
-    };
+    let synthTracks = SynthTracks.default(initialGlobalParameters);
 
     {
-      lanes,
-      lanesUndoBuffer: UndoBuffer.create(12, lanes),
-      lanesRedoBuffer: UndoBuffer.create(12, lanes),
+      synthTracks,
+      synthTracksUndoBuffer: UndoBuffer.create(12, []),
+      synthTracksRedoBuffer: UndoBuffer.create(12, []),
       isPlaying: false,
       volume: 1.0,
       bpm: 120,
       tick: 0,
       sync: false,
-      scheduler: ref(None)
-    }
+      scheduler: ref(None),
+      globalParameters: initialGlobalParameters
+    };
   },
 
   reducer: (action, state) =>
     switch (action) {
-      | Undo => switch (UndoBuffer.read(state.lanesUndoBuffer)) {
+      | Undo => switch (UndoBuffer.read(state.synthTracksUndoBuffer)) {
         | None => ReasonReact.NoUpdate
-        | Some(lanes) => ReasonReact.Update({
+        | Some(synthTracks) => ReasonReact.Update({
           ...state,
-          lanes: mergeUndo(lanes, state.lanes),
-          lanesUndoBuffer: UndoBuffer.pop(state.lanesUndoBuffer),
-          lanesRedoBuffer: UndoBuffer.write(state.lanes, state.lanesRedoBuffer)
+          synthTracks: SynthTracks.merge(synthTracks, state.synthTracks),
+          synthTracksUndoBuffer: UndoBuffer.pop(state.synthTracksUndoBuffer),
+          synthTracksRedoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksRedoBuffer)
         })
       }
-      | Redo => switch (UndoBuffer.read(state.lanesRedoBuffer)) {
+      | Redo => switch (UndoBuffer.read(state.synthTracksRedoBuffer)) {
         | None => ReasonReact.NoUpdate
-        | Some(lanes) => ReasonReact.Update({
+        | Some(synthTracks) => ReasonReact.Update({
           ...state,
-          lanes: mergeUndo(lanes, state.lanes),
-          lanesUndoBuffer: UndoBuffer.write(state.lanes, state.lanesUndoBuffer),
-          lanesRedoBuffer: UndoBuffer.pop(state.lanesRedoBuffer)
+          synthTracks: SynthTracks.merge(synthTracks, state.synthTracks),
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracksRedoBuffer: UndoBuffer.pop(state.synthTracksRedoBuffer)
         })
       }
-      | RestartLanes => ReasonReact.Update({
+      | Restart => ReasonReact.Update({
         ...state,
-        lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.restart(lane) }),
+        synthTracks: List.map(synthTrack:SynthTrack.t => {
+          ...synthTrack,
+          timing: Timing.default
+        }, state.synthTracks),
         tick: 0
       })
       | Playback(beatTime, beatLength) => ReasonReact.SideEffects((self) => {
-        let chance = Random.float(1.);
-
-        let offset = Lane.value(self.state.lanes.offset);
-
-        if (chance < Lane.value(self.state.lanes.chance)) {
-          let octave = Lane.value(self.state.lanes.octave);
-          let transpose = Lane.value(self.state.lanes.transpose);
-          let pitch = Lane.value(self.state.lanes.pitch);
-          let velocity = Lane.value(self.state.lanes.velocity);
-          let pan = Lane.value(self.state.lanes.pan);
-          let length = Lane.value(self.state.lanes.length);
-          let filter = Lane.value(self.state.lanes.filter);
-          let chordIndex = Lane.value(self.state.lanes.chord);
-
-          let (_, chordType) = chords[chordIndex];
-          let chord = Chords.value(chordType);
-
-          let scale = Lane.getParameter(self.state.lanes.pitch).value;
-          let pitchScaled = Scales.value(pitch, scale);
-          let note = (octave * 12) + transpose + pitchScaled;
-
-          WebAudio.playSynth(~note, ~chord, ~gain=velocity, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
+        let initialParameters = SynthParameters.{
+          chance: 1.0,
+          chord: [||],
+          filter: 1.0,
+          gain: 1.0,
+          length: 1.0,
+          note: 0,
+          offset: 0.0,
+          pan: 0.0
         };
 
-        WebAudio.playHihat(~start=beatTime +. (beatLength *. offset));
+        let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
+          let index = Timing.index(synthTrack.loopAfterIndex, synthTrack.timing);
+
+          SynthValues.updateSynthParameters(self.state.globalParameters, initialParameters, index, synthTrack.values, synthTrack.valueConverter);
+        }, initialParameters, state.synthTracks);
+
+        let chance = Random.float(1.);
+
+        if (playback.chance > 0.0 && chance <= playback.chance) {
+          let note = playback.note;
+          let chord = playback.chord;
+          let gain = playback.gain;
+          let pan = playback.pan;
+          let length = playback.length;
+          let filter = playback.filter;
+
+          WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
+        }
+
+        WebAudio.playHihat(~start=beatTime +. (beatLength *. playback.offset));
 
         self.send(AdvancePlayback);
       })
       | AdvancePlayback => {
         let nextTick = state.tick + 1;
-        let sync = state.sync ? Lane.Sync(nextTick) : Lane.NoSync;
+        let sync = state.sync ? Timing.Sync(nextTick) : Timing.NoSync;
 
         ReasonReact.Update({
           ...state,
-          lanes: applyToAllLanes(state.lanes, { fnWrap: lane => Lane.advance(sync, lane) }),
+          synthTracks: List.map((synthTrack:SynthTrack.t) => {
+            ...synthTrack,
+            timing: Timing.advance(synthTrack.subTicks, synthTrack.loopAfterIndex, sync, synthTrack.timing),
+          }, state.synthTracks),
           tick: nextTick
         });
       }
@@ -259,33 +126,18 @@ let make = (_children) => {
       | RandomiseAll(canUndo) => {
         ReasonReact.Update({
           ...state,
-          lanesUndoBuffer: canUndo ? UndoBuffer.write(state.lanes, state.lanesUndoBuffer) : state.lanesUndoBuffer,
-          lanes: {
-            octave: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.octave)
-              |> Lane.randomLoopAfterIndex,
-            transpose: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.transpose)
-              |> Lane.randomLoopAfterIndex,
-            pitch: Lane.mapTransform((_, min, max) => min + Random.int(max - min + 1), state.lanes.pitch)
-              |> Lane.randomLoopAfterIndex,
-            velocity: Lane.mapTransform((_, _, _) => 0.9 +. Random.float(0.1), state.lanes.velocity)
-              |> Lane.randomLoopAfterIndex,
-            chance: Lane.mapTransform((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.chance)
-              |> Lane.randomLoopAfterIndex,
-            pan: Lane.reset(state.lanes.pan),
-            offset: Lane.reset(state.lanes.offset),
-            length: Lane.mapTransform((_, _, _) => 0.2 +. Random.float(1.4), state.lanes.length)
-              |> Lane.randomLoopAfterIndex,
-            filter: Lane.mapTransform((_, _, _) => 0.4 +. Random.float(0.6), state.lanes.filter)
-              |> Lane.randomLoopAfterIndex,
-            chord: state.lanes.chord
-          }
+          synthTracksUndoBuffer: canUndo ? UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer) : state.synthTracksUndoBuffer,
+          synthTracks: List.map((synthTrack:SynthTrack.t) => {
+            ...synthTrack,
+          values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
+          loopAfterIndex: Random.int(SynthValues.valuesLength(synthTrack.values))
+          }, state.synthTracks)
         })
       }
       | SetScale(scale) => ReasonReact.Update({
         ...state,
-        lanes: {
-          ...state.lanes,
-          pitch: Lane.setParameter(Parameter.createScale(scale), state.lanes.pitch),
+        globalParameters: {
+          scale: scale
         }
       })
       | SetVolume(volume) => ReasonReact.Update({
@@ -296,27 +148,85 @@ let make = (_children) => {
         ...state,
         bpm
       })
-      | UpdateLanes(updateFn) => {
-        let (newLanes, lanesToUndo) = updateFn(state.lanes);
+      | SetValues(id, values, synthTracksToUndo) => {
+        let synthTracksUndoBuffer = switch (synthTracksToUndo) {
+          | Some(values) => {
+            let synthTracks = SynthTracks.mapSynthTrackById(id, (synthTrack => {
+              ...synthTrack,
+              values
+            }), state.synthTracks);
 
-        let lanesUndoBuffer = switch (lanesToUndo) {
-          | Some(lanes) => UndoBuffer.write(lanes, state.lanesUndoBuffer)
-          | None => state.lanesUndoBuffer
+            UndoBuffer.write(synthTracks, state.synthTracksUndoBuffer);
+          }
+          | None => state.synthTracksUndoBuffer
         };
+
+        let synthTracks = SynthTracks.mapSynthTrackById(id, (synthTrack => {
+          ...synthTrack,
+          values
+        }), state.synthTracks);
 
         ReasonReact.Update({
           ...state,
-          lanes: newLanes,
-          lanesUndoBuffer
+          synthTracksUndoBuffer,
+          synthTracks
         });
       }
+      | SetLoopAfterIndex(id, index) => {
+        ReasonReact.Update({
+          ...state,
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracks: SynthTracks.mapSynthTrackById(id, (synthTrack) => {
+            ...synthTrack,
+            loopAfterIndex: index
+          }, state.synthTracks)
+        });
+      }
+      | RandomiseAbsolute(id) => {
+        ReasonReact.Update({
+          ...state,
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
+            ...synthTrack,
+            values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values)
+          }, state.synthTracks)
+        });
+      }
+      | RandomiseRelative(id) => {
+        ReasonReact.Update({
+          ...state,
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
+            ...synthTrack,
+            values: SynthValues.randomValuesRelative(state.globalParameters, synthTrack.valueConverter, synthTrack.values)
+          }, state.synthTracks)
+        });
+      }
+      | Reset(id) => {
+        ReasonReact.Update({
+          ...state,
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
+            ...synthTrack,
+            values: SynthValues.defaultValues(state.globalParameters, synthTrack.valueConverter, SynthValues.valuesLength(synthTrack.values))
+          }, state.synthTracks)
+        });
+      }
+      | SetSubTicks(id, subTicks) => {
+        ReasonReact.Update({
+          ...state,
+          synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+          synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
+            ...synthTrack,
+            subTicks
+          }, state.synthTracks)
+        });
+    }
     },
 
   didMount: (self) => {
-    self.send(RandomiseAll(false));
-
     let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
-      self.send(Playback(beatTime, beatLength));
+      self.send(Actions.Playback(beatTime, beatLength));
     });
 
     scheduler.setBpm(float_of_int(self.state.bpm));
@@ -332,7 +242,7 @@ let make = (_children) => {
         | None => ()
         | Some(scheduler) => {
           if (newSelf.state.isPlaying) {
-            newSelf.send(RestartLanes);
+            newSelf.send(Restart);
 
             scheduler.start();
           } else {
@@ -355,24 +265,18 @@ let make = (_children) => {
   },
 
   render: self => {
-    let selectedScale = Lane.getParameter(self.state.lanes.pitch).value;
-
-    let sendLaneAction = (lane, laneAction) => {
-      self.send(UpdateLanes(lanes => handleLaneAction(lane, laneAction, lanes)));
-    };
-
     <div className="ma4">
       <div className="flex items-center">
         <button
           className="w4 h2 flex-none"
-          disabled=(UndoBuffer.isEmpty(self.state.lanesUndoBuffer))
+          disabled=(UndoBuffer.isEmpty(self.state.synthTracksUndoBuffer))
           onClick=(_event => self.send(Undo))
         >
           (ReasonReact.string("Undo"))
         </button>
         <button
           className="w4 h2 flex-none"
-          disabled=(UndoBuffer.isEmpty(self.state.lanesRedoBuffer))
+          disabled=(UndoBuffer.isEmpty(self.state.synthTracksRedoBuffer))
           onClick=(_event => self.send(Redo))
         >
           (ReasonReact.string("Redo"))
@@ -396,7 +300,7 @@ let make = (_children) => {
         <button className="w4 h2 flex-none" onClick=(_event => self.send(SetPlayback(!self.state.isPlaying)))>
           (self.state.isPlaying ? ReasonReact.string("Stop") : ReasonReact.string("Play"))
         </button>
-        <button className="w4 h2 flex-none" onClick=(_event => self.send(RestartLanes))>
+        <button className="w4 h2 flex-none" onClick=(_event => self.send(Restart))>
           (ReasonReact.string("Restart"))
         </button>
         <button className="w4 h2 flex-none" onClick=(_event => self.send(RandomiseAll(true)))>
@@ -416,93 +320,28 @@ let make = (_children) => {
               type_="radio"
               name="scale"
               value=label
-              checked=(scale === selectedScale)
+              checked=(scale === self.state.globalParameters.scale)
               onChange=((_event) => self.send(SetScale(scale)))
             />
             (ReasonReact.string(label))
           </label>
-        , scales)))
+        , Scales.scales)))
       </div>
-      <div className="h1" />
-      <Row.RowInt
-        label="Octave"
-        lane=self.state.lanes.octave
-        laneType=Octave
-        relativeValue=1
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowInt
-        label="Transpose"
-        lane=self.state.lanes.transpose
-        laneType=Transpose
-        relativeValue=3
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowInt
-        label="Pitch"
-        lane=self.state.lanes.pitch
-        laneType=Pitch
-        relativeValue=3
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Velocity"
-        lane=self.state.lanes.velocity
-        laneType=Velocity
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Pan"
-        lane=self.state.lanes.pan
-        laneType=Pan
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Chance"
-        lane=self.state.lanes.chance
-        laneType=Chance
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Offset"
-        lane=self.state.lanes.offset
-        laneType=Offset
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Length"
-        lane=self.state.lanes.length
-        laneType=Length
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowFloat
-        label="Filter"
-        lane=self.state.lanes.filter
-        laneType=Filter
-        relativeValue=0.2
-        sendLaneAction
-      />
-      <div className="h1" />
-      <Row.RowInt
-        label="Chord"
-        lane=self.state.lanes.chord
-        laneType=Chord
-        relativeValue=3
-        sendLaneAction
-      />
+      (
+        List.mapi((index, synthTrack:SynthTrack.t) => {
+          // TODO - replace with keyed fragment when upgrading reason-react
+          <div key=(Id.toString(synthTrack.id))>
+            {index > 0 ? <div className="h1 flex-none" /> : ReasonReact.null}
+            <Track
+              synthTrack
+              globalParameters=self.state.globalParameters
+              send=self.send
+            />
+          </div>
+        }, self.state.synthTracks)
+        |> Array.of_list
+        |> ReasonReact.array
+      )
     </div>
   },
 };

@@ -13,3 +13,13 @@ let rec getOffset = (element, x, y) => {
 };
 
 let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value));
+
+let randomArrayValue = (array) => array[Random.int(Array.length(array))];
+
+let rec getArrayIndex = (array, value, index) => {
+  if (array[index] === value) {
+    index;
+  } else {
+    getArrayIndex(array, value, index + 1);
+  }
+};
