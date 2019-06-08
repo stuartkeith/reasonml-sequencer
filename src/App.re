@@ -93,8 +93,8 @@ let reducer = (state, action) => {
       synthTracks: List.map((synthTrack:SynthTrack.t) => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopAfterIndex: Random.int(SynthValues.valuesLength(synthTrack.values))
-      }, state.synthTracks)
+        loopAfterIndex: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values) - 1)
+      }, state.synthTracks),
       globalTranspose: randomTranspose()
     }
     | SetScale(scale) => {
@@ -125,7 +125,7 @@ let reducer = (state, action) => {
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopAfterIndex: Random.int(SynthValues.valuesLength(synthTrack.values))
+        loopAfterIndex: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values) - 1)
       }, state.synthTracks)
     }
     | RandomiseRelative(id) => {

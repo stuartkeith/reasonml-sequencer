@@ -16,6 +16,8 @@ let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value))
 
 let randomArrayValue = (array) => array[Random.int(Array.length(array))];
 
+let randomInt = (min, max) => min + Random.int(max - min + 1);
+
 let rec getArrayIndex = (array, value, index) => {
   if (array[index] === value) {
     index;
