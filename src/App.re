@@ -278,7 +278,7 @@ let useScheduler = (state, dispatch) => {
           WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
         }
 
-        WebAudio.playHihat(~start=beatTime +. (beatLength *. playback.offset));
+        WebAudio.playHihat(~start=beatTime);
 
         dispatch(Actions.AdvancePlayback);
       });
