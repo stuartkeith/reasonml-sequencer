@@ -238,58 +238,54 @@ let reducer = (state, action) => {
   }
 };
 
+let scheduleCallback = (stateRef, dispatch) => (beatTime, beatLength) => {
+  let state = React.Ref.current(stateRef);
+
+  let initialParameters = SynthParameters.{
+    chance: 1.0,
+    chord: [||],
+    filter: 1.0,
+    gain: 1.0,
+    length: 1.0,
+    note: 0,
+    offset: 0.0,
+    pan: 0.0
+  };
+
+  let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
+    let index = Timing.index(synthTrack.loopAfterIndex, synthTrack.timing);
+
+    SynthValues.updateSynthParameters(state.globalParameters, initialParameters, index, synthTrack.values, synthTrack.valueConverter);
+  }, initialParameters, state.synthTracks);
+
+  let chance = Random.float(1.);
+
+  if (playback.chance > 0.0 && chance <= playback.chance) {
+    let note = playback.note + state.globalTranspose;
+    let chord = playback.chord;
+    let gain = playback.gain;
+    let pan = playback.pan;
+    let length = playback.length;
+    let filter = playback.filter;
+
+    WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
+  }
+
+  WebAudio.playHihat(~start=beatTime);
+
+  dispatch(Actions.AdvancePlayback);
+};
+
 let useScheduler = (state, dispatch) => {
   let schedulerRef = React.useRef(None);
-  let synthTracksRef = React.useRef(state.synthTracks);
-  let globalParametersRef = React.useRef(state.globalParameters);
-  let globalTransposeRef = React.useRef(state.globalTranspose);
+  let stateRef = React.useRef(state);
 
-  React.Ref.setCurrent(synthTracksRef, state.synthTracks);
-  React.Ref.setCurrent(globalParametersRef, state.globalParameters);
-  React.Ref.setCurrent(globalTransposeRef, state.globalTranspose);
+  React.Ref.setCurrent(stateRef, state);
 
   let scheduler = switch (React.Ref.current(schedulerRef)) {
     | Some(scheduler) => scheduler;
     | None => {
-      let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
-        let globalParameters = React.Ref.current(globalParametersRef);
-        let synthTracks = React.Ref.current(synthTracksRef);
-        let globalTranspose = React.Ref.current(globalTransposeRef);
-
-        let initialParameters = SynthParameters.{
-          chance: 1.0,
-          chord: [||],
-          filter: 1.0,
-          gain: 1.0,
-          length: 1.0,
-          note: 0,
-          offset: 0.0,
-          pan: 0.0
-        };
-
-        let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
-          let index = Timing.index(synthTrack.loopAfterIndex, synthTrack.timing);
-
-          SynthValues.updateSynthParameters(globalParameters, initialParameters, index, synthTrack.values, synthTrack.valueConverter);
-        }, initialParameters, synthTracks);
-
-        let chance = Random.float(1.);
-
-        if (playback.chance > 0.0 && chance <= playback.chance) {
-          let note = playback.note + globalTranspose;
-          let chord = playback.chord;
-          let gain = playback.gain;
-          let pan = playback.pan;
-          let length = playback.length;
-          let filter = playback.filter;
-
-          WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
-        }
-
-        WebAudio.playHihat(~start=beatTime);
-
-        dispatch(Actions.AdvancePlayback);
-      });
+      let scheduler = WebAudio.createSchedule(scheduleCallback(stateRef, dispatch));
 
       React.Ref.setCurrent(schedulerRef, Some(scheduler));
 
