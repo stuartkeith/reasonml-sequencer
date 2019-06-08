@@ -290,35 +290,31 @@ let useScheduler = (state, dispatch) => {
 
   scheduler.setBpm(state.bpm);
 
-  // stop scheduler when component removed.
-  React.useEffect1(() => {
-    Some(() => {
-      scheduler.stop();
-    });
-  }, [||]);
-
-  scheduler;
-};
-
-[@react.component]
-let make = () => {
-  let (state, dispatch) = React.useReducerWithMapState(reducer, (), initialState);
-  let scheduler = useScheduler(state, dispatch);
-
   React.useEffect2(() => {
     switch (state.isPlaying) {
       | true => {
         dispatch(Restart);
 
         scheduler.start();
+
+        Some(() => {
+          scheduler.stop();
+        });
       }
       | false => {
         scheduler.stop();
-      }
-    }
 
-    None;
+        None;
+      }
+    };
   }, (dispatch, state.isPlaying));
+};
+
+[@react.component]
+let make = () => {
+  let (state, dispatch) = React.useReducerWithMapState(reducer, (), initialState);
+
+  useScheduler(state, dispatch);
 
   React.useEffect1(() => {
     WebAudio.setGlobalVolume(state.volume);
