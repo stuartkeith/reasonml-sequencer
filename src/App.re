@@ -119,7 +119,8 @@ let reducer = (state, action) => {
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
-        values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values)
+        values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
+        loopAfterIndex: Random.int(SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks)
     }
     | RandomiseRelative(id) => {
