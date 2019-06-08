@@ -140,7 +140,7 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Offset", SynthValues.createValueConverter(
-      mapFloatRange(0.0, 0.0, 1.0, 0.2),
+      mapFloatRange(0.0, 0.0, 0.25, 0.1),
       (parameters, value) => {
         ...parameters,
         offset: parameters.offset +. value
