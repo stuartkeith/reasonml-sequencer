@@ -10,6 +10,26 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     | Active(_) => Slider.Deactive
   };
 
+  let mapValues = React.useCallback2(
+    SynthValues.mapValues(globalParameters, synthTrack.valueConverter),
+    (globalParameters, synthTrack.valueConverter)
+  );
+
+  let getValuesAt = React.useCallback2(
+    SynthValues.getValuesAt(globalParameters, synthTrack.valueConverter),
+    (globalParameters, synthTrack.valueConverter)
+  );
+
+  let onAction = React.useCallback1(
+    (update, action) => dispatch(Actions.TrackEditMode(synthTrack.id, update, action)),
+    [|synthTrack.id|]
+  );
+
+  let onSetLength = React.useCallback1(
+    (index) => dispatch(Actions.SetLoopAfterIndex(synthTrack.id, index)),
+    [|synthTrack.id|]
+  );
+
   <div className="flex items-center">
     <p className="ma0 w4 flex-none">(React.string(synthTrack.label))</p>
     <div className="w1 flex-none" />
@@ -29,13 +49,13 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     <div className="w1 flex-none" />
     <Slider
       viewMode
-      mapValues=SynthValues.mapValues(globalParameters, synthTrack.valueConverter)
-      getValuesAt=SynthValues.getValuesAt(globalParameters, synthTrack.valueConverter)
+      mapValues
+      getValuesAt
       values=synthTrack.values
       highlightedIndex=Timing.index(synthTrack.loopAfterIndex, synthTrack.timing)
       disabledAfterIndex=synthTrack.loopAfterIndex
-      onAction=((update, action) => dispatch(TrackEditMode(synthTrack.id, update, action)))
-      onSetLength=((index) => dispatch(SetLoopAfterIndex(synthTrack.id, index)))
+      onAction
+      onSetLength
     />
     <div className="w1 flex-none" />
     <div className="flex flex-none">

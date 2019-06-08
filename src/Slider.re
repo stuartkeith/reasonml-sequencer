@@ -161,3 +161,5 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
     |> React.array)
   </div>
 };
+
+let make = React.memo(make);
