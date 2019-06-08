@@ -7,7 +7,7 @@ type mouseAction =
 
 type action =
   | AdvancePlayback
-  | RandomiseAll(bool)
+  | RandomiseAll
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)
   | Redo

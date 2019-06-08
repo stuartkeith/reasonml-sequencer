@@ -83,9 +83,9 @@ let reducer = (state, action) => {
       ...state,
       sync: value
     }
-    | RandomiseAll(canUndo) => {
+    | RandomiseAll => {
       ...state,
-      synthTracksUndoBuffer: canUndo ? UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer) : state.synthTracksUndoBuffer,
+      synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: List.map((synthTrack:SynthTrack.t) => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
@@ -365,7 +365,7 @@ let make = () => {
       <button className="w4 h2 flex-none" onClick=(_event => dispatch(Restart))>
         (React.string("Restart"))
       </button>
-      <button className="w4 h2 flex-none" onClick=(_event => dispatch(RandomiseAll(true)))>
+      <button className="w4 h2 flex-none" onClick=(_event => dispatch(RandomiseAll))>
         (React.string("Randomise All"))
       </button>
       <label className="flex-none">
