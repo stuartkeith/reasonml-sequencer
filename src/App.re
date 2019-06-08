@@ -8,8 +8,11 @@ type state = {
   tick: int,
   sync: bool,
   globalParameters: SynthParameters.globalParameters,
-  editMode: TrackEditMode.editMode
+  editMode: TrackEditMode.editMode,
+  globalTranspose: int
 };
+
+let randomTranspose = () => Random.int(12);
 
 let initialState = () => {
   let (_, initialScale) = Utils.randomArrayValue(Scales.scales);
@@ -30,7 +33,8 @@ let initialState = () => {
     tick: 0,
     sync: false,
     globalParameters: initialGlobalParameters,
-    editMode: Inactive
+    editMode: Inactive,
+    globalTranspose: randomTranspose()
   };
 };
 
@@ -91,6 +95,7 @@ let reducer = (state, action) => {
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
         loopAfterIndex: Random.int(SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks)
+      globalTranspose: randomTranspose()
     }
     | SetScale(scale) => {
       ...state,
@@ -237,9 +242,11 @@ let useScheduler = (state, dispatch) => {
   let schedulerRef = React.useRef(None);
   let synthTracksRef = React.useRef(state.synthTracks);
   let globalParametersRef = React.useRef(state.globalParameters);
+  let globalTransposeRef = React.useRef(state.globalTranspose);
 
   React.Ref.setCurrent(synthTracksRef, state.synthTracks);
   React.Ref.setCurrent(globalParametersRef, state.globalParameters);
+  React.Ref.setCurrent(globalTransposeRef, state.globalTranspose);
 
   let scheduler = switch (React.Ref.current(schedulerRef)) {
     | Some(scheduler) => scheduler;
@@ -247,6 +254,7 @@ let useScheduler = (state, dispatch) => {
       let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
         let globalParameters = React.Ref.current(globalParametersRef);
         let synthTracks = React.Ref.current(synthTracksRef);
+        let globalTranspose = React.Ref.current(globalTransposeRef);
 
         let initialParameters = SynthParameters.{
           chance: 1.0,
@@ -268,7 +276,7 @@ let useScheduler = (state, dispatch) => {
         let chance = Random.float(1.);
 
         if (playback.chance > 0.0 && chance <= playback.chance) {
-          let note = playback.note;
+          let note = playback.note + globalTranspose;
           let chord = playback.chord;
           let gain = playback.gain;
           let pan = playback.pan;
