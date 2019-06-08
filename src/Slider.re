@@ -29,11 +29,11 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
   let containerRef = React.useRef(Js.Nullable.null);
   let offsetRef = React.useRef((0, 0));
 
-  let (containerOpacity, valueOpacity) = switch (viewMode) {
-    | Inactive => ("1", "0")
-    | Deactive => ("0.5", "0")
-    | Preview(_) => ("1", "1")
-    | Active => ("1", "1")
+  let (containerOpacity, showValues) = switch (viewMode) {
+    | Inactive => ("1", false)
+    | Deactive => ("0.5", false)
+    | Preview(_) => ("1", true)
+    | Active => ("1", true)
   };
 
   let cellSize = 48;
@@ -147,15 +147,11 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
             ()
           ))
         />
-        <div
-          className="gray absolute absolute--center opacity-transition-1"
-          style=(ReactDOMRe.Style.make(
-            ~opacity=valueOpacity,
-            ()
-          ))
-        >
-          (React.string(value.label))
-        </div>
+        (showValues ?
+          <div className="gray absolute absolute--center opacity-transition-1">
+            (React.string(value.label))
+          </div>
+        : React.null)
       </div>
     }, values)
     |> React.array)
