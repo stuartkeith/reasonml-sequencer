@@ -13,7 +13,7 @@ type action =
   | Redo
   | Reset(Id.t)
   | Restart
-  | SetBpm(int)
+  | SetBpm(float)
   | SetLoopAfterIndex(Id.t, int)
   | SetPlayback(bool)
   | SetScale(Scales.t)

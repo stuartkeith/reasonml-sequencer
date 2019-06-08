@@ -4,7 +4,7 @@ type state = {
   synthTracksRedoBuffer: UndoBuffer.t(list(SynthTrack.t)),
   isPlaying: bool,
   volume: float,
-  bpm: int,
+  bpm: float,
   tick: int,
   sync: bool,
   globalParameters: SynthParameters.globalParameters,
@@ -26,7 +26,7 @@ let initialState = () => {
     synthTracksRedoBuffer: UndoBuffer.create(12, []),
     isPlaying: false,
     volume: 1.0,
-    bpm: 120,
+    bpm: 120.0,
     tick: 0,
     sync: false,
     globalParameters: initialGlobalParameters,
@@ -288,7 +288,7 @@ let useScheduler = (state, dispatch) => {
     }
   };
 
-  scheduler.setBpm(float_of_int(state.bpm));
+  scheduler.setBpm(state.bpm);
 
   // stop scheduler when component removed.
   React.useEffect1(() => {
@@ -343,12 +343,12 @@ let make = () => {
         (React.string("Redo"))
       </button>
       <Range
-        value=float_of_int(state.bpm)
-        label=("BPM: " ++ string_of_int(state.bpm))
+        value=state.bpm
+        label=("BPM: " ++ Js.Float.toString(state.bpm))
         min=40.0
         max=200.0
         step=1.0
-        onChange=(value => dispatch(SetBpm(int_of_float(value))))
+        onChange=(value => dispatch(SetBpm(value)))
       />
       <Range
         value=state.volume
