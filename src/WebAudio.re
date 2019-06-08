@@ -195,13 +195,15 @@ let createSchedule = (callback) => {
     let targetTime = getCurrentTime(audioContext) +. 0.2;
     let beatLength = 60. /. bpm^ /. ticksPerBeat;
 
+    // "stop" may be called during the callback, so the timeout must be set
+    // first.
+    timeoutId := Some(Js.Global.setTimeout(onTimeout, 100));
+
     while (beatTime^ < targetTime) {
       callback(beatTime^, beatLength);
 
       beatTime := beatTime^ +. beatLength;
     };
-
-    timeoutId := Some(Js.Global.setTimeout(onTimeout, 100));
   };
 
   let start = () => {
@@ -230,5 +232,5 @@ let createSchedule = (callback) => {
     start,
     stop,
     setBpm
-  }
+  };
 };
