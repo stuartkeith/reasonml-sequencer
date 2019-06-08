@@ -1,5 +1,10 @@
 type values = array(float);
 
+type valuesUpdate = {
+  index: int,
+  value: float
+};
+
 type value = {
   label: string,
   number: float

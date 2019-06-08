@@ -1,6 +1,12 @@
+type mouseAction =
+  | MouseEnter
+  | MouseMove
+  | MouseLeave
+  | MouseDown
+  | MouseUp;
+
 type action =
   | AdvancePlayback
-  | Playback(float, float)
   | RandomiseAll(bool)
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)
@@ -13,6 +19,6 @@ type action =
   | SetScale(Scales.t)
   | SetSubTicks(Id.t, int)
   | SetSync(bool)
-  | SetValues(Id.t, SynthValues.values, option(SynthValues.values))
   | SetVolume(float)
+  | TrackEditMode(Id.t, SynthValues.valuesUpdate, mouseAction)
   | Undo;
