@@ -2,26 +2,26 @@ let mapIntRange = (defaultValue, min, max, randomRelativeRange) => SynthValues.{
   defaultValue: (_) => defaultValue,
   fromFloat: (_globalParameters, value) => min + int_of_float(float_of_int(max - min) *. value),
   toFloat: (_globalParameters, value) => float_of_int(value - min) /. float_of_int(max - min),
-  randomValueAbsolute: (_globalParameters, _value) => min + Random.int(max - min + 1),
-  randomValueRelative: (_globalParameters, value) => {
+  randomValueAbsolute: (_globalParameters, values) => Array.map((_) => min + Random.int(max - min + 1), values),
+  randomValueRelative: (_globalParameters, values) => Array.map((value) => {
     let deltaMin = Pervasives.max(min, value - randomRelativeRange);
     let deltaMax = Pervasives.min(max, value + randomRelativeRange);
 
     deltaMin + Random.int(deltaMax - deltaMin + 1);
-  }
+  }, values)
 };
 
 let mapFloatRange = (defaultValue, min, max, randomRelativeRange) => SynthValues.{
   defaultValue: (_) => defaultValue,
   fromFloat: (_globalParameters, value) => min +. ((max -. min) *. value),
   toFloat: (_globalParameters, value) => (value -. min) /. (max -. min),
-  randomValueAbsolute: (_globalParameters, _value) => min +. Random.float(max -. min),
-  randomValueRelative: (_globalParameters, value) => {
+  randomValueAbsolute: (_globalParameters, values) => Array.map((_) => min +. Random.float(max -. min), values),
+  randomValueRelative: (_globalParameters, values) => Array.map((value) => {
     let deltaMin = Pervasives.max(min, value -. randomRelativeRange);
     let deltaMax = Pervasives.min(max, value +. randomRelativeRange);
 
     deltaMin +. Random.float(deltaMax -. deltaMin);
-  },
+  }, values)
 };
 
 let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
@@ -38,21 +38,24 @@ let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
 
     float_of_int(index) /. float_of_int(Array.length(array) - 1);
   },
-  randomValueAbsolute: (globalParameters, _value) => {
+  randomValueAbsolute: ((globalParameters, values) => {
     let array = getArray(globalParameters);
 
-    Utils.randomArrayValue(array);
-  },
-  randomValueRelative: (globalParameters, value) => {
+    Array.map((_) => Utils.randomArrayValue(array), values);
+  }),
+  randomValueRelative: (globalParameters, values) => {
     let array = getArray(globalParameters);
-    let index = Utils.getArrayIndex(array, value, 0);
 
-    let deltaMin = Pervasives.max(0, index - randomRelativeRange);
-    let deltaMax = Pervasives.min(Array.length(array) - 1, index + randomRelativeRange);
+    Array.map((value) => {
+      let index = Utils.getArrayIndex(array, value, 0);
 
-    let randomIndex = deltaMin + Random.int(deltaMax - deltaMin + 1);
+      let deltaMin = Pervasives.max(0, index - randomRelativeRange);
+      let deltaMax = Pervasives.min(Array.length(array) - 1, index + randomRelativeRange);
 
-    array[randomIndex];
+      let randomIndex = deltaMin + Random.int(deltaMax - deltaMin + 1);
+
+      array[randomIndex];
+    }, values);
   },
 };
 
