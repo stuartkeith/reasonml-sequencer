@@ -12,7 +12,7 @@ type state = {
   globalTranspose: int
 };
 
-let randomTranspose = () => Random.int(12);
+let randomTranspose = () => Utils.randomInt(-5, 6);
 
 let initialState = () => {
   let (_, initialScale) = Utils.randomArrayValue(Scales.scales);
