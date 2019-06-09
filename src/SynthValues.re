@@ -10,10 +10,14 @@ type value = {
   number: float
 };
 
-type valueConverterFunctions('a) = {
-  defaultValue: (SynthParameters.globalParameters) => 'a,
+type floatFns('a) = {
   fromFloat: (SynthParameters.globalParameters, float) => 'a,
-  toFloat: (SynthParameters.globalParameters, 'a) => float,
+  toFloat: (SynthParameters.globalParameters, 'a) => float
+};
+
+type valueConverterFunctions('a) = {
+  floatFns: floatFns('a),
+  defaultValue: (SynthParameters.globalParameters) => 'a,
   randomValueAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
   randomValueRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
@@ -33,24 +37,24 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
   defaultFloat: (globalParameters) => {
     let defaultValue = valueConverterFunctions.defaultValue(globalParameters);
 
-    valueConverterFunctions.toFloat(globalParameters, defaultValue);
+    valueConverterFunctions.floatFns.toFloat(globalParameters, defaultValue);
   },
   randomValueAbsoluteFloat: (globalParameters, values) => {
     values
-      |> Array.map(valueConverterFunctions.fromFloat(globalParameters))
+      |> Array.map(valueConverterFunctions.floatFns.fromFloat(globalParameters))
       |> valueConverterFunctions.randomValueAbsolute(globalParameters)
-      |> Array.map(valueConverterFunctions.toFloat(globalParameters));
+      |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
   randomValueRelativeFloat: (globalParameters, values) => {
     values
-      |> Array.map(valueConverterFunctions.fromFloat(globalParameters))
+      |> Array.map(valueConverterFunctions.floatFns.fromFloat(globalParameters))
       |> valueConverterFunctions.randomValueRelative(globalParameters)
-      |> Array.map(valueConverterFunctions.toFloat(globalParameters));
+      |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
   quantiseFloat: (globalParameters, value) => {
-    let actualValue = valueConverterFunctions.fromFloat(globalParameters, value);
+    let actualValue = valueConverterFunctions.floatFns.fromFloat(globalParameters, value);
     let label = toString(actualValue);
-    let floatValue = valueConverterFunctions.toFloat(globalParameters, actualValue);
+    let floatValue = valueConverterFunctions.floatFns.toFloat(globalParameters, actualValue);
 
     {
       label,
@@ -58,7 +62,7 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
     };
   },
   updateSynthParameters: (globalParameters, parameters, value) => {
-    let value = valueConverterFunctions.fromFloat(globalParameters, value);
+    let value = valueConverterFunctions.floatFns.fromFloat(globalParameters, value);
 
     updateSynthParameters(parameters, value);
   }

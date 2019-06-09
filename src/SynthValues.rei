@@ -10,10 +10,14 @@ type value = {
   number: float
 };
 
-type valueConverterFunctions('a) = {
-  defaultValue: (SynthParameters.globalParameters) => 'a,
+type floatFns('a) = {
   fromFloat: (SynthParameters.globalParameters, float) => 'a,
-  toFloat: (SynthParameters.globalParameters, 'a) => float,
+  toFloat: (SynthParameters.globalParameters, 'a) => float
+};
+
+type valueConverterFunctions('a) = {
+  floatFns: floatFns('a),
+  defaultValue: (SynthParameters.globalParameters) => 'a,
   randomValueAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
   randomValueRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };

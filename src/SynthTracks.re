@@ -1,43 +1,51 @@
-let mapIntRange = (defaultValue, min, max, randomRelativeRange) => SynthValues.{
-  defaultValue: (_) => defaultValue,
+let intFloatFns = (min, max) => SynthValues.{
   fromFloat: (_globalParameters, value) => min + int_of_float(float_of_int(max - min) *. value),
-  toFloat: (_globalParameters, value) => float_of_int(value - min) /. float_of_int(max - min),
-  randomValueAbsolute: (_globalParameters, values) => Array.map((_) => min + Random.int(max - min + 1), values),
-  randomValueRelative: (_globalParameters, values) => Array.map((value) => {
+  toFloat: (_globalParameters, value) => float_of_int(value - min) /. float_of_int(max - min)
+};
+
+let randomIntAbsolute = (min, max) => (_globalParameters, values) => Array.map((_) => Utils.randomInt(min, max), values);
+
+let randomIntRelative = (min, max, randomRelativeRange) => (_globalParameters, values) => {
+  Array.map((value) => {
     let deltaMin = Pervasives.max(min, value - randomRelativeRange);
     let deltaMax = Pervasives.min(max, value + randomRelativeRange);
 
-    deltaMin + Random.int(deltaMax - deltaMin + 1);
-  }, values)
+    Utils.randomInt(deltaMin, deltaMax);
+  }, values);
 };
 
-let mapFloatRange = (defaultValue, min, max, randomRelativeRange) => SynthValues.{
-  defaultValue: (_) => defaultValue,
+let floatFloatFns = (min, max) => SynthValues.{
   fromFloat: (_globalParameters, value) => min +. ((max -. min) *. value),
-  toFloat: (_globalParameters, value) => (value -. min) /. (max -. min),
-  randomValueAbsolute: (_globalParameters, values) => Array.map((_) => min +. Random.float(max -. min), values),
-  randomValueRelative: (_globalParameters, values) => Array.map((value) => {
+  toFloat: (_globalParameters, value) => (value -. min) /. (max -. min)
+};
+
+let randomFloatAbsolute = (min, max) => (_globalParameters, values) => Array.map((_) => Utils.randomFloat(min, max), values);
+
+let randomFloatRelative = (min, max, randomRelativeRange) => (_globalParameters, values) => {
+  Array.map((value) => {
     let deltaMin = Pervasives.max(min, value -. randomRelativeRange);
     let deltaMax = Pervasives.min(max, value +. randomRelativeRange);
 
-    deltaMin +. Random.float(deltaMax -. deltaMin);
-  }, values)
+    Utils.randomFloat(deltaMin, deltaMax);
+  }, values);
 };
 
 let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
+  floatFns: {
+    fromFloat: (globalParameters, value) => {
+      let array = getArray(globalParameters);
+      let index = int_of_float(value *. float_of_int(Array.length(array) - 1));
+
+      array[index];
+    },
+    toFloat: (globalParameters, value) => {
+      let array = getArray(globalParameters);
+      let index = Utils.getArrayIndex(array, value, 0);
+
+      float_of_int(index) /. float_of_int(Array.length(array) - 1);
+    }
+  },
   defaultValue: (globalParameters) => defaultValue(globalParameters, getArray(globalParameters)),
-  fromFloat: (globalParameters, value) => {
-    let array = getArray(globalParameters);
-    let index = int_of_float(value *. float_of_int(Array.length(array) - 1));
-
-    array[index];
-  },
-  toFloat: (globalParameters, value) => {
-    let array = getArray(globalParameters);
-    let index = Utils.getArrayIndex(array, value, 0);
-
-    float_of_int(index) /. float_of_int(Array.length(array) - 1);
-  },
   randomValueAbsolute: ((globalParameters, values) => {
     let array = getArray(globalParameters);
 
@@ -52,7 +60,7 @@ let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
       let deltaMin = Pervasives.max(0, index - randomRelativeRange);
       let deltaMax = Pervasives.min(Array.length(array) - 1, index + randomRelativeRange);
 
-      let randomIndex = deltaMin + Random.int(deltaMax - deltaMin + 1);
+      let randomIndex = Utils.randomInt(deltaMin, deltaMax);
 
       array[randomIndex];
     }, values);
@@ -99,7 +107,12 @@ let default = (globalParameters) => {
 
   [
     create("Octave", SynthValues.createValueConverter(
-      mapIntRange(0, -3, 2, 1),
+      {
+        floatFns: intFloatFns(-3, 2),
+        defaultValue: (_) => 0,
+        randomValueAbsolute: randomIntAbsolute(-3, 2),
+        randomValueRelative: randomIntRelative(-3, 2, 1)
+      },
       (parameters, value) => {
         ...parameters,
         note: parameters.note + (value * 12)
@@ -119,7 +132,12 @@ let default = (globalParameters) => {
       intToPlusMinus
     )),
     create("Gain", SynthValues.createValueConverter(
-      mapFloatRange(1.0, 0.0, 1.0, 0.2),
+      {
+        floatFns: floatFloatFns(0.0, 1.0),
+        defaultValue: (_) => 1.0,
+        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+      },
       (parameters, value) => {
         ...parameters,
         gain: parameters.gain *. value
@@ -127,7 +145,12 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Pan", SynthValues.createValueConverter(
-      mapFloatRange(0.0, -1.0, 1.0, 0.2),
+      {
+        floatFns: floatFloatFns(-1.0, 1.0),
+        defaultValue: (_) => 0.0,
+        randomValueAbsolute: randomFloatAbsolute(-1.0, 1.0),
+        randomValueRelative: randomFloatRelative(-1.0, 1.0, 0.2)
+      },
       (parameters, value) => {
         ...parameters,
         pan: parameters.pan +. value
@@ -135,7 +158,12 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Chance", SynthValues.createValueConverter(
-      mapFloatRange(1.0, 0.0, 1.0, 0.2),
+      {
+        floatFns: floatFloatFns(0.0, 1.0),
+        defaultValue: (_) => 1.0,
+        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+      },
       (parameters, value) => {
         ...parameters,
         chance: parameters.chance *. value
@@ -143,7 +171,12 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Offset", SynthValues.createValueConverter(
-      mapFloatRange(0.0, 0.0, 0.25, 0.1),
+      {
+        floatFns: floatFloatFns(0.0, 0.25),
+        defaultValue: (_) => 0.0,
+        randomValueAbsolute: randomFloatAbsolute(0.0, 0.25),
+        randomValueRelative: randomFloatRelative(0.0, 0.25, 0.1)
+      },
       (parameters, value) => {
         ...parameters,
         offset: parameters.offset +. value
@@ -151,7 +184,12 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Length", SynthValues.createValueConverter(
-      mapFloatRange(1.0, 0.0, 2.0, 0.2),
+      {
+        floatFns: floatFloatFns(0.0, 2.0),
+        defaultValue: (_) => 1.0,
+        randomValueAbsolute: randomFloatAbsolute(0.0, 2.0),
+        randomValueRelative: randomFloatRelative(0.0, 2.0, 0.2)
+      },
       (parameters, value) => {
         ...parameters,
         length: parameters.length *. value
@@ -159,7 +197,12 @@ let default = (globalParameters) => {
       floatToPercentageString
     )),
     create("Filter", SynthValues.createValueConverter(
-      mapFloatRange(1.0, 0.0, 1.0, 0.2),
+      {
+        floatFns: floatFloatFns(0.0, 1.0),
+        defaultValue: (_) => 1.0,
+        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+      },
       (parameters, value) => {
         ...parameters,
         filter: parameters.filter *. value
