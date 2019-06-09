@@ -1,7 +1,10 @@
 type values;
 
+type index = int;
+type length = int;
+
 type valuesUpdate = {
-  index: int,
+  index,
   value: float
 };
 
@@ -29,18 +32,18 @@ type valueConverter;
 
 let createValueConverter: (valueConverterFunctions('a), updateSynthParametersFn('a), toStringFn('a)) => valueConverter;
 
-let defaultValues: (SynthParameters.globalParameters, valueConverter, int) => values;
+let defaultValues: (SynthParameters.globalParameters, valueConverter, length) => values;
 
 let randomValuesAbsolute: (SynthParameters.globalParameters, valueConverter, values) => values;
 
 let randomValuesRelative: (SynthParameters.globalParameters, valueConverter, values) => values;
 
-let mapValues: (SynthParameters.globalParameters, valueConverter, (int, value) => 'a, values) => array('a);
+let mapValues: (SynthParameters.globalParameters, valueConverter, (index, value) => 'a, values) => array('a);
 
-let getValuesAt: (SynthParameters.globalParameters, valueConverter, int, values) => float;
+let getValuesAt: (SynthParameters.globalParameters, valueConverter, index, values) => float;
 
-let updateValues: (SynthParameters.globalParameters, valueConverter, values, int, float) => values;
+let updateValues: (SynthParameters.globalParameters, valueConverter, values, index, float) => values;
 
-let valuesLength: (values) => int;
+let valuesLength: (values) => length;
 
-let updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, int, values, valueConverter) => SynthParameters.parameters;
+let updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, index, values, valueConverter) => SynthParameters.parameters;

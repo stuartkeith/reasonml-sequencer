@@ -1,5 +1,8 @@
 type values = array(float);
 
+type index = int;
+type length = int;
+
 type valuesUpdate = {
   index: int,
   value: float
