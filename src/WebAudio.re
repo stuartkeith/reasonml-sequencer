@@ -185,6 +185,11 @@ type schedule = {
   setBpm: (float) => unit
 };
 
+type scheduleTime = {
+  beatTime: float,
+  beatLength: float
+};
+
 let createSchedule = (callback) => {
   let beatTime = ref(0.);
   let timeoutId = ref(None);
@@ -200,7 +205,10 @@ let createSchedule = (callback) => {
     timeoutId := Some(Js.Global.setTimeout(onTimeout, 100));
 
     while (beatTime^ < targetTime) {
-      callback(beatTime^, beatLength);
+      callback({
+        beatTime: beatTime^,
+        beatLength
+      });
 
       beatTime := beatTime^ +. beatLength;
     };

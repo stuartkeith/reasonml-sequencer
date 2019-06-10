@@ -6,7 +6,7 @@ type mouseAction =
   | MouseUp;
 
 type action =
-  | AdvancePlayback(float, float)
+  | AdvancePlayback(WebAudio.scheduleTime)
   | RandomiseAll
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)

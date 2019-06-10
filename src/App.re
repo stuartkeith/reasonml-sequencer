@@ -10,7 +10,7 @@ type state = {
   globalParameters: SynthParameters.globalParameters,
   editMode: TrackEditMode.editMode,
   globalTranspose: int,
-  playbackSideEffects: ref(array((state, float, float)))
+  playbackSideEffects: ref(array((state, WebAudio.scheduleTime)))
 };
 
 let randomTranspose = () => Utils.randomInt(-5, 6);
@@ -68,11 +68,11 @@ let reducer = (state, action) => {
       }, state.synthTracks),
       tick: 0
     }
-    | AdvancePlayback(beatTime, beatLength) => {
+    | AdvancePlayback(scheduleTime) => {
       let nextTick = state.tick + 1;
       let sync = state.sync ? Timing.Sync(nextTick) : Timing.NoSync;
 
-      let playbackSideEffects = Array.append(state.playbackSideEffects^, [|(state, beatTime, beatLength)|]);
+      let playbackSideEffects = Array.append(state.playbackSideEffects^, [|(state, scheduleTime)|]);
 
       {
         ...state,
@@ -284,8 +284,8 @@ let useScheduler = (state, dispatch) => {
   let scheduler = switch (React.Ref.current(schedulerRef)) {
     | Some(scheduler) => scheduler;
     | None => {
-      let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
-        dispatch(Actions.AdvancePlayback(beatTime, beatLength));
+      let scheduler = WebAudio.createSchedule((scheduleTime) => {
+        dispatch(Actions.AdvancePlayback(scheduleTime));
       });
 
       React.Ref.setCurrent(schedulerRef, Some(scheduler));
@@ -332,8 +332,8 @@ let useScheduler = (state, dispatch) => {
 
         let beatTimeOffset = switch (React.Ref.current(beatTimeOffsetRef)) {
           | None => {
-            let (_, firstBeatTime, _) = playbackSideEffects[0];
-            let beatTimeOffset = WebAudio.getCurrentTime(WebAudio.audioContext) -. firstBeatTime;
+            let (_, scheduleTime) = playbackSideEffects[0];
+            let beatTimeOffset = WebAudio.getCurrentTime(WebAudio.audioContext) -. scheduleTime.beatTime;
 
             React.Ref.setCurrent(beatTimeOffsetRef, Some(beatTimeOffset));
 
@@ -342,8 +342,8 @@ let useScheduler = (state, dispatch) => {
           | Some(beatTimeOffset) => beatTimeOffset
         };
 
-        Array.iter(((state, beatTime, beatLength)) => {
-          scheduleCallback(state, beatTime +. beatTimeOffset, beatLength);
+        Array.iter(((state, scheduleTime:WebAudio.scheduleTime)) => {
+          scheduleCallback(state, scheduleTime.beatTime +. beatTimeOffset, scheduleTime.beatLength);
         }, playbackSideEffects);
       }
     };
