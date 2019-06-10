@@ -9,7 +9,8 @@ type state = {
   sync: bool,
   globalParameters: SynthParameters.globalParameters,
   editMode: TrackEditMode.editMode,
-  globalTranspose: int
+  globalTranspose: int,
+  playbackSideEffects: ref(array((state, float, float)))
 };
 
 let randomTranspose = () => Utils.randomInt(-5, 6);
@@ -34,7 +35,8 @@ let initialState = () => {
     sync: false,
     globalParameters: initialGlobalParameters,
     editMode: Inactive,
-    globalTranspose: randomTranspose()
+    globalTranspose: randomTranspose(),
+    playbackSideEffects: ref([||])
   };
 };
 
@@ -66,9 +68,11 @@ let reducer = (state, action) => {
       }, state.synthTracks),
       tick: 0
     }
-    | AdvancePlayback => {
+    | AdvancePlayback(beatTime, beatLength) => {
       let nextTick = state.tick + 1;
       let sync = state.sync ? Timing.Sync(nextTick) : Timing.NoSync;
+
+      let playbackSideEffects = Array.append(state.playbackSideEffects^, [|(state, beatTime, beatLength)|]);
 
       {
         ...state,
@@ -76,7 +80,8 @@ let reducer = (state, action) => {
           ...synthTrack,
           timing: Timing.advance(synthTrack.subTicks, synthTrack.loopAfterIndex, sync, synthTrack.timing),
         }, state.synthTracks),
-        tick: nextTick
+        tick: nextTick,
+        playbackSideEffects: ref(playbackSideEffects)
       };
     }
     | SetPlayback(value) => {
@@ -238,9 +243,7 @@ let reducer = (state, action) => {
   }
 };
 
-let scheduleCallback = (stateRef, dispatch) => (beatTime, beatLength) => {
-  let state = React.Ref.current(stateRef);
-
+let scheduleCallback = (state, beatTime, beatLength) => {
   let initialParameters = SynthParameters.{
     chance: 1.0,
     chord: [||],
@@ -272,20 +275,18 @@ let scheduleCallback = (stateRef, dispatch) => (beatTime, beatLength) => {
   }
 
   WebAudio.playHihat(~start=beatTime);
-
-  dispatch(Actions.AdvancePlayback);
 };
 
 let useScheduler = (state, dispatch) => {
   let schedulerRef = React.useRef(None);
-  let stateRef = React.useRef(state);
-
-  React.Ref.setCurrent(stateRef, state);
+  let beatTimeOffsetRef = React.useRef(None);
 
   let scheduler = switch (React.Ref.current(schedulerRef)) {
     | Some(scheduler) => scheduler;
     | None => {
-      let scheduler = WebAudio.createSchedule(scheduleCallback(stateRef, dispatch));
+      let scheduler = WebAudio.createSchedule((beatTime, beatLength) => {
+        dispatch(Actions.AdvancePlayback(beatTime, beatLength));
+      });
 
       React.Ref.setCurrent(schedulerRef, Some(scheduler));
 
@@ -295,9 +296,66 @@ let useScheduler = (state, dispatch) => {
 
   scheduler.setBpm(state.bpm);
 
+  React.useEffect1(() => {
+    switch (state.playbackSideEffects^) {
+      | [||] => ()
+      | playbackSideEffects => {
+        state.playbackSideEffects := [||];
+
+        // we have two timings to deal with:
+        // - the time the action was dispatched via the scheduler.
+        // - the time this effect is executed.
+        //
+        // for example:
+        // - the scheduler starts 10 seconds in. it dispatches two actions –
+        //   play a note at 10.0 seconds (immediately) and 10.4 seconds.
+        // - the effect executes for the first time at 10.2 seconds.
+        //
+        // this means the effect is behind - it can't play the note at
+        // 10.0 seconds as it's already 10.2. so the first note is brought
+        // forward to 10.2 seconds, but the second note can be played at 10.4,
+        // as it's still in the future. they're played 0.2 seconds apart, when
+        // they should be 0.4 seconds apart, throwing off the timing.
+        //
+        // to work around this, we can calculate the difference between the
+        // scheduler's idea of "now" and this effect's idea of "now". we know
+        // the first beat's timing is always intended to be immediate, so the
+        // effect can subtract this time from the current audio clock time:
+        //
+        // - it's now 10.2, the first beat was meant to be 10.0, so we're
+        //   0.2 seconds behind.
+        // - we play the first note at 10.0 + 0.2 (10.2, i.e. immediately).
+        // - we play the second note at 10.4 + 0.2 (10.6).
+        //
+        // if all subsequent notes are played with this offset, the timing
+        // between notes is retained.
+
+        let beatTimeOffset = switch (React.Ref.current(beatTimeOffsetRef)) {
+          | None => {
+            let (_, firstBeatTime, _) = playbackSideEffects[0];
+            let beatTimeOffset = WebAudio.getCurrentTime(WebAudio.audioContext) -. firstBeatTime;
+
+            React.Ref.setCurrent(beatTimeOffsetRef, Some(beatTimeOffset));
+
+            beatTimeOffset;
+          }
+          | Some(beatTimeOffset) => beatTimeOffset
+        };
+
+        Array.iter(((state, beatTime, beatLength)) => {
+          scheduleCallback(state, beatTime +. beatTimeOffset, beatLength);
+        }, playbackSideEffects);
+      }
+    };
+
+    None;
+  }, [|state.playbackSideEffects|]);
+
   React.useEffect2(() => {
     switch (state.isPlaying) {
       | true => {
+        React.Ref.setCurrent(beatTimeOffsetRef, None);
+
         dispatch(Restart);
 
         scheduler.start();

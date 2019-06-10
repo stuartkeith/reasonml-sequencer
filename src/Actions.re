@@ -6,7 +6,7 @@ type mouseAction =
   | MouseUp;
 
 type action =
-  | AdvancePlayback
+  | AdvancePlayback(float, float)
   | RandomiseAll
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)
