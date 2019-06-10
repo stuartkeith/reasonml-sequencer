@@ -25,7 +25,7 @@ type viewMode =
   | Active;
 
 [@react.component]
-let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~disabledAfterIndex, ~onAction, ~onSetLength) => {
+let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~disabledIndex, ~onAction, ~onSetLength) => {
   let containerRef = React.useRef(Js.Nullable.null);
   let offsetRef = React.useRef((0, 0));
 
@@ -58,7 +58,7 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
         let update = getUpdateFromMouse(event);
 
         if (ReactEvent.Mouse.shiftKey(event)) {
-          onSetLength(update.index);
+          onSetLength(update.index + 1);
         } else {
           onAction(getUpdateFromMouse(event), MouseDown);
         }
@@ -119,7 +119,7 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
         | Inactive | Deactive | Preview(_) | Active => (value.number, 0.0)
       };
 
-      let isDisabled = valueIndex > disabledAfterIndex;
+      let isDisabled = valueIndex >= disabledIndex;
 
       <div
         key=string_of_int(valueIndex)

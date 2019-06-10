@@ -78,7 +78,7 @@ let reducer = (state, action) => {
         ...state,
         synthTracks: List.map((synthTrack:SynthTrack.t) => {
           ...synthTrack,
-          timing: Timing.advance(synthTrack.subTicks, synthTrack.loopAfterIndex, sync, synthTrack.timing),
+          timing: Timing.advance(synthTrack.subTicks, synthTrack.loopLength, sync, synthTrack.timing),
         }, state.synthTracks),
         tick: nextTick,
         playbackSideEffects: ref(playbackSideEffects)
@@ -98,7 +98,7 @@ let reducer = (state, action) => {
       synthTracks: List.map((synthTrack:SynthTrack.t) => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopAfterIndex: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values) - 1)
+        loopLength: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks),
       globalTranspose: randomTranspose()
     }
@@ -116,12 +116,12 @@ let reducer = (state, action) => {
       ...state,
       bpm
     }
-    | SetLoopAfterIndex(id, index) => {
+    | SetLoopLength(id, index) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: SynthTracks.mapSynthTrackById(id, (synthTrack) => {
         ...synthTrack,
-        loopAfterIndex: index
+        loopLength: index
       }, state.synthTracks)
     }
     | RandomiseAbsolute(id) => {
@@ -130,7 +130,7 @@ let reducer = (state, action) => {
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopAfterIndex: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values) - 1)
+        loopLength: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks)
     }
     | RandomiseRelative(id) => {
@@ -256,7 +256,7 @@ let scheduleCallback = (state, beatTime, beatLength) => {
   };
 
   let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
-    let index = Timing.index(synthTrack.loopAfterIndex, synthTrack.timing);
+    let index = Timing.index(synthTrack.loopLength, synthTrack.timing);
 
     SynthValues.updateSynthParameters(state.globalParameters, initialParameters, index, synthTrack.values, synthTrack.valueConverter);
   }, initialParameters, state.synthTracks);

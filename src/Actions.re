@@ -14,7 +14,7 @@ type action =
   | Reset(Id.t)
   | Restart
   | SetBpm(float)
-  | SetLoopAfterIndex(Id.t, int)
+  | SetLoopLength(Id.t, int)
   | SetPlayback(bool)
   | SetScale(Scales.t)
   | SetSubTicks(Id.t, int)

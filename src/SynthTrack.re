@@ -3,7 +3,7 @@ type t = {
   label: string,
   values: SynthValues.values,
   valueConverter: SynthValues.valueConverter,
-  loopAfterIndex: int,
+  loopLength: int,
   subTicks: int,
   timing: Timing.t
 };

@@ -26,7 +26,7 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
   );
 
   let onSetLength = React.useCallback1(
-    (index) => dispatch(Actions.SetLoopAfterIndex(synthTrack.id, index)),
+    (index) => dispatch(Actions.SetLoopLength(synthTrack.id, index)),
     [|synthTrack.id|]
   );
 
@@ -52,8 +52,8 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
       mapValues
       getValuesAt
       values=synthTrack.values
-      highlightedIndex=Timing.index(synthTrack.loopAfterIndex, synthTrack.timing)
-      disabledAfterIndex=synthTrack.loopAfterIndex
+      highlightedIndex=Timing.index(synthTrack.loopLength, synthTrack.timing)
+      disabledIndex=synthTrack.loopLength
       onAction
       onSetLength
     />
