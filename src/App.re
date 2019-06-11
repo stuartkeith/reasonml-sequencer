@@ -98,7 +98,7 @@ let reducer = (state, action) => {
       synthTracks: List.map((synthTrack:SynthTrack.t) => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopLength: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values))
+        loopLength: Utils.randomInt(2, SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks),
       globalTranspose: randomTranspose()
     }
@@ -130,7 +130,7 @@ let reducer = (state, action) => {
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
         values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopLength: Utils.randomInt(1, SynthValues.valuesLength(synthTrack.values))
+        loopLength: Utils.randomInt(2, SynthValues.valuesLength(synthTrack.values))
       }, state.synthTracks)
     }
     | RandomiseRelative(id) => {
