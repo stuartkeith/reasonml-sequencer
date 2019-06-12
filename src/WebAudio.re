@@ -146,8 +146,8 @@ let synthFilterMax = 22000.0;
 let synthFilterRange = synthFilterMax -. synthFilterMin;
 let synthFilterLog = log(synthFilterMax /. synthFilterMin) /. log(2.0);
 
-let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~filter:float) => unit = [%bs.raw {|
-  function (note, gain, pan, start, time, filter) {
+let playSynth: (~note:int, ~gain:float, ~pan:float, ~filter:float, ~start:float, ~time:float) => unit = [%bs.raw {|
+  function (note, gain, pan, filter, start, time) {
     const filterLogScale = synthFilterMin + (synthFilterRange * Math.pow(2, synthFilterLog * (filter - 1)));
 
     const lowpass = audioContext.createBiquadFilter();

@@ -276,13 +276,14 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     };
 
     Array.iter((incomingNote) => {
-      let note = incomingNote + playback.transpose + state.globalTranspose;
-      let gain = playback.gain;
-      let pan = playback.pan;
-      let length = playback.length;
-      let filter = playback.filter;
-
-      WebAudio.playSynth(~note, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
+      WebAudio.playSynth(
+        ~note=incomingNote + playback.transpose + state.globalTranspose,
+        ~gain=playback.gain,
+        ~pan=playback.pan,
+        ~filter=playback.filter,
+        ~start=beatTime +. (beatLength *. offset),
+        ~time=beatLength *. playback.length
+      );
     }, playback.notes);
   };
 
