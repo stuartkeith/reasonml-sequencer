@@ -45,7 +45,7 @@ let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
       float_of_int(index) /. float_of_int(Array.length(array) - 1);
     }
   },
-  defaultValue: (globalParameters) => defaultValue(globalParameters, getArray(globalParameters)),
+  defaultValues: (length, globalParameters) => Array.make(length, defaultValue(globalParameters, getArray(globalParameters))),
   randomValueAbsolute: ((globalParameters, values) => {
     let array = getArray(globalParameters);
 
@@ -79,7 +79,7 @@ let default = (globalParameters) => {
   open SynthTrack;
 
   let create = (label, valueConverter) => {
-    let values = SynthValues.defaultValues(globalParameters, valueConverter, 16);
+    let values = SynthValues.defaultValues(16, globalParameters, valueConverter);
 
     {
       id: Id.create(),
@@ -96,7 +96,7 @@ let default = (globalParameters) => {
     create("Octave", SynthValues.createValueConverter(
       {
         floatFns: intFloatFns(-3, 2),
-        defaultValue: (_) => 0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 0),
         randomValueAbsolute: randomIntAbsolute(-3, 2),
         randomValueRelative: randomIntRelative(-3, 2, 1)
       },
@@ -160,7 +160,7 @@ let default = (globalParameters) => {
     create("Gain", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 1.0),
-        defaultValue: (_) => 1.0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
         randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
         randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
@@ -173,7 +173,7 @@ let default = (globalParameters) => {
     create("Pan", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(-1.0, 1.0),
-        defaultValue: (_) => 0.0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 0.0),
         randomValueAbsolute: randomFloatAbsolute(-1.0, 1.0),
         randomValueRelative: randomFloatRelative(-1.0, 1.0, 0.2)
       },
@@ -186,7 +186,7 @@ let default = (globalParameters) => {
     create("Chance", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 1.0),
-        defaultValue: (_) => 1.0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
         randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
         randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
@@ -199,7 +199,7 @@ let default = (globalParameters) => {
     create("Length", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 2.0),
-        defaultValue: (_) => 1.0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
         randomValueAbsolute: randomFloatAbsolute(0.0, 2.0),
         randomValueRelative: randomFloatRelative(0.0, 2.0, 0.2)
       },
@@ -212,7 +212,7 @@ let default = (globalParameters) => {
     create("Filter", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 1.0),
-        defaultValue: (_) => 1.0,
+        defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
         randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
         randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },

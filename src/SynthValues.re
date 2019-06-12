@@ -20,7 +20,7 @@ type floatFns('a) = {
 
 type valueConverterFunctions('a) = {
   floatFns: floatFns('a),
-  defaultValue: (SynthParameters.globalParameters) => 'a,
+  defaultValues: (length, SynthParameters.globalParameters) => array('a),
   randomValueAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
   randomValueRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
@@ -29,7 +29,7 @@ type updateSynthParametersFn('a) = (SynthParameters.parameters, 'a) => SynthPara
 type toStringFn('a) = ('a) => string;
 
 type valueConverter = {
-  defaultFloat: (SynthParameters.globalParameters) => float,
+  defaultFloat: (length, SynthParameters.globalParameters) => array(float),
   quantiseFloat: (SynthParameters.globalParameters, float) => value,
   randomValueAbsoluteFloat: (SynthParameters.globalParameters, array(float)) => array(float),
   randomValueRelativeFloat: (SynthParameters.globalParameters, array(float)) => array(float),
@@ -37,10 +37,9 @@ type valueConverter = {
 };
 
 let createValueConverter = (valueConverterFunctions, updateSynthParameters, toString) => {
-  defaultFloat: (globalParameters) => {
-    let defaultValue = valueConverterFunctions.defaultValue(globalParameters);
-
-    valueConverterFunctions.floatFns.toFloat(globalParameters, defaultValue);
+  defaultFloat: (length, globalParameters) => {
+    valueConverterFunctions.defaultValues(length, globalParameters)
+      |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
   randomValueAbsoluteFloat: (globalParameters, values) => {
     values
@@ -71,10 +70,8 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
   }
 };
 
-let defaultValues = (globalParameters, valueConverter, length) => {
-  let defaultValue = valueConverter.defaultFloat(globalParameters);
-
-  Array.make(length, defaultValue);
+let defaultValues = (length, globalParameters, valueConverter) => {
+  valueConverter.defaultFloat(length, globalParameters);
 };
 
 let randomValuesAbsolute = (globalParameters, valueConverter, values) => {

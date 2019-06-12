@@ -152,7 +152,7 @@ let reducer = (state, action) => {
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
-        values: SynthValues.defaultValues(state.globalParameters, synthTrack.valueConverter, SynthValues.valuesLength(synthTrack.values))
+        values: SynthValues.defaultValues(SynthValues.valuesLength(synthTrack.values), state.globalParameters, synthTrack.valueConverter)
       }, state.synthTracks)
     }
     | SetSubTicks(id, subTicks) => {
