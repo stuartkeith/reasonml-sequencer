@@ -250,9 +250,10 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     filter: 1.0,
     gain: 1.0,
     length: 1.0,
-    note: 0,
+    notes: [||],
     offset: 0.0,
-    pan: 0.0
+    pan: 0.0,
+    transpose: 0
   };
 
   let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
@@ -264,15 +265,17 @@ let scheduleCallback = (state, beatTime, beatLength) => {
   let chance = Random.float(1.);
 
   if (playback.chance > 0.0 && chance <= playback.chance) {
-    let note = playback.note + state.globalTranspose;
-    let chord = playback.chord;
-    let gain = playback.gain;
-    let pan = playback.pan;
-    let length = playback.length;
-    let filter = playback.filter;
+    Array.iter((incomingNote) => {
+      let note = incomingNote + playback.transpose + state.globalTranspose;
+      let chord = playback.chord;
+      let gain = playback.gain;
+      let pan = playback.pan;
+      let length = playback.length;
+      let filter = playback.filter;
 
-    WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
-  }
+      WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
+    }, playback.notes);
+  };
 
   WebAudio.playHihat(~start=beatTime);
 };

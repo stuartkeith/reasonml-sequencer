@@ -115,11 +115,11 @@ let default = (globalParameters) => {
       },
       (parameters, value) => {
         ...parameters,
-        note: parameters.note + (value * 12)
+        transpose: parameters.transpose + (value * 12)
       },
       intToPlusMinus
     )),
-    create("Pitch", SynthValues.createValueConverter(
+    create("Pitch 1", SynthValues.createValueConverter(
       mapArray(
         (globalParameters) => globalParameters.scale,
         (_globalParameters, array) => array[0],
@@ -127,9 +127,48 @@ let default = (globalParameters) => {
       ),
       (parameters, value) => {
         ...parameters,
-        note: parameters.note + value
+        notes: {
+          switch (Utils.findInArray(value, parameters.notes)) {
+            | None => Array.append(parameters.notes, [|value|])
+            | Some(_) => parameters.notes
+          };
+        }
       },
-      intToPlusMinus
+      (value) => intToPlusMinus(value + 1)
+    )),
+    create("Pitch 2", SynthValues.createValueConverter(
+      mapArray(
+        (globalParameters) => globalParameters.scale,
+        (_globalParameters, array) => array[0],
+        3
+      ),
+      (parameters, value) => {
+        ...parameters,
+        notes: {
+          switch (Utils.findInArray(value, parameters.notes)) {
+            | None => Array.append(parameters.notes, [|value|])
+            | Some(_) => parameters.notes
+          };
+        }
+      },
+      (value) => intToPlusMinus(value + 1)
+    )),
+    create("Pitch 3", SynthValues.createValueConverter(
+      mapArray(
+        (globalParameters) => globalParameters.scale,
+        (_globalParameters, array) => array[0],
+        3
+      ),
+      (parameters, value) => {
+        ...parameters,
+        notes: {
+          switch (Utils.findInArray(value, parameters.notes)) {
+            | None => Array.append(parameters.notes, [|value|])
+            | Some(_) => parameters.notes
+          };
+        }
+      },
+      (value) => intToPlusMinus(value + 1)
     )),
     create("Gain", SynthValues.createValueConverter(
       {
