@@ -21,8 +21,8 @@ type floatFns('a) = {
 type valueConverterFunctions('a) = {
   floatFns: floatFns('a),
   defaultValues: (length, SynthParameters.globalParameters) => array('a),
-  randomValueAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
-  randomValueRelative: (SynthParameters.globalParameters, array('a)) => array('a)
+  randomValuesAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
+  randomValuesRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
 
 type updateSynthParametersFn('a) = (SynthParameters.parameters, 'a) => SynthParameters.parameters;

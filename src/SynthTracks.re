@@ -46,12 +46,12 @@ let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
     }
   },
   defaultValues: (length, globalParameters) => Array.make(length, defaultValue(globalParameters, getArray(globalParameters))),
-  randomValueAbsolute: ((globalParameters, values) => {
+  randomValuesAbsolute: ((globalParameters, values) => {
     let array = getArray(globalParameters);
 
     Array.map((_) => Utils.randomArrayValue(array), values);
   }),
-  randomValueRelative: (globalParameters, values) => {
+  randomValuesRelative: (globalParameters, values) => {
     let array = getArray(globalParameters);
 
     Array.map((value) => {
@@ -97,8 +97,8 @@ let default = (globalParameters) => {
       {
         floatFns: intFloatFns(-3, 2),
         defaultValues: (length, _globalParameters) => Array.make(length, 0),
-        randomValueAbsolute: randomIntAbsolute(-3, 2),
-        randomValueRelative: randomIntRelative(-3, 2, 1)
+        randomValuesAbsolute: randomIntAbsolute(-3, 2),
+        randomValuesRelative: randomIntRelative(-3, 2, 1)
       },
       (parameters, value) => {
         ...parameters,
@@ -161,8 +161,8 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(0.0, 1.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
-        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
-        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+        randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
       (parameters, value) => {
         ...parameters,
@@ -174,8 +174,8 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(-1.0, 1.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 0.0),
-        randomValueAbsolute: randomFloatAbsolute(-1.0, 1.0),
-        randomValueRelative: randomFloatRelative(-1.0, 1.0, 0.2)
+        randomValuesAbsolute: randomFloatAbsolute(-1.0, 1.0),
+        randomValuesRelative: randomFloatRelative(-1.0, 1.0, 0.2)
       },
       (parameters, value) => {
         ...parameters,
@@ -187,8 +187,8 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(0.0, 1.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
-        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
-        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+        randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
       (parameters, value) => {
         ...parameters,
@@ -200,8 +200,8 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(0.0, 2.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
-        randomValueAbsolute: randomFloatAbsolute(0.0, 2.0),
-        randomValueRelative: randomFloatRelative(0.0, 2.0, 0.2)
+        randomValuesAbsolute: randomFloatAbsolute(0.0, 2.0),
+        randomValuesRelative: randomFloatRelative(0.0, 2.0, 0.2)
       },
       (parameters, value) => {
         ...parameters,
@@ -213,8 +213,8 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(0.0, 1.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
-        randomValueAbsolute: randomFloatAbsolute(0.0, 1.0),
-        randomValueRelative: randomFloatRelative(0.0, 1.0, 0.2)
+        randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
       (parameters, value) => {
         ...parameters,

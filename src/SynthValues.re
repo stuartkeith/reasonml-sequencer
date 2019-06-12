@@ -21,8 +21,8 @@ type floatFns('a) = {
 type valueConverterFunctions('a) = {
   floatFns: floatFns('a),
   defaultValues: (length, SynthParameters.globalParameters) => array('a),
-  randomValueAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
-  randomValueRelative: (SynthParameters.globalParameters, array('a)) => array('a)
+  randomValuesAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
+  randomValuesRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
 
 type updateSynthParametersFn('a) = (SynthParameters.parameters, 'a) => SynthParameters.parameters;
@@ -31,8 +31,8 @@ type toStringFn('a) = ('a) => string;
 type valueConverter = {
   defaultFloat: (length, SynthParameters.globalParameters) => array(float),
   quantiseFloat: (SynthParameters.globalParameters, float) => value,
-  randomValueAbsoluteFloat: (SynthParameters.globalParameters, array(float)) => array(float),
-  randomValueRelativeFloat: (SynthParameters.globalParameters, array(float)) => array(float),
+  randomValuesAbsoluteFloat: (SynthParameters.globalParameters, array(float)) => array(float),
+  randomValuesRelativeFloat: (SynthParameters.globalParameters, array(float)) => array(float),
   updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, float) => SynthParameters.parameters
 };
 
@@ -41,16 +41,16 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
     valueConverterFunctions.defaultValues(length, globalParameters)
       |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
-  randomValueAbsoluteFloat: (globalParameters, values) => {
+  randomValuesAbsoluteFloat: (globalParameters, values) => {
     values
       |> Array.map(valueConverterFunctions.floatFns.fromFloat(globalParameters))
-      |> valueConverterFunctions.randomValueAbsolute(globalParameters)
+      |> valueConverterFunctions.randomValuesAbsolute(globalParameters)
       |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
-  randomValueRelativeFloat: (globalParameters, values) => {
+  randomValuesRelativeFloat: (globalParameters, values) => {
     values
       |> Array.map(valueConverterFunctions.floatFns.fromFloat(globalParameters))
-      |> valueConverterFunctions.randomValueRelative(globalParameters)
+      |> valueConverterFunctions.randomValuesRelative(globalParameters)
       |> Array.map(valueConverterFunctions.floatFns.toFloat(globalParameters));
   },
   quantiseFloat: (globalParameters, value) => {
@@ -75,11 +75,11 @@ let defaultValues = (length, globalParameters, valueConverter) => {
 };
 
 let randomValuesAbsolute = (globalParameters, valueConverter, values) => {
-  valueConverter.randomValueAbsoluteFloat(globalParameters, values);
+  valueConverter.randomValuesAbsoluteFloat(globalParameters, values);
 };
 
 let randomValuesRelative = (globalParameters, valueConverter, values) => {
-  valueConverter.randomValueRelativeFloat(globalParameters, values);
+  valueConverter.randomValuesRelativeFloat(globalParameters, values);
 };
 
 let mapValues = (globalParameters, valueConverter, fn, values) => {
