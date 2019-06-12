@@ -20,5 +20,6 @@ type action =
   | SetSubTicks(Id.t, int)
   | SetSync(bool)
   | SetVolume(float)
+  | SetWarble(float)
   | TrackEditMode(Id.t, SynthValues.valuesUpdate, mouseAction)
   | Undo;

@@ -196,19 +196,6 @@ let default = (globalParameters) => {
       },
       floatToPercentageString
     )),
-    create("Offset", SynthValues.createValueConverter(
-      {
-        floatFns: floatFloatFns(0.0, 0.25),
-        defaultValue: (_) => 0.0,
-        randomValueAbsolute: randomFloatAbsolute(0.0, 0.25),
-        randomValueRelative: randomFloatRelative(0.0, 0.25, 0.1)
-      },
-      (parameters, value) => {
-        ...parameters,
-        offset: parameters.offset +. value
-      },
-      floatToPercentageString
-    )),
     create("Length", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 2.0),

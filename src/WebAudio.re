@@ -58,8 +58,6 @@ let createGlobalFx: unit => globalFx = [%bs.raw {|
     globalFx.warbleOsc.connect(globalFx.warbleGain);
     globalFx.warbleOsc.start();
 
-    globalFx.warbleGain.gain.value = 2.1;
-
     return globalFx;
   }
 |}];
@@ -67,6 +65,12 @@ let createGlobalFx: unit => globalFx = [%bs.raw {|
 let setGlobalVolume: float => unit = [%bs.raw {|
   function (volume) {
     globalFx.masterGain.gain.value = Math.pow(volume, 1.6);
+  }
+|}];
+
+let setGlobalWarble: float => unit = [%bs.raw {|
+  function (volume) {
+    globalFx.warbleGain.gain.value = Math.pow(volume, 1.6);
   }
 |}];
 

@@ -8,7 +8,6 @@ type parameters = {
   gain: float,
   length: float,
   notes: array(int),
-  offset: float,
   pan: float,
   transpose: int
 };

@@ -4,6 +4,7 @@ type state = {
   synthTracksRedoBuffer: UndoBuffer.t(list(SynthTrack.t)),
   isPlaying: bool,
   volume: float,
+  warble: float,
   bpm: float,
   tick: int,
   sync: bool,
@@ -30,6 +31,7 @@ let initialState = () => {
     synthTracksRedoBuffer: UndoBuffer.create(12, []),
     isPlaying: false,
     volume: 1.0,
+    warble: 0.0,
     bpm: 120.0,
     tick: 0,
     sync: false,
@@ -111,6 +113,10 @@ let reducer = (state, action) => {
     | SetVolume(volume) => {
       ...state,
       volume
+    }
+    | SetWarble(warble) => {
+      ...state,
+      warble
     }
     | SetBpm(bpm) => {
       ...state,
@@ -250,7 +256,6 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     gain: 1.0,
     length: 1.0,
     notes: [||],
-    offset: 0.0,
     pan: 0.0,
     transpose: 0
   };
@@ -264,6 +269,12 @@ let scheduleCallback = (state, beatTime, beatLength) => {
   let chance = Random.float(1.);
 
   if (playback.chance > 0.0 && chance <= playback.chance) {
+    let offset = if (state.tick mod 2 === 1) {
+      (state.warble ** 2.3) *. 0.3;
+    } else {
+      0.0;
+    };
+
     Array.iter((incomingNote) => {
       let note = incomingNote + playback.transpose + state.globalTranspose;
       let gain = playback.gain;
@@ -271,7 +282,7 @@ let scheduleCallback = (state, beatTime, beatLength) => {
       let length = playback.length;
       let filter = playback.filter;
 
-      WebAudio.playSynth(~note, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
+      WebAudio.playSynth(~note, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. offset), ~time=beatLength *. length, ~filter);
     }, playback.notes);
   };
 
@@ -386,6 +397,12 @@ let make = () => {
     None;
   }, [|state.volume|]);
 
+  React.useEffect1(() => {
+    WebAudio.setGlobalWarble(state.warble *. 2.9);
+
+    None;
+  }, [|state.warble|]);
+
   <div className="ma4">
     <div className="flex items-center">
       <button
@@ -417,6 +434,14 @@ let make = () => {
         max=1.0
         step=0.01
         onChange=(value => dispatch(SetVolume(value)))
+      />
+      <Range
+        value=state.warble
+        label=("Warble: " ++ (Js.Math.floor(state.warble *. 100.0) |> string_of_int) ++ "%")
+        min=0.0
+        max=1.0
+        step=0.01
+        onChange=(value => dispatch(SetWarble(value)))
       />
       <button className="w4 h2 flex-none" onClick=(_event => {
         WebAudio.resume();
