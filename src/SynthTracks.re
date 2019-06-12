@@ -173,7 +173,7 @@ let default = (globalParameters) => {
       {
         floatFns: floatFloatFns(0.0, 1.0),
         defaultValues: (length, _globalParameters) => Array.make(length, 1.0),
-        randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
+        randomValuesAbsolute: randomFloatAbsolute(0.2, 1.0),
         randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
       (parameters, value) => {
