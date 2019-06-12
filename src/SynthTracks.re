@@ -30,46 +30,94 @@ let randomFloatRelative = (min, max, randomRelativeRange) => (_globalParameters,
   }, values);
 };
 
-let mapArray = (getArray, defaultValue, randomRelativeRange) => SynthValues.{
-  floatFns: {
-    fromFloat: (globalParameters, value) => {
-      let array = getArray(globalParameters);
-      let index = int_of_float(value *. float_of_int(Array.length(array) - 1));
-
-      array[index];
-    },
-    toFloat: (globalParameters, value) => {
-      let array = getArray(globalParameters);
-      let index = Utils.getArrayIndex(array, value, 0);
-
-      float_of_int(index) /. float_of_int(Array.length(array) - 1);
-    }
-  },
-  defaultValues: (length, globalParameters) => Array.make(length, defaultValue(globalParameters, getArray(globalParameters))),
-  randomValuesAbsolute: ((globalParameters, values) => {
-    let array = getArray(globalParameters);
-
-    Array.map((_) => Utils.randomArrayValue(array), values);
-  }),
-  randomValuesRelative: (globalParameters, values) => {
-    let array = getArray(globalParameters);
-
-    Array.map((value) => {
-      let index = Utils.getArrayIndex(array, value, 0);
-
-      let deltaMin = Pervasives.max(0, index - randomRelativeRange);
-      let deltaMax = Pervasives.min(Array.length(array) - 1, index + randomRelativeRange);
-
-      let randomIndex = Utils.randomInt(deltaMin, deltaMax);
-
-      array[randomIndex];
-    }, values);
-  },
-};
-
 let intToPlusMinus = value => {
   (value >= 0 ? "+" : "") ++ string_of_int(value);
 };
+
+let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
+  // pitches are stored as options.
+  // to easily convert, use 1-based indices with 0 as None, then convert
+  // when needed.
+  {
+    floatFns: {
+      fromFloat: (globalParameters, value) => {
+        let array = globalParameters.scale;
+        let index = int_of_float(value *. float_of_int(Array.length(array)));
+
+        if (index === 0) {
+          None;
+        } else {
+          Some(array[index - 1]);
+        };
+      },
+      toFloat: (globalParameters, value) => {
+        switch (value) {
+          | None => 0.0
+          | Some(value) => {
+            let array = globalParameters.scale;
+            let index = Utils.getArrayIndex(array, value, 0);
+
+            float_of_int(index + 1) /. float_of_int(Array.length(array));
+          }
+        };
+      }
+    },
+    defaultValues,
+    randomValuesAbsolute: ((globalParameters, values) => {
+      let array = globalParameters.scale;
+      let chance = 0.65 +. Random.float(0.2);
+
+      values
+        |> Array.map(_ => {
+          if (Random.float(1.0) <= chance) {
+            Some(Utils.randomArrayValue(array));
+          } else {
+            None;
+          }
+        });
+    }),
+    randomValuesRelative: (globalParameters, values) => {
+      let array = globalParameters.scale;
+      let randomRelativeRange = 2;
+
+       Array.map((value) => {
+        let index = switch (value) {
+          | None => 0
+          | Some(value) => Utils.getArrayIndex(array, value, 0) + 1
+        };
+
+        let deltaMin = Pervasives.max(0, index - randomRelativeRange);
+        let deltaMax = Pervasives.min(Array.length(array), index + randomRelativeRange);
+
+        let randomIndex = Utils.randomInt(deltaMin, deltaMax);
+
+        if (randomIndex === 0) {
+          None;
+        } else {
+          Some(array[randomIndex - 1]);
+        };
+      }, values);
+    }
+  },
+  (parameters, value) => {
+    ...parameters,
+    notes: {
+      switch (value) {
+        | Some(value) => switch (Utils.findInArray(value, parameters.notes)) {
+          | None => Array.append(parameters.notes, [|value|])
+          | Some(_) => parameters.notes
+        }
+        | None => parameters.notes
+      };
+    }
+  },
+  (value) => {
+    switch (value) {
+      | Some(value) => string_of_int(value + 1)
+      | None => "-"
+    };
+  }
+);
 
 let floatToPercentageString = (value) => {
   Js.Float.toString(Js.Math.round(value *. 100.0)) ++ "%";
@@ -106,57 +154,19 @@ let default = (globalParameters) => {
       },
       intToPlusMinus
     )),
-    create("Pitch 1", SynthValues.createValueConverter(
-      mapArray(
-        (globalParameters) => globalParameters.scale,
-        (_globalParameters, array) => array[0],
-        3
-      ),
-      (parameters, value) => {
-        ...parameters,
-        notes: {
-          switch (Utils.findInArray(value, parameters.notes)) {
-            | None => Array.append(parameters.notes, [|value|])
-            | Some(_) => parameters.notes
-          };
-        }
-      },
-      (value) => intToPlusMinus(value + 1)
-    )),
-    create("Pitch 2", SynthValues.createValueConverter(
-      mapArray(
-        (globalParameters) => globalParameters.scale,
-        (_globalParameters, array) => array[0],
-        3
-      ),
-      (parameters, value) => {
-        ...parameters,
-        notes: {
-          switch (Utils.findInArray(value, parameters.notes)) {
-            | None => Array.append(parameters.notes, [|value|])
-            | Some(_) => parameters.notes
-          };
-        }
-      },
-      (value) => intToPlusMinus(value + 1)
-    )),
-    create("Pitch 3", SynthValues.createValueConverter(
-      mapArray(
-        (globalParameters) => globalParameters.scale,
-        (_globalParameters, array) => array[0],
-        3
-      ),
-      (parameters, value) => {
-        ...parameters,
-        notes: {
-          switch (Utils.findInArray(value, parameters.notes)) {
-            | None => Array.append(parameters.notes, [|value|])
-            | Some(_) => parameters.notes
-          };
-        }
-      },
-      (value) => intToPlusMinus(value + 1)
-    )),
+    create("Pitch 1", pitchValueConverter((length, globalParameters) => {
+      let array = Array.make(length, None);
+
+      array[0] = Some(Utils.randomArrayValue(globalParameters.scale));
+
+      array;
+    })),
+    create("Pitch 2", pitchValueConverter((length, _globalParameters) => {
+      Array.make(length, None);
+    })),
+    create("Pitch 3", pitchValueConverter((length, _globalParameters) => {
+      Array.make(length, None);
+    })),
     create("Gain", SynthValues.createValueConverter(
       {
         floatFns: floatFloatFns(0.0, 1.0),
