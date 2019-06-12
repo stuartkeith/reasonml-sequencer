@@ -23,7 +23,6 @@ let generateScale = (majorScaleOffset) => {
   result;
 };
 
-let scaleChromatic = [|0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11|];
 let scaleMajor = generateScale(0);
 let scaleDorian = generateScale(1);
 let scalePhrygian = generateScale(2);
@@ -33,12 +32,11 @@ let scaleMinor = generateScale(5);
 let scaleLocrian = generateScale(6);
 
 let scales = [|
-  ("Chromatic", scaleChromatic),
   ("Major", scaleMajor),
+  ("Minor", scaleMinor),
   ("Dorian", scaleDorian),
   ("Phrygian", scalePhrygian),
   ("Lydian", scaleLydian),
   ("Mixolydian", scaleMixolydian),
-  ("Minor", scaleMinor),
   ("Locrian", scaleLocrian)
 |];
