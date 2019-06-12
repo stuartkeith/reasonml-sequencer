@@ -142,8 +142,8 @@ let synthFilterMax = 22000.0;
 let synthFilterRange = synthFilterMax -. synthFilterMin;
 let synthFilterLog = log(synthFilterMax /. synthFilterMin) /. log(2.0);
 
-let playSynth: (~note:int, ~chord:array(int), ~gain:float, ~pan:float, ~start:float, ~time:float, ~filter:float) => unit = [%bs.raw {|
-  function (note, chords, gain, pan, start, time, filter) {
+let playSynth: (~note:int, ~gain:float, ~pan:float, ~start:float, ~time:float, ~filter:float) => unit = [%bs.raw {|
+  function (note, gain, pan, start, time, filter) {
     const filterLogScale = synthFilterMin + (synthFilterRange * Math.pow(2, synthFilterLog * (filter - 1)));
 
     const lowpass = audioContext.createBiquadFilter();
@@ -169,13 +169,9 @@ let playSynth: (~note:int, ~chord:array(int), ~gain:float, ~pan:float, ~start:fl
     stereoPannerNode.connect(globalFx.masterGain);
     stereoPannerNode.connect(globalFx.convolver);
 
-    const voiceGain = chords.length === 0 ? 1 : 1 / chords.length;
+    const voiceGain = 1;
 
     playOsc(note, start, time, voiceGain, gainNode);
-
-    chords.forEach(function (noteOffset) {
-      playOsc(note + noteOffset, start, time, voiceGain, gainNode);
-    });
   }
 |}];
 

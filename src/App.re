@@ -246,7 +246,6 @@ let reducer = (state, action) => {
 let scheduleCallback = (state, beatTime, beatLength) => {
   let initialParameters = SynthParameters.{
     chance: 1.0,
-    chord: [||],
     filter: 1.0,
     gain: 1.0,
     length: 1.0,
@@ -267,13 +266,12 @@ let scheduleCallback = (state, beatTime, beatLength) => {
   if (playback.chance > 0.0 && chance <= playback.chance) {
     Array.iter((incomingNote) => {
       let note = incomingNote + playback.transpose + state.globalTranspose;
-      let chord = playback.chord;
       let gain = playback.gain;
       let pan = playback.pan;
       let length = playback.length;
       let filter = playback.filter;
 
-      WebAudio.playSynth(~note, ~chord, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
+      WebAudio.playSynth(~note, ~gain=gain, ~pan, ~start=beatTime +. (beatLength *. playback.offset), ~time=beatLength *. length, ~filter);
     }, playback.notes);
   };
 

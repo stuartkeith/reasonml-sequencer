@@ -4,7 +4,6 @@ type globalParameters = {
 
 type parameters = {
   chance: float,
-  chord: array(int),
   filter: float,
   gain: float,
   length: float,

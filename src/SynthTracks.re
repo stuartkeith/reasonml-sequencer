@@ -75,19 +75,6 @@ let floatToPercentageString = (value) => {
   Js.Float.toString(Js.Math.round(value *. 100.0)) ++ "%";
 };
 
-let chords = [|
-  ("None", [||]),
-  ("Maj", [|4, 7|]),
-  ("Min", [|3, 7|]),
-  ("Dom", [|3, 6|]),
-  ("Maj7", [|4, 7, 11|]),
-  ("Min7", [|3, 7, 10|]),
-  ("Dom7", [|4, 7, 10|]),
-  ("Sus2", [|2, 7|]),
-  ("Sus4", [|5, 7|]),
-  ("Aug", [|4, 8|])
-|];
-
 let default = (globalParameters) => {
   open SynthTrack;
 
@@ -247,14 +234,6 @@ let default = (globalParameters) => {
         filter: parameters.filter *. value
       },
       floatToPercentageString
-    )),
-    create("Chord", SynthValues.createValueConverter(
-      mapArray((_) => chords, (_, array) => array[0], 3),
-      (parameters, (_, value)) => {
-        ...parameters,
-        chord: value
-      },
-      ((label, _)) => label
     ))
   ];
 };
