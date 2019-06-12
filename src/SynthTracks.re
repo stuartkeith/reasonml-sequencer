@@ -1,5 +1,9 @@
 let intFloatFns = (min, max) => SynthValues.{
-  fromFloat: (_globalParameters, value) => min + Js.Math.ceil(value *. float_of_int(max - min + 1)) - 1,
+  fromFloat: (_globalParameters, value) => {
+    let range = -1 + Js.Math.ceil(value *. float_of_int(max - min + 1));
+
+    min + Pervasives.max(0, range);
+  },
   toFloat: (_globalParameters, value) => float_of_int(value - min + 1) /. float_of_int(max - min + 1)
 };
 
@@ -41,7 +45,7 @@ let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
     floatFns: {
       fromFloat: (globalParameters, value) => {
         let array = globalParameters.scale;
-        let index = Js.Math.ceil(value *. float_of_int(Array.length(array) + 1));
+        let index = max(1, Js.Math.ceil(value *. float_of_int(Array.length(array) + 1)));
 
         if (index === 1) {
           None;
