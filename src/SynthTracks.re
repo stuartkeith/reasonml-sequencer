@@ -1,6 +1,6 @@
 let intFloatFns = (min, max) => SynthValues.{
-  fromFloat: (_globalParameters, value) => min + int_of_float(float_of_int(max - min) *. value),
-  toFloat: (_globalParameters, value) => float_of_int(value - min) /. float_of_int(max - min)
+  fromFloat: (_globalParameters, value) => min + Js.Math.ceil(value *. float_of_int(max - min + 1)) - 1,
+  toFloat: (_globalParameters, value) => float_of_int(value - min + 1) /. float_of_int(max - min + 1)
 };
 
 let randomIntAbsolute = (min, max) => (_globalParameters, values) => Array.map((_) => Utils.randomInt(min, max), values);
@@ -36,30 +36,28 @@ let intToPlusMinus = value => {
 
 let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
   // pitches are stored as options.
-  // to easily convert, use 1-based indices with 0 as None, then convert
-  // when needed.
+  // use 1-based indices, with 1 as None, then convert when needed.
   {
     floatFns: {
       fromFloat: (globalParameters, value) => {
         let array = globalParameters.scale;
-        let index = int_of_float(value *. float_of_int(Array.length(array)));
+        let index = Js.Math.ceil(value *. float_of_int(Array.length(array) + 1));
 
-        if (index === 0) {
+        if (index === 1) {
           None;
         } else {
-          Some(array[index - 1]);
+          Some(array[index - 2]);
         };
       },
       toFloat: (globalParameters, value) => {
-        switch (value) {
-          | None => 0.0
-          | Some(value) => {
-            let array = globalParameters.scale;
-            let index = Utils.getArrayIndex(array, value, 0);
+        let array = globalParameters.scale;
 
-            float_of_int(index + 1) /. float_of_int(Array.length(array));
-          }
+        let index = switch (value) {
+          | None => 1
+          | Some(value) => 2 + Utils.getArrayIndex(array, value, 0)
         };
+
+        float_of_int(index) /. float_of_int(Array.length(array) + 1);
       }
     },
     defaultValues,
