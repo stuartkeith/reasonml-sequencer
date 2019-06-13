@@ -260,10 +260,10 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     transpose: 0
   };
 
-  let playback = List.fold_left((initialParameters, synthTrack:SynthTrack.t) => {
+  let playback = List.fold_left((parameters, synthTrack:SynthTrack.t) => {
     let index = Timing.index(synthTrack.loopLength, synthTrack.timing);
 
-    SynthValues.updateSynthParameters(state.globalParameters, initialParameters, index, synthTrack.values, synthTrack.valueConverter);
+    SynthValues.updateSynthParameters(state.globalParameters, parameters, index, synthTrack.values, synthTrack.valueConverter);
   }, initialParameters, state.synthTracks);
 
   let chance = Random.float(1.);
