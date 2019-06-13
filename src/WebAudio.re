@@ -1,7 +1,12 @@
 type audioContext;
 type globalFx;
 
-[@bs.new] external create_audioContext : unit => audioContext = "AudioContext";
+let create_audioContext: unit => audioContext = [%bs.raw {|
+  function (_) {
+    return new (window.AudioContext || window.webkitAudioContext)();
+  }
+|}];
+
 [@bs.get] external getCurrentTime : (audioContext) => float = "currentTime";
 
 let audioContext = create_audioContext();
