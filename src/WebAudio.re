@@ -164,8 +164,16 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~filter:float, ~start:float,
     const gainNode = audioContext.createGain();
     gainNode.gain.value = gain;
 
-    const stereoPannerNode = audioContext.createStereoPanner();
-    stereoPannerNode.pan.value = pan;
+    // createStereoPanner not supported on Safari 12.1.1 as of 13 June 2019.
+    let stereoPannerNode;
+
+    if (audioContext.createStereoPanner) {
+      stereoPannerNode = audioContext.createStereoPanner();
+      stereoPannerNode.pan.value = pan;
+    } else {
+      stereoPannerNode = audioContext.createPanner();
+      stereoPannerNode.setPosition(pan, 0, 1 - Math.abs(pan));
+    }
 
     // schedule
     gainNode.gain.setValueAtTime(gain, start);
