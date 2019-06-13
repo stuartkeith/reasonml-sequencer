@@ -55,6 +55,9 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
   let onMouseDown = (event) => switch (viewMode) {
     | Preview(_) => {
       if (ReactEvent.Mouse.button(event) === 0) {
+        // Safari will show the select cursor unless prevented.
+        ReactEvent.Mouse.preventDefault(event);
+
         let update = getUpdateFromMouse(event);
 
         if (ReactEvent.Mouse.shiftKey(event)) {
