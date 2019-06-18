@@ -66,7 +66,7 @@ let reducer = (state, action) => {
       ...state,
       synthTracks: List.map(synthTrack:SynthTrack.t => {
         ...synthTrack,
-        timing: Timing.default
+        timing: Timing.restart(synthTrack.SynthTrack.timing)
       }, state.synthTracks),
       tick: 0
     }
@@ -80,7 +80,7 @@ let reducer = (state, action) => {
         ...state,
         synthTracks: List.map((synthTrack:SynthTrack.t) => {
           ...synthTrack,
-          timing: Timing.advance(synthTrack.subTicks, synthTrack.loopLength, sync, synthTrack.timing),
+          timing: Timing.advance(synthTrack.loopLength, sync, synthTrack.timing),
         }, state.synthTracks),
         tick: nextTick,
         playbackSideEffects: ref(playbackSideEffects)
@@ -165,7 +165,7 @@ let reducer = (state, action) => {
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: SynthTracks.mapSynthTrackById(id, synthTrack => {
         ...synthTrack,
-        subTicks
+        timing: Timing.setSubTicks(subTicks, synthTrack.timing)
       }, state.synthTracks)
     }
     | TrackEditMode(id, update, action) => {

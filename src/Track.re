@@ -34,7 +34,7 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     <p className="ma0 w4 flex-none">(React.string(synthTrack.label))</p>
     <div className="w1 flex-none" />
       <select
-        value=(string_of_int(synthTrack.subTicks))
+        value=(synthTrack.timing |> Timing.subTicks |> string_of_int)
         onChange=((event) => {
           let value = int_of_string(event->ReactEvent.Form.target##value);
 

@@ -134,8 +134,7 @@ let default = (globalParameters) => {
       values,
       valueConverter,
       loopLength: 8,
-      subTicks: 1,
-      timing: Timing.default
+      timing: Timing.create(1)
     };
   };
 
@@ -254,7 +253,7 @@ let merge = (incomingSynthTracks, existingSynthTracks) => {
 
         SynthTrack.{
           ...incomingSynthTrack,
-          timing: Timing.merge(incomingSynthTrack.subTicks, incomingSynthTrack.loopLength, existingSynthTrack.timing)
+          timing: Timing.merge(incomingSynthTrack.loopLength, incomingSynthTrack.timing, existingSynthTrack.timing)
         };
       }
       | [] => incomingSynthTrack;

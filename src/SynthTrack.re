@@ -4,6 +4,5 @@ type t = {
   values: SynthValues.values,
   valueConverter: SynthValues.valueConverter,
   loopLength: int,
-  subTicks: int,
   timing: Timing.t
 };
