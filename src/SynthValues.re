@@ -25,7 +25,7 @@ type valueConverterFunctions('a) = {
   randomValuesRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
 
-type updateSynthParametersFn('a) = (SynthParameters.parameters, Timing.t, 'a) => SynthParameters.parameters;
+type updateSynthParametersFn('a) = (SynthParameters.globalParameters, SynthParameters.parameters, Timing.t, 'a) => SynthParameters.parameters;
 type toStringFn('a) = ('a) => string;
 
 type valueConverter = {
@@ -66,7 +66,7 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
   updateSynthParameters: (globalParameters, parameters, timing, value) => {
     let value = valueConverterFunctions.floatFns.fromFloat(globalParameters, value);
 
-    updateSynthParameters(parameters, timing, value);
+    updateSynthParameters(globalParameters, parameters, timing, value);
   }
 };
 

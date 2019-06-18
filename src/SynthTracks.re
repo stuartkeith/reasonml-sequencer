@@ -101,7 +101,7 @@ let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
       }, values);
     }
   },
-  (parameters, _timing, value) => {
+  (_globalParameters, parameters, timing, value) => {
     ...parameters,
     notes: {
       switch (value) {
@@ -146,7 +146,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomIntAbsolute(-3, 2),
         randomValuesRelative: randomIntRelative(-3, 2, 1)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         transpose: parameters.transpose + (value * 12)
       },
@@ -172,7 +172,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomFloatAbsolute(0.2, 1.0),
         randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         gain: parameters.gain *. value
       },
@@ -185,7 +185,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomFloatAbsolute(-1.0, 1.0),
         randomValuesRelative: randomFloatRelative(-1.0, 1.0, 0.2)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         pan: parameters.pan +. value
       },
@@ -198,7 +198,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
         randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         chance: parameters.chance *. value
       },
@@ -211,7 +211,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomFloatAbsolute(0.0, 2.0),
         randomValuesRelative: randomFloatRelative(0.0, 2.0, 0.2)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         length: parameters.length *. value
       },
@@ -224,7 +224,7 @@ let default = (globalParameters) => {
         randomValuesAbsolute: randomFloatAbsolute(0.0, 1.0),
         randomValuesRelative: randomFloatRelative(0.0, 1.0, 0.2)
       },
-      (parameters, _timing, value) => {
+      (_globalParameters, parameters, _timing, value) => {
         ...parameters,
         filter: parameters.filter *. value
       },
