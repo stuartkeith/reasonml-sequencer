@@ -20,7 +20,7 @@ let initialState = () => {
   let (_, initialScale) = Utils.randomArrayValue(Scales.scales);
 
   let initialGlobalParameters = SynthParameters.{
-    repeatNotesEverySubTicks: false,
+    repeatNotesEverySubTick: false,
     scale: initialScale
   };
 

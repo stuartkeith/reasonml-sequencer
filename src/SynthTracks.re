@@ -104,7 +104,7 @@ let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
   (globalParameters, parameters, timing, value) => {
     ...parameters,
     notes: {
-      if (globalParameters.repeatNotesEverySubTicks || Timing.isFirstTick(timing)) {
+      if (globalParameters.repeatNotesEverySubTick || Timing.isFirstTick(timing)) {
         switch (value) {
           | Some(value) => Array.append(parameters.notes, [|value|])
           | None => parameters.notes
