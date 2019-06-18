@@ -491,6 +491,18 @@ let make = () => {
         }) />
         <span className="ml2">(React.string("Sync"))</span>
       </label>
+      <span className="db w1 flex-none" />
+      <label className="flex-none">
+        <input
+          type_="checkbox"
+          checked=state.globalParameters.repeatNotesEverySubTick
+          onChange=((event) => dispatch(UpdateGlobalParameters({
+            ...state.globalParameters,
+            repeatNotesEverySubTick: event->ReactEvent.Form.target##checked
+          })))
+        />
+        <span className="ml2">(React.string("Repeat notes"))</span>
+      </label>
     </div>
     <span className="dib h2" />
     <div className="flex">
