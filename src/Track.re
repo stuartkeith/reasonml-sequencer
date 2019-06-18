@@ -58,18 +58,23 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
       onSetLength
     />
     <div className="w1 flex-none" />
-    <div className="flex flex-none">
+    <div className="flex flex-none f6">
       <button
+        className="flex-none h2"
         onClick=(_event => dispatch(RandomiseAbsolute(synthTrack.id)))
       >
         (React.string("Random Absolute"))
       </button>
+      <span className="db w1 flex-none" />
       <button
+        className="flex-none h2"
         onClick=(_event => dispatch(RandomiseRelative(synthTrack.id)))
       >
         (React.string("Random Relative"))
       </button>
+      <span className="db w1 flex-none" />
       <button
+        className="flex-none h2"
         onClick=(_event => dispatch(Reset(synthTrack.id)))
       >
         (React.string("Reset")

@@ -1,5 +1,5 @@
 [@react.component]
-let make = (~label:string, ~value:float, ~min:float, ~max:float, ~step:float, ~onChange) => {
+let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~children) => {
   let scale = 1.0 -. ((value -. min) /. (max -. min));
 
   let style = ReactDOMRe.Style.make(
@@ -13,7 +13,7 @@ let make = (~label:string, ~value:float, ~min:float, ~max:float, ~step:float, ~o
       <div className="absolute absolute--fill bg-gray" style />
     </div>
     <div className="absolute absolute--fill flex items-center justify-center">
-      (React.string(label))
+      (children)
     </div>
     <input
       type_="range"

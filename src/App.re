@@ -418,74 +418,88 @@ let make = () => {
   }, [|state.warble|]);
 
   <div className="ma4">
-    <div className="flex items-center">
-      <button
-        className="w4 h2 flex-none"
-        disabled=(UndoBuffer.isEmpty(state.synthTracksUndoBuffer))
-        onClick=(_event => dispatch(Undo))
-      >
-        (React.string("Undo"))
-      </button>
-      <button
-        className="w4 h2 flex-none"
-        disabled=(UndoBuffer.isEmpty(state.synthTracksRedoBuffer))
-        onClick=(_event => dispatch(Redo))
-      >
-        (React.string("Redo"))
-      </button>
-      <Range
-        value=state.bpm
-        label=("BPM: " ++ Js.Float.toString(state.bpm))
-        min=40.0
-        max=200.0
-        step=1.0
-        onChange=(value => dispatch(SetBpm(value)))
-      />
-      <Range
-        value=state.volume
-        label=("Volume: " ++ (Js.Math.floor(state.volume *. 100.0) |> string_of_int) ++ "%")
-        min=0.0
-        max=1.0
-        step=0.01
-        onChange=(value => dispatch(SetVolume(value)))
-      />
-      <Range
-        value=state.warble
-        label=("Warble: " ++ (Js.Math.floor(state.warble *. 100.0) |> string_of_int) ++ "%")
-        min=0.0
-        max=1.0
-        step=0.01
-        onChange=(value => dispatch(SetWarble(value)))
-      />
-      <button className="w4 h2 flex-none" onClick=(_event => {
+    <div className="flex items-center f6">
+      <button className="w3 h2 flex-none" onClick=(_event => {
         WebAudio.resume();
 
         dispatch(SetPlayback(!state.isPlaying));
       })>
         (state.isPlaying ? React.string("Stop") : React.string("Play"))
       </button>
+      <span className="db w1 flex-none" />
+      <Range
+        value=state.bpm
+        min=40.0
+        max=200.0
+        step=1.0
+        onChange=(value => dispatch(SetBpm(value)))
+      >
+        <span>(React.string("BPM: " ++ Js.Float.toString(state.bpm)))</span>
+      </Range>
+      <span className="db w1 flex-none" />
+      <Range
+        value=state.volume
+        min=0.0
+        max=1.0
+        step=0.01
+        onChange=(value => dispatch(SetVolume(value)))
+      >
+        (React.string("Volume: " ++ (Js.Math.floor(state.volume *. 100.0) |> string_of_int) ++ "%"))
+      </Range>
+      <span className="db w1 flex-none" />
+      <Range
+        value=state.warble
+        min=0.0
+        max=1.0
+        step=0.01
+        onChange=(value => dispatch(SetWarble(value)))
+      >
+        (React.string("Warble: " ++ (Js.Math.floor(state.warble *. 100.0) |> string_of_int) ++ "%"))
+      </Range>
+      <span className="db w2 flex-none" />
       <button className="w4 h2 flex-none" onClick=(_event => dispatch(Restart))>
-        (React.string("Restart"))
+        (React.string("Restart All"))
       </button>
+      <span className="db w1 flex-none" />
       <button className="w4 h2 flex-none" onClick=(_event => dispatch(RandomiseAll))>
         (React.string("Randomise All"))
       </button>
+      <span className="db w1 flex-none" />
       <button
         className="w4 h2 flex-none"
         onClick=(_event => dispatch(ResetAll))
       >
         (React.string("Reset All"))
       </button>
+      <span className="db w2 flex-none" />
+      <button
+        className="w3 h2 flex-none"
+        disabled=(UndoBuffer.isEmpty(state.synthTracksUndoBuffer))
+        onClick=(_event => dispatch(Undo))
+      >
+        (React.string("Undo"))
+      </button>
+      <span className="db w1 flex-none" />
+      <button
+        className="w3 h2 flex-none"
+        disabled=(UndoBuffer.isEmpty(state.synthTracksRedoBuffer))
+        onClick=(_event => dispatch(Redo))
+      >
+        (React.string("Redo"))
+      </button>
+      <span className="db w2 flex-none" />
       <label className="flex-none">
         <input type_="checkbox" checked=state.sync onChange=(event => {
           dispatch(SetSync(event->ReactEvent.Form.target##checked));
         }) />
-        (React.string("Sync"))
+        <span className="ml2">(React.string("Sync"))</span>
       </label>
     </div>
-    <div>
+    <span className="dib h2" />
+    <div className="flex">
+      <p className="ma0">(React.string("Scale:"))</p>
       (Array.map(((label, scale)) =>
-        <label key=label>
+        <label key=label className="ml4">
           <input
             type_="radio"
             name="scale"
@@ -493,15 +507,16 @@ let make = () => {
             checked=(scale === state.globalParameters.scale)
             onChange=((_event) => dispatch(SetScale(scale)))
           />
-          (React.string(label))
+          <span className="ml2">(React.string(label))</span>
         </label>
       , Scales.scales)
       |> React.array)
     </div>
+    <span className="dib h2" />
     (
       List.mapi((index, synthTrack:SynthTrack.t) => {
         <React.Fragment key=(Id.toString(synthTrack.id))>
-          {index > 0 ? <div className="h1 flex-none" /> : React.null}
+          {index > 0 ? <span className="dib h1 flex-none" /> : React.null}
           <Track
             synthTrack
             editMode=state.editMode
