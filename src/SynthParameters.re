@@ -1,4 +1,5 @@
 type globalParameters = {
+  repeatNotesEverySubTicks: bool,
   scale: Scales.t
 };
 

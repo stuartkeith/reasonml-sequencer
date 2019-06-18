@@ -20,6 +20,7 @@ let initialState = () => {
   let (_, initialScale) = Utils.randomArrayValue(Scales.scales);
 
   let initialGlobalParameters = SynthParameters.{
+    repeatNotesEverySubTicks: false,
     scale: initialScale
   };
 
@@ -107,6 +108,7 @@ let reducer = (state, action) => {
     | SetScale(scale) => {
       ...state,
       globalParameters: {
+        ...state.globalParameters,
         scale: scale
       }
     }
