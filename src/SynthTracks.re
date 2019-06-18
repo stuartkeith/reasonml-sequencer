@@ -101,13 +101,17 @@ let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
       }, values);
     }
   },
-  (_globalParameters, parameters, timing, value) => {
+  (globalParameters, parameters, timing, value) => {
     ...parameters,
     notes: {
-      switch (value) {
-        | Some(value) => Array.append(parameters.notes, [|value|])
-        | None => parameters.notes
-      };
+      if (globalParameters.repeatNotesEverySubTicks || Timing.isFirstTick(timing)) {
+        switch (value) {
+          | Some(value) => Array.append(parameters.notes, [|value|])
+          | None => parameters.notes
+        };
+      } else {
+        parameters.notes;
+      }
     }
   },
   (value) => {
