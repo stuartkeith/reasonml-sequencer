@@ -105,12 +105,9 @@ let reducer = (state, action) => {
       }, state.synthTracks),
       globalTranspose: randomTranspose()
     }
-    | SetScale(scale) => {
+    | UpdateGlobalParameters(globalParameters) => {
       ...state,
-      globalParameters: {
-        ...state.globalParameters,
-        scale: scale
-      }
+      globalParameters
     }
     | SetVolume(volume) => {
       ...state,
@@ -505,7 +502,10 @@ let make = () => {
             name="scale"
             value=label
             checked=(scale === state.globalParameters.scale)
-            onChange=((_event) => dispatch(SetScale(scale)))
+            onChange=((_event) => dispatch(UpdateGlobalParameters({
+              ...state.globalParameters,
+              scale
+            })))
           />
           <span className="ml2">(React.string(label))</span>
         </label>
