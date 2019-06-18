@@ -147,6 +147,11 @@ let reducer = (state, action) => {
         values: SynthValues.randomValuesRelative(state.globalParameters, synthTrack.valueConverter, synthTrack.values)
       }, state.synthTracks)
     }
+    | ResetAll => {
+      ...state,
+      synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
+      synthTracks: SynthTracks.default(state.globalParameters)
+    }
     | Reset(id) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
@@ -464,6 +469,12 @@ let make = () => {
       </button>
       <button className="w4 h2 flex-none" onClick=(_event => dispatch(RandomiseAll))>
         (React.string("Randomise All"))
+      </button>
+      <button
+        className="w4 h2 flex-none"
+        onClick=(_event => dispatch(ResetAll))
+      >
+        (React.string("Reset All"))
       </button>
       <label className="flex-none">
         <input type_="checkbox" checked=state.sync onChange=(event => {

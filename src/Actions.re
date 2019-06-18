@@ -11,6 +11,7 @@ type action =
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)
   | Redo
+  | ResetAll
   | Reset(Id.t)
   | Restart
   | SetBpm(float)
