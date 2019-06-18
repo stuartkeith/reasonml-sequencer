@@ -266,9 +266,7 @@ let scheduleCallback = (state, beatTime, beatLength) => {
   };
 
   let playback = List.fold_left((parameters, synthTrack:SynthTrack.t) => {
-    let index = Timing.index(synthTrack.loopLength, synthTrack.timing);
-
-    SynthValues.updateSynthParameters(state.globalParameters, parameters, index, synthTrack.values, synthTrack.valueConverter);
+    SynthValues.updateSynthParameters(state.globalParameters, parameters, synthTrack.timing, synthTrack.values, synthTrack.valueConverter);
   }, initialParameters, state.synthTracks);
 
   if (playback.chance > 0.0) {

@@ -57,6 +57,4 @@ let merge = (incomingSubTicks, incomingLoopLength, existing) => {
   };
 };
 
-let index = (incomingLoopLength, t) => {
-  t.index mod incomingLoopLength;
-};
+let index = (t) => t.index;

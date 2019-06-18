@@ -25,7 +25,7 @@ type valueConverterFunctions('a) = {
   randomValuesRelative: (SynthParameters.globalParameters, array('a)) => array('a)
 };
 
-type updateSynthParametersFn('a) = (SynthParameters.parameters, 'a) => SynthParameters.parameters;
+type updateSynthParametersFn('a) = (SynthParameters.parameters, Timing.t, 'a) => SynthParameters.parameters;
 type toStringFn('a) = ('a) => string;
 
 type valueConverter = {
@@ -33,7 +33,7 @@ type valueConverter = {
   quantiseFloat: (SynthParameters.globalParameters, float) => value,
   randomValuesAbsoluteFloat: (SynthParameters.globalParameters, array(float)) => array(float),
   randomValuesRelativeFloat: (SynthParameters.globalParameters, array(float)) => array(float),
-  updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, float) => SynthParameters.parameters
+  updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, Timing.t, float) => SynthParameters.parameters
 };
 
 let createValueConverter = (valueConverterFunctions, updateSynthParameters, toString) => {
@@ -63,10 +63,10 @@ let createValueConverter = (valueConverterFunctions, updateSynthParameters, toSt
       number: floatValue
     };
   },
-  updateSynthParameters: (globalParameters, parameters, value) => {
+  updateSynthParameters: (globalParameters, parameters, timing, value) => {
     let value = valueConverterFunctions.floatFns.fromFloat(globalParameters, value);
 
-    updateSynthParameters(parameters, value);
+    updateSynthParameters(parameters, timing, value);
   }
 };
 
@@ -110,8 +110,9 @@ let updateValues = (globalParameters, valueConverter, values, index, value) => {
 
 let valuesLength = Array.length;
 
-let updateSynthParameters = (globalParameters, parameters, index, values, valueConverter) => {
+let updateSynthParameters = (globalParameters, parameters, timing, values, valueConverter) => {
+  let index = Timing.index(timing);
   let value = values[index];
 
-  valueConverter.updateSynthParameters(globalParameters, parameters, value);
+  valueConverter.updateSynthParameters(globalParameters, parameters, timing, value);
 };

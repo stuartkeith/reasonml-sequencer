@@ -10,4 +10,4 @@ let advance: (int, int, sync, t) => t;
 
 let merge: (int, int, t) => t;
 
-let index: (int, t) => int;
+let index: (t) => int;

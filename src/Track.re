@@ -52,7 +52,7 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
       mapValues
       getValuesAt
       values=synthTrack.values
-      highlightedIndex=Timing.index(synthTrack.loopLength, synthTrack.timing)
+      highlightedIndex=Timing.index(synthTrack.timing)
       disabledIndex=synthTrack.loopLength
       onAction
       onSetLength
