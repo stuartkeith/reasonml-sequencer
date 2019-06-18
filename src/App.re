@@ -266,24 +266,32 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     SynthValues.updateSynthParameters(state.globalParameters, parameters, index, synthTrack.values, synthTrack.valueConverter);
   }, initialParameters, state.synthTracks);
 
-  let chance = Random.float(1.);
-
-  if (playback.chance > 0.0 && chance <= playback.chance) {
+  if (playback.chance > 0.0) {
     let offset = if (state.tick mod 2 === 1) {
       (state.warble ** 2.3) *. 0.3;
     } else {
       0.0;
     };
 
+    // avoid duplicate notes by sorting in ascending order then skipping over
+    // values <= the previous value.
+    Array.sort((a, b) => a - b, playback.notes);
+
+    let lastNotePlayed = ref(-1);
+
     Array.iter((incomingNote) => {
-      WebAudio.playSynth(
-        ~note=incomingNote + playback.transpose + state.globalTranspose,
-        ~gain=playback.gain,
-        ~pan=playback.pan,
-        ~filter=playback.filter,
-        ~start=beatTime +. (beatLength *. offset),
-        ~time=beatLength *. playback.length
-      );
+      if ((incomingNote > lastNotePlayed^) && (Random.float(1.) <= playback.chance)) {
+        lastNotePlayed := incomingNote;
+
+        WebAudio.playSynth(
+          ~note=incomingNote + playback.transpose + state.globalTranspose,
+          ~gain=playback.gain,
+          ~pan=playback.pan,
+          ~filter=playback.filter,
+          ~start=beatTime +. (beatLength *. offset),
+          ~time=beatLength *. playback.length
+        );
+      }
     }, playback.notes);
   };
 

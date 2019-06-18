@@ -27,15 +27,3 @@ let rec getArrayIndex = (array, value, index) => {
     getArrayIndex(array, value, index + 1);
   }
 };
-
-let findInArray = (value, array) => {
-  let result = ref(None);
-
-  Array.iter((existingValue) => {
-    if (existingValue === value) {
-      result := Some(value);
-    }
-  }, array);
-
-  result^;
-};

@@ -105,10 +105,7 @@ let pitchValueConverter = (defaultValues) => SynthValues.createValueConverter(
     ...parameters,
     notes: {
       switch (value) {
-        | Some(value) => switch (Utils.findInArray(value, parameters.notes)) {
-          | None => Array.append(parameters.notes, [|value|])
-          | Some(_) => parameters.notes
-        }
+        | Some(value) => Array.append(parameters.notes, [|value|])
         | None => parameters.notes
       };
     }
