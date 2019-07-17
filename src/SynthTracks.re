@@ -58,6 +58,10 @@ let intToPlusMinus = value => {
   (value >= 0 ? "+" : "") ++ string_of_int(value);
 };
 
+let floatToPercentageString = (value) => {
+  Js.Float.toString(Js.Math.round(value *. 100.0)) ++ "%";
+};
+
 let pitchValueConverter = (default) => SynthValues.createValueConverter(
   // pitches are stored as options.
   // use 1-based indices, with 1 as None, then convert when needed.
@@ -141,10 +145,6 @@ let pitchValueConverter = (default) => SynthValues.createValueConverter(
     }
   }
 );
-
-let floatToPercentageString = (value) => {
-  Js.Float.toString(Js.Math.round(value *. 100.0)) ++ "%";
-};
 
 type createArguments = {
   trackLabel: string,
