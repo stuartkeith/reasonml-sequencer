@@ -152,12 +152,10 @@ type createArguments = {
 };
 
 let default = (globalParameters) => {
-  open SynthTrack;
-
   let create = ({ trackLabel, trackValueConverter }) => {
     let values = SynthValues.defaultValues(16, globalParameters, trackValueConverter);
 
-    {
+    SynthTrack.{
       id: Id.create(),
       label: trackLabel,
       values,
