@@ -1,29 +1,31 @@
+open SynthParameters;
+
 type values = array(float);
 
 type index = int;
 type length = int;
 
 type floatConverters('a) = {
-  fromFloat: (SynthParameters.globalParameters, float) => 'a,
-  toFloat: (SynthParameters.globalParameters, 'a) => float
+  fromFloat: (globalParameters, float) => 'a,
+  toFloat: (globalParameters, 'a) => float
 };
 
 type valueConverterConfig('a) = {
   floatConverters: floatConverters('a),
-  default: (length, SynthParameters.globalParameters) => array('a),
-  randomAbsolute: (SynthParameters.globalParameters, array('a)) => array('a),
-  randomRelative: (SynthParameters.globalParameters, array('a)) => array('a),
-  updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, Timing.t, 'a) => SynthParameters.parameters,
+  default: (length, globalParameters) => array('a),
+  randomAbsolute: (globalParameters, array('a)) => array('a),
+  randomRelative: (globalParameters, array('a)) => array('a),
+  updateSynthParameters: (globalParameters, parameters, Timing.t, 'a) => parameters,
   toString: ('a) => string
 };
 
 type valueConverter = {
-  defaultValues: (length, SynthParameters.globalParameters) => array(float),
-  valueToString: (SynthParameters.globalParameters, float) => string,
-  snapValue: (SynthParameters.globalParameters, float) => float,
-  randomAbsoluteValues: (SynthParameters.globalParameters, array(float)) => array(float),
-  randomRelativeValues: (SynthParameters.globalParameters, array(float)) => array(float),
-  updateSynthParameters: (SynthParameters.globalParameters, SynthParameters.parameters, Timing.t, float) => SynthParameters.parameters
+  defaultValues: (length, globalParameters) => array(float),
+  valueToString: (globalParameters, float) => string,
+  snapValue: (globalParameters, float) => float,
+  randomAbsoluteValues: (globalParameters, array(float)) => array(float),
+  randomRelativeValues: (globalParameters, array(float)) => array(float),
+  updateSynthParameters: (globalParameters, parameters, Timing.t, float) => parameters
 };
 
 let createValueConverter = (valueConverterConfig) => {
