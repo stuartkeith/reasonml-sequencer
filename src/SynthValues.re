@@ -36,6 +36,10 @@ let createValueConverter = (valueConverterConfig) => {
 
     valueConverterConfig.toString(actualValue);
   },
+  snapValue: (globalParameters, value) => {
+    valueConverterConfig.floatConverters.fromFloat(globalParameters, value)
+      |> valueConverterConfig.floatConverters.toFloat(globalParameters);
+  },
   randomAbsoluteValues: (globalParameters, values) => {
     values
       |> Array.map(valueConverterConfig.floatConverters.fromFloat(globalParameters))
@@ -47,10 +51,6 @@ let createValueConverter = (valueConverterConfig) => {
       |> Array.map(valueConverterConfig.floatConverters.fromFloat(globalParameters))
       |> valueConverterConfig.randomRelative(globalParameters)
       |> Array.map(valueConverterConfig.floatConverters.toFloat(globalParameters));
-  },
-  snapValue: (globalParameters, value) => {
-    valueConverterConfig.floatConverters.fromFloat(globalParameters, value)
-      |> valueConverterConfig.floatConverters.toFloat(globalParameters);
   },
   updateSynthParameters: (globalParameters, parameters, timing, value) => {
     let value = valueConverterConfig.floatConverters.fromFloat(globalParameters, value);
