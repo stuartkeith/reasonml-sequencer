@@ -168,7 +168,7 @@ let reducer = (state, action) => {
       }, state.synthTracks)
     }
     | TrackEditMode(id, update, action) => {
-      let applyUpdate = (synthTrack:SynthTrack.t, values, update:SynthValues.valuesUpdate) => {
+      let applyUpdate = (synthTrack:SynthTrack.t, values, update: Actions.update) => {
         SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update.index, update.value);
       };
 

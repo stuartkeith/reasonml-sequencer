@@ -12,7 +12,7 @@ let getUpdate = (offset, cellSize, values, pageX, pageY) => {
 
   let value = Utils.limit(value, 0., 1.);
 
-  SynthValues.{
+  Actions.{
     index,
     value
   };
@@ -25,11 +25,11 @@ type viewMode =
   | Active;
 
 [@react.component]
-let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~disabledIndex, ~onAction, ~onSetLength) => {
+let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~disabledIndex, ~onAction, ~onSetLength) => {
   let containerRef = React.useRef(Js.Nullable.null);
   let offsetRef = React.useRef((0, 0));
 
-  let (containerOpacity, showValues) = switch (viewMode) {
+  let (containerOpacity, showLabels) = switch (viewMode) {
     | Inactive => ("1", false)
     | Deactive => ("0.5", false)
     | Preview(_) => ("1", true)
@@ -116,10 +116,10 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
     onMouseDown
     onMouseLeave
   >
-    (mapValues((valueIndex, value:SynthValues.value) => {
+    (mapValues((valueIndex, value, label) => {
       let (scale, previewScale) = switch (viewMode) {
-        | Preview(values, index) when index === valueIndex => (getValuesAt(index, values), value.number)
-        | Inactive | Deactive | Preview(_) | Active => (value.number, 0.0)
+        | Preview(values, index) when index === valueIndex => (getValueAt(index, values), value)
+        | Inactive | Deactive | Preview(_) | Active => (value, 0.0)
       };
 
       let isDisabled = valueIndex >= disabledIndex;
@@ -150,9 +150,9 @@ let make = (~viewMode, ~mapValues, ~getValuesAt, ~values, ~highlightedIndex, ~di
             ()
           ))
         />
-        (showValues ?
+        (showLabels ?
           <div className="gray absolute absolute--center opacity-transition-1">
-            (React.string(value.label))
+            (React.string(label))
           </div>
         : React.null)
       </div>

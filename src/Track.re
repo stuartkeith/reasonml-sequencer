@@ -15,8 +15,8 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     (globalParameters, synthTrack.valueConverter)
   );
 
-  let getValuesAt = React.useCallback2(
-    SynthValues.getValuesAt(globalParameters, synthTrack.valueConverter),
+  let getValueAt = React.useCallback2(
+    SynthValues.getValueAt(globalParameters, synthTrack.valueConverter),
     (globalParameters, synthTrack.valueConverter)
   );
 
@@ -50,7 +50,7 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     <Slider
       viewMode
       mapValues
-      getValuesAt
+      getValueAt
       values=synthTrack.values
       highlightedIndex=Timing.index(synthTrack.timing)
       disabledIndex=synthTrack.loopLength
