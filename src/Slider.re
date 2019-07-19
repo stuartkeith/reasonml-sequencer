@@ -40,16 +40,13 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
 
   let getUpdateFromMouse = (event) => getUpdate(React.Ref.current(offsetRef), cellSize, values, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
 
-  let onMouseEnter = (event) => switch (viewMode) {
-    | Inactive | Active => {
-      // update offset first.
-      let offsetOption = containerRef |> React.Ref.current |> Js.Nullable.toOption;
+  let onMouseEnter = (event) => {
+    // update offset first.
+    let offsetOption = containerRef |> React.Ref.current |> Js.Nullable.toOption;
 
-      React.Ref.setCurrent(offsetRef, Utils.getOffset(offsetOption, 0, 0));
+    React.Ref.setCurrent(offsetRef, Utils.getOffset(offsetOption, 0, 0));
 
-      onAction(getUpdateFromMouse(event), TrackEditMode.MouseEnter);
-    }
-    | Deactive | Preview(_) => ()
+    onAction(getUpdateFromMouse(event), TrackEditMode.MouseEnter);
   };
 
   let onMouseDown = (event) => switch (viewMode) {
@@ -70,11 +67,8 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
     | Inactive | Deactive | Active => ()
   };
 
-  let onMouseLeave = (event) => switch (viewMode) {
-    | Preview(_) | Active => {
-      onAction(getUpdateFromMouse(event), MouseLeave);
-    }
-    | Inactive | Deactive => ()
+  let onMouseLeave = (event) => {
+    onAction(getUpdateFromMouse(event), MouseLeave);
   };
 
   React.useEffect4(() => {

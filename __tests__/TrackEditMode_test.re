@@ -1,46 +1,81 @@
 open Jest;
 open Expect;
 
-describe("TrackEditMode getSideEffects", () => {
-  test("should handle active movements within a component", () => {
+describe("TrackEditMode", () => {
+  test("preview should handle mouse movements between indices", () => {
     open TrackEditMode;
 
     let id = Id.create();
 
-    let previousEditMode = Active({
-      id,
-      valuesBeforeEdit: [|1|],
-      mousePosition: Inside
-    });
-
-    let nextEditMode = Active({
+    let result = updateEditMode(id, [|1|], 1, MouseMove, Preview({
       id,
       valuesBeforeEdit: [|2|],
-      mousePosition: Inside
-    });
+      index: 0
+    }));
 
-    let result = getSideEffects(previousEditMode, nextEditMode);
-
-    expect(result) |> toEqual(ApplyUpdateToExistingValues);
+    expect(result) |> toEqual((
+      Preview({
+        id,
+        valuesBeforeEdit: [|2|],
+        index: 1
+      }),
+      ApplyUpdateToValues(id, [|2|])
+    ));
   });
 
-  test("should revert values when leaving a component", () => {
+  test("preview should handle mouse movements within one index", () => {
     open TrackEditMode;
 
     let id = Id.create();
 
-    let valuesBeforeEdit = [|1|];
-
-    let previousEditMode = Preview({
+    let result = updateEditMode(id, [|1|], 0, MouseMove, Preview({
       id,
-      valuesBeforeEdit,
+      valuesBeforeEdit: [|2|],
       index: 0
-    });
+    }));
 
-    let nextEditMode = Inactive;
-
-    let result = getSideEffects(previousEditMode, nextEditMode);
-
-    expect(result) |> toEqual(RestoreValues(valuesBeforeEdit));
+    expect(result) |> toEqual((
+      Preview({
+        id,
+        valuesBeforeEdit: [|2|],
+        index: 0
+      }),
+      ApplyUpdateToValues(id, [|1|])
+    ));
   });
+
+  let nonActiveTest = (label, editMode) => {
+    open TrackEditMode;
+
+    [
+      ("mouse enter", MouseEnter),
+      ("mouse move", MouseMove),
+      ("mouse leave", MouseLeave),
+      ("mouse down", MouseDown),
+      ("mouse up", MouseUp)
+    ] |> List.iter(((mouseEventName, mouseEvent)) => {
+      test(label ++ " should ignore " ++ mouseEventName ++ " from non-active component", () => {
+        let inactiveId = Id.create();
+
+        let result = updateEditMode(inactiveId, [|1|], 0, mouseEvent, editMode);
+
+        expect(result) |> toEqual((
+          editMode,
+          NoSideEffects
+        ));
+      });
+    });
+  };
+
+  nonActiveTest("preview", Preview({
+    id: Id.create(),
+    valuesBeforeEdit: [|2|],
+    index: 0
+  }));
+
+  nonActiveTest("active", Active({
+    id: Id.create(),
+    valuesBeforeEdit: [|2|],
+    mousePosition: Outside
+  }));
 });
