@@ -1,10 +1,3 @@
-type mouseAction =
-  | MouseEnter
-  | MouseMove
-  | MouseLeave
-  | MouseDown
-  | MouseUp;
-
 type update = {
   index: int,
   value: float
@@ -26,6 +19,6 @@ type action =
   | SetSync(bool)
   | SetVolume(float)
   | SetWarble(float)
-  | TrackEditMode(Id.t, update, mouseAction)
+  | TrackEditMode(Id.t, update, TrackEditMode.mouseAction)
   | Undo
   | UpdateGlobalParameters(SynthParameters.globalParameters);

@@ -8,15 +8,15 @@ let make = (
   ~values: SynthValues.values,
   ~loopLength: int,
   ~timing: Timing.t,
-  ~editMode: TrackEditMode.editMode,
+  ~editMode: TrackEditMode.editMode(SynthValues.values),
   ~globalParameters: SynthParameters.globalParameters,
   ~dispatch
 ) => {
   let viewMode = switch (editMode) {
     | Inactive => Slider.Inactive
-    | Preview(previewId, values, index) when previewId === id => Slider.Preview(values, index)
+    | Preview(preview) when preview.id === id => Slider.Preview(preview.valuesBeforeEdit, preview.index)
     | Preview(_) => Slider.Deactive
-    | Active(previewId, _, _) when previewId === id => Slider.Active
+    | Active(active) when active.id === id => Slider.Active
     | Active(_) => Slider.Deactive
   };
 

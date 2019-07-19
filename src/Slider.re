@@ -47,7 +47,7 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
 
       React.Ref.setCurrent(offsetRef, Utils.getOffset(offsetOption, 0, 0));
 
-      onAction(getUpdateFromMouse(event), Actions.MouseEnter);
+      onAction(getUpdateFromMouse(event), TrackEditMode.MouseEnter);
     }
     | Deactive | Preview(_) => ()
   };

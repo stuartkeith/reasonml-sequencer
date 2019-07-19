@@ -76,7 +76,7 @@ type state = {
   tick: int,
   sync: bool,
   globalParameters: SynthParameters.globalParameters,
-  editMode: TrackEditMode.editMode,
+  editMode: TrackEditMode.editMode(SynthValues.values),
   globalTranspose: int,
   playbackSideEffects: ref(array((state, WebAudio.scheduleTime)))
 };
@@ -233,85 +233,55 @@ let reducer = (state, action) => {
       }, state.synthTracks)
     }
     | TrackEditMode(id, update, action) => {
-      let applyUpdate = (synthTrack, values, update: Actions.update) => {
-        SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update.index, update.value);
-      };
-
       let targetSynthTrack = List.find(synthTrack => synthTrack.id === id, state.synthTracks);
 
-      switch (state.editMode, action) {
-        | (Inactive, MouseEnter) => {
-          ...state,
-          // on enter, store the initial values for later.
-          editMode: Preview(id, targetSynthTrack.values, update.index),
-          synthTracks: mapSynthTrackById(id, synthTrack => {
+      let newEditMode = TrackEditMode.updateEditMode(id, targetSynthTrack.values, update.index, action, state.editMode);
+      let sideEffects = TrackEditMode.getSideEffects(state.editMode, newEditMode);
+
+      let applyUpdate = (values, synthTrack) => {
+        SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update.index, update.value)
+      };
+
+      let restoreValues = (values, synthTrack) => {
+        values
+      };
+
+      let valuesToUpdate = switch (sideEffects) {
+        | NoSideEffects => None
+        | ApplyUpdateToExistingValues => Some(applyUpdate(targetSynthTrack.values))
+        | ApplyUpdateToValues(values) => Some(applyUpdate(values))
+        | RestoreValues(values) => Some(restoreValues(values))
+        | PushUndoValues(_) => None
+      };
+
+      let valuesToUndo = switch (sideEffects) {
+        | NoSideEffects => None
+        | ApplyUpdateToExistingValues => None
+        | ApplyUpdateToValues(_) => None
+        | RestoreValues(_) => None
+        | PushUndoValues(values) => Some(values)
+      };
+
+      {
+        ...state,
+        editMode: newEditMode,
+        synthTracks: switch (valuesToUpdate) {
+          | None => state.synthTracks
+          | Some(values) => mapSynthTrackById(id, (synthTrack) => {
             ...synthTrack,
-            values: applyUpdate(synthTrack, synthTrack.values, update)
+            values: values(synthTrack)
           }, state.synthTracks)
-        }
-        | (Inactive, MouseMove) => state
-        | (Inactive, MouseLeave) => state
-        | (Inactive, MouseDown) => state
-        | (Inactive, MouseUp) => state
-        | (Preview(_), MouseEnter) => state
-        | (Preview(id, values, index), MouseMove) when index !== update.index => {
-          ...state,
-          editMode: Preview(id, values, update.index),
-          synthTracks: mapSynthTrackById(id, synthTrack => {
-            ...synthTrack,
-            // apply the change to the clean stored values - the synthTrack's
-            // current values are dirty from the previous index's preview.
-            values: applyUpdate(synthTrack, values, update)
-          }, state.synthTracks)
-        }
-        | (Preview(_), MouseMove) => {
-          ...state,
-          synthTracks: mapSynthTrackById(id, synthTrack => {
-            ...synthTrack,
-            values: applyUpdate(synthTrack, synthTrack.values, update)
-          }, state.synthTracks)
-        }
-        | (Preview(id, values, _), MouseLeave) => {
-          ...state,
-          editMode: Inactive,
-          synthTracks: mapSynthTrackById(id, (synthTrack) => {
-            ...synthTrack,
-            // restore to the initial values completely - all changes discarded.
-            values
-          }, state.synthTracks)
-        }
-        | (Preview(id, values, _), MouseDown) => {
-          ...state,
-          editMode: Active(id, values, Inside)
-        }
-        | (Preview(_), MouseUp) => state
-        | (Active(id, values, _), MouseEnter) => {
-          ...state,
-          editMode: Active(id, values, Inside)
-        }
-        | (Active(_), MouseMove) => {
-          ...state,
-          synthTracks: mapSynthTrackById(id, synthTrack => {
-            ...synthTrack,
-            values: applyUpdate(synthTrack, synthTrack.values, update)
-          }, state.synthTracks)
-        }
-        | (Active(id, values, _), MouseLeave) => {
-          ...state,
-          editMode: Active(id, values, Outside)
-        }
-        | (Active(_), MouseDown) => state
-        | (Active(id, values, mousePosition), MouseUp) => {
-          ...state,
-          editMode: switch (mousePosition) {
-            | Inside => Preview(id, targetSynthTrack.values, update.index)
-            | Outside => Inactive
-          },
-          // apply the pre-edited values and store in undo.
-          synthTracksUndoBuffer: UndoBuffer.write(mapSynthTrackById(id, (synthTrack) => {
-            ...synthTrack,
-            values
-          }, state.synthTracks), state.synthTracksUndoBuffer)
+        },
+        synthTracksUndoBuffer: switch (valuesToUndo) {
+          | None => state.synthTracksUndoBuffer
+          | Some(values) => {
+            let synthTracks = mapSynthTrackById(id, (synthTrack) => {
+              ...synthTrack,
+              values
+            }, state.synthTracks)
+
+            UndoBuffer.write(synthTracks, state.synthTracksUndoBuffer);
+          }
         }
       };
     }
