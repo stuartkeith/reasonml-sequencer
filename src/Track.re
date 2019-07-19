@@ -1,44 +1,54 @@
 let options = Array.init(64, i => (string_of_int(i + 1), i + 1));
 
 [@react.component]
-let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalParameters:SynthParameters.globalParameters, ~dispatch) => {
+let make = (
+  ~id: Id.t,
+  ~label: string,
+  ~valueConverter: SynthValues.valueConverter,
+  ~values: SynthValues.values,
+  ~loopLength: int,
+  ~timing: Timing.t,
+  ~editMode: TrackEditMode.editMode,
+  ~globalParameters: SynthParameters.globalParameters,
+  ~dispatch
+) => {
   let viewMode = switch (editMode) {
     | Inactive => Slider.Inactive
-    | Preview(id, values, index) when id === synthTrack.id => Slider.Preview(values, index)
+    | Preview(previewId, values, index) when previewId === id => Slider.Preview(values, index)
     | Preview(_) => Slider.Deactive
-    | Active(id, _, _) when id === synthTrack.id => Slider.Active
+    | Active(previewId, _, _) when previewId === id => Slider.Active
     | Active(_) => Slider.Deactive
   };
 
   let mapValues = React.useCallback2(
-    SynthValues.mapValues(globalParameters, synthTrack.valueConverter),
-    (globalParameters, synthTrack.valueConverter)
+    SynthValues.mapValues(globalParameters, valueConverter),
+    (globalParameters, valueConverter)
   );
 
   let getValueAt = React.useCallback2(
-    SynthValues.getValueAt(globalParameters, synthTrack.valueConverter),
-    (globalParameters, synthTrack.valueConverter)
+    SynthValues.getValueAt(globalParameters, valueConverter),
+    (globalParameters, valueConverter)
   );
 
   let onAction = React.useCallback1(
-    (update, action) => dispatch(Actions.TrackEditMode(synthTrack.id, update, action)),
-    [|synthTrack.id|]
+    (update, action) => dispatch(Actions.TrackEditMode(id, update, action)),
+    [|id|]
   );
 
   let onSetLength = React.useCallback1(
-    (index) => dispatch(Actions.SetLoopLength(synthTrack.id, index)),
-    [|synthTrack.id|]
+    (index) => dispatch(Actions.SetLoopLength(id, index)),
+    [|id|]
   );
 
   <div className="flex items-center">
-    <p className="ma0 w4 flex-none">(React.string(synthTrack.label))</p>
+    <p className="ma0 w4 flex-none">(React.string(label))</p>
     <div className="w1 flex-none" />
       <select
-        value=(synthTrack.timing |> Timing.subTicks |> string_of_int)
+        value=(timing |> Timing.subTicks |> string_of_int)
         onChange=((event) => {
           let value = int_of_string(event->ReactEvent.Form.target##value);
 
-          dispatch(Actions.SetSubTicks(synthTrack.id, value));
+          dispatch(Actions.SetSubTicks(id, value));
         })
       >
         (Array.map(((label, _value)) => {
@@ -51,9 +61,9 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
       viewMode
       mapValues
       getValueAt
-      values=synthTrack.values
-      highlightedIndex=Timing.index(synthTrack.timing)
-      disabledIndex=synthTrack.loopLength
+      values
+      highlightedIndex=Timing.index(timing)
+      disabledIndex=loopLength
       onAction
       onSetLength
     />
@@ -61,21 +71,21 @@ let make = (~synthTrack:SynthTrack.t, ~editMode:TrackEditMode.editMode, ~globalP
     <div className="flex flex-none f6">
       <button
         className="flex-none h2"
-        onClick=(_event => dispatch(RandomiseAbsolute(synthTrack.id)))
+        onClick=(_event => dispatch(RandomiseAbsolute(id)))
       >
         (React.string("Random Absolute"))
       </button>
       <span className="db w1 flex-none" />
       <button
         className="flex-none h2"
-        onClick=(_event => dispatch(RandomiseRelative(synthTrack.id)))
+        onClick=(_event => dispatch(RandomiseRelative(id)))
       >
         (React.string("Random Relative"))
       </button>
       <span className="db w1 flex-none" />
       <button
         className="flex-none h2"
-        onClick=(_event => dispatch(Reset(synthTrack.id)))
+        onClick=(_event => dispatch(Reset(id)))
       >
         (React.string("Reset")
       )</button>
