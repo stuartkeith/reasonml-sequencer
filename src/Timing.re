@@ -8,10 +8,10 @@ type t = {
   subTicks: int
 };
 
-let create = (subTicks) => {
+let start = {
   index: 0,
   subIndex: 0,
-  subTicks
+  subTicks: 1
 };
 
 let restart = (t) => {
@@ -21,6 +21,10 @@ let restart = (t) => {
 };
 
 let advance = (loopLength, sync, t) => {
+  if (loopLength === 0) {
+    raise(Invalid_argument("loopLength === 0"));
+  };
+
   switch (sync) {
     | Sync(tick) => {
       let index = (tick / t.subTicks) mod loopLength;
@@ -70,11 +74,19 @@ let merge = (incomingLoopLength, incoming, existing) => {
 
 let index = (t) => t.index;
 
+let subIndex = (t) => t.subIndex;
+
 let subTicks = (t) => t.subTicks;
 
 let setSubTicks = (subTicks, t) => {
-  ...t,
-  subTicks
+  if (subTicks === 0) {
+    raise(Invalid_argument("subTicks === 0"));
+  };
+
+  {
+    ...t,
+    subTicks
+  };
 };
 
 let isFirstTick = (t) => t.subIndex === 0;

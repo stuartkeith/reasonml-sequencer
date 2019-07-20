@@ -16,7 +16,7 @@ let createSynthTrack = (globalParameters, (label, valueConverter)) => {
     values,
     valueConverter,
     loopLength: 8,
-    timing: Timing.create(1)
+    timing: Timing.start
   };
 };
 
