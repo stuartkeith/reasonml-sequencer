@@ -12,7 +12,7 @@ let getUpdate = (offset, cellSize, values, pageX, pageY) => {
 
   let value = Utils.limit(value, 0., 1.);
 
-  Actions.{
+  SynthValues.{
     index,
     value
   };
@@ -71,6 +71,11 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
     onAction(getUpdateFromMouse(event), MouseLeave);
   };
 
+  let onMouseMove = (event) => switch (viewMode) {
+    | Deactive=> onAction(getUpdateFromMouse(event), MouseMove)
+    | Inactive | Preview(_) | Active => ()
+  };
+
   React.useEffect4(() => {
     switch (viewMode) {
       | Preview(_) | Active => {
@@ -93,7 +98,7 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
           Webapi.Dom.Document.removeMouseUpEventListener(onMouseUp, Webapi.Dom.document);
         });
       }
-      | _ => None
+      | Deactive | Inactive => None
     };
   }, (values, viewMode, cellSize, onAction));
 
@@ -109,6 +114,7 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
     onMouseEnter
     onMouseDown
     onMouseLeave
+    onMouseMove
   >
     (mapValues((valueIndex, value, label) => {
       let (scale, previewScale) = switch (viewMode) {

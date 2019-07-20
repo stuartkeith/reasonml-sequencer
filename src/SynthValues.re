@@ -5,6 +5,11 @@ type values = array(float);
 type index = int;
 type length = int;
 
+type update = {
+  index,
+  value: float
+};
+
 type floatConverters('a) = {
   fromFloat: (globalParameters, float) => 'a,
   toFloat: (globalParameters, 'a) => float
@@ -85,17 +90,17 @@ let getValueAt = (globalParameters, valueConverter, index, values) => {
   valueConverter.snapValue(globalParameters, values[index]);
 };
 
-let updateValues = (globalParameters, valueConverter, values, index, value) => {
+let updateValues = (globalParameters, valueConverter, values, update) => {
   // don't store the raw value - store the value as interpreted by
   // the valueConverter instead.
-  let actualValue = valueConverter.snapValue(globalParameters, value);
+  let actualValue = valueConverter.snapValue(globalParameters, update.value);
 
-  if (actualValue === values[index]) {
+  if (actualValue === values[update.index]) {
     values;
   } else {
     let newArray = Array.copy(values);
 
-    newArray[index] = actualValue;
+    newArray[update.index] = actualValue;
 
     newArray;
   };

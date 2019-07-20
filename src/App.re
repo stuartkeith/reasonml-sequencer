@@ -235,12 +235,12 @@ let reducer = (state, action) => {
     | TrackEditMode(id, update, action) => {
       let targetSynthTrack = List.find(synthTrack => synthTrack.id === id, state.synthTracks);
 
-      let (newEditMode, sideEffects) = TrackEditMode.updateEditMode(id, targetSynthTrack.values, update.index, action, state.editMode);
+      let (newEditMode, sideEffects, valuesToUndo) = TrackEditMode.updateEditMode(id, targetSynthTrack.values, update, action, state.editMode);
 
-      let applyUpdate = (id, values) => {
+      let applyUpdate = (id, values, update) => {
         mapSynthTrackById(id, (synthTrack) => {
           ...synthTrack,
-          values: SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update.index, update.value)
+          values: SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update)
         });
       };
 
@@ -253,16 +253,8 @@ let reducer = (state, action) => {
 
       let valuesToUpdate = switch (sideEffects) {
         | NoSideEffects => None
-        | ApplyUpdateToValues(id, values) => Some(applyUpdate(id, values))
+        | ApplyUpdateToValues(id, values, update) => Some(applyUpdate(id, values, update))
         | RestoreValues(id, values) => Some(restoreValues(id, values))
-        | PushUndoValues(_) => None
-      };
-
-      let valuesToUndo = switch (sideEffects) {
-        | NoSideEffects => None
-        | ApplyUpdateToValues(_) => None
-        | RestoreValues(_) => None
-        | PushUndoValues(id, values) => Some((id, values))
       };
 
       {
@@ -270,7 +262,7 @@ let reducer = (state, action) => {
         editMode: newEditMode,
         synthTracks: switch (valuesToUpdate) {
           | None => state.synthTracks
-          | Some(values) => values(state.synthTracks)
+          | Some(fn) => fn(state.synthTracks)
         },
         synthTracksUndoBuffer: switch (valuesToUndo) {
           | None => state.synthTracksUndoBuffer

@@ -1,8 +1,3 @@
-type update = {
-  index: int,
-  value: float
-};
-
 type action =
   | AdvancePlayback(WebAudio.scheduleTime)
   | RandomiseAll
@@ -19,6 +14,6 @@ type action =
   | SetSync(bool)
   | SetVolume(float)
   | SetWarble(float)
-  | TrackEditMode(Id.t, update, TrackEditMode.mouseAction)
+  | TrackEditMode(Id.t, SynthValues.update, TrackEditMode.mouseAction)
   | Undo
   | UpdateGlobalParameters(SynthParameters.globalParameters);

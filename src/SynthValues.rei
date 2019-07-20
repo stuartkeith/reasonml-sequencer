@@ -5,6 +5,11 @@ type values;
 type index = int;
 type length = int;
 
+type update = {
+  index,
+  value: float
+};
+
 type floatConverters('a) = {
   fromFloat: (globalParameters, float) => 'a,
   toFloat: (globalParameters, 'a) => float
@@ -33,7 +38,7 @@ let mapValues: (globalParameters, valueConverter, (index, float, string) => 'a, 
 
 let getValueAt: (globalParameters, valueConverter, index, values) => float;
 
-let updateValues: (globalParameters, valueConverter, values, index, float) => values;
+let updateValues: (globalParameters, valueConverter, values, update) => values;
 
 let valuesLength: (values) => length;
 
