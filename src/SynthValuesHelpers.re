@@ -1,24 +1,24 @@
 open SynthValues;
 
 let intRangeConverters = (min, max) => {
-  fromFloat: (_globalParameters, value) => {
+  fromFloat: (value) => {
     let range = -1 + Js.Math.ceil(value *. float_of_int(max - min + 1));
 
     min + Pervasives.max(0, range);
   },
-  toFloat: (_globalParameters, value) => {
+  toFloat: (value) => {
     float_of_int(value - min + 1) /. float_of_int(max - min + 1);
   }
 };
 
 let randomIntAbsolute = (min, max) => {
-  (_globalParameters, values) => {
+  (values) => {
     Array.map((_) => Utils.randomInt(min, max), values);
   };
 };
 
 let randomIntRelative = (min, max, randomRelativeRange) => {
-  (_globalParameters, values) => {
+  (values) => {
     Array.map((value) => {
       let deltaMin = Pervasives.max(min, value - randomRelativeRange);
       let deltaMax = Pervasives.min(max, value + randomRelativeRange);
@@ -29,16 +29,16 @@ let randomIntRelative = (min, max, randomRelativeRange) => {
 };
 
 let floatRangeConverters = (min, max) => {
-  fromFloat: (_globalParameters, value) =>{
+  fromFloat: (value) =>{
     min +. ((max -. min) *. value);
   },
-  toFloat: (_globalParameters, value) => {
+  toFloat: (value) => {
     (value -. min) /. (max -. min);
   }
 };
 
 let randomFloatAbsolute = (min, max) => {
-  (_globalParameters, values) => {
+  (values) => {
     Array.map((_) => {
       Utils.randomFloat(min, max);
     }, values);
@@ -46,7 +46,7 @@ let randomFloatAbsolute = (min, max) => {
 };
 
 let randomFloatRelative = (min, max, randomRelativeRange) => {
-  (_globalParameters, values) => {
+  (values) => {
     Array.map((value) => {
       let deltaMin = Pervasives.max(min, value -. randomRelativeRange);
       let deltaMax = Pervasives.min(max, value +. randomRelativeRange);
@@ -56,10 +56,9 @@ let randomFloatRelative = (min, max, randomRelativeRange) => {
   };
 };
 
-let optionalArrayConverters = (getArray) => {
+let optionalArrayConverters = (array) => {
   // use 1-based indices, with 1 as None, then convert when needed.
-  fromFloat: (globalParameters, value) => {
-    let array = getArray(globalParameters);
+  fromFloat: (value) => {
     let index = max(1, Js.Math.ceil(value *. float_of_int(Array.length(array) + 1)));
 
     if (index === 1) {
@@ -68,9 +67,7 @@ let optionalArrayConverters = (getArray) => {
       Some(array[index - 2]);
     };
   },
-  toFloat: (globalParameters, value) => {
-    let array = getArray(globalParameters);
-
+  toFloat: (value) => {
     let index = switch (value) {
       | None => 1
       | Some(value) => 2 + Utils.getArrayIndex(array, value, 0)
@@ -91,11 +88,11 @@ let floatToPercentageString = (value) => {
 let createPitch = (default) => {
   // pitches are stored as options.
   // use 1-based indices, with 1 as None, then convert when needed.
-  {
-    floatConverters: optionalArrayConverters((globalParameters) => globalParameters.scale),
-    default,
-    randomAbsolute: ((globalParameters, values) => {
-      let array = globalParameters.scale;
+  (scale) => {
+    floatConverter: optionalArrayConverters(scale),
+    default: (length) => default(length, scale),
+    randomAbsolute: ((values) => {
+      let array = scale;
       let chance = 0.65 +. Random.float(0.2);
 
       Array.map(_ => {
@@ -106,8 +103,8 @@ let createPitch = (default) => {
         }
       }, values);
     }),
-    randomRelative: (globalParameters, values) => {
-      let array = globalParameters.scale;
+    randomRelative: (values) => {
+      let array = scale;
       let randomRelativeRange = 2;
 
        Array.map((value) => {
@@ -128,7 +125,7 @@ let createPitch = (default) => {
         };
       }, values);
     },
-    updateSynthParameters: (globalParameters, parameters, timing, value) => {
+    updateSynthParameters: ({ globalParameters, timing }, parameters, value) => {
       ...parameters,
       notes: {
         if (globalParameters.repeatNotesEverySubTick || Timing.isFirstTick(timing)) {
@@ -151,35 +148,35 @@ let createPitch = (default) => {
 };
 
 let octave = {
-  floatConverters: intRangeConverters(-3, 2),
-  default: (length, _globalParameters) => Array.make(length, 0),
+  floatConverter: intRangeConverters(-3, 2),
+  default: (length) => Array.make(length, 0),
   randomAbsolute: randomIntAbsolute(-3, 2),
   randomRelative: randomIntRelative(-3, 2, 1),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     transpose: parameters.transpose + (value * 12)
   },
   toString: intToPlusMinus
 };
 
-let pitchWithFirstNote = createPitch((length, globalParameters) => {
+let pitchWithFirstNote = createPitch((length, scale) => {
   let array = Array.make(length, None);
 
-  array[0] = Some(Utils.randomArrayValue(globalParameters.scale));
+  array[0] = Some(Utils.randomArrayValue(scale));
 
   array;
 });
 
-let pitch = createPitch((length, _globalParameters) => {
+let pitch = createPitch((length, _array) => {
   Array.make(length, None);
 });
 
 let gain = {
-  floatConverters: floatRangeConverters(0.0, 1.0),
-  default: (length, _globalParameters) => Array.make(length, 1.0),
+  floatConverter: floatRangeConverters(0.0, 1.0),
+  default: (length) => Array.make(length, 1.0),
   randomAbsolute: randomFloatAbsolute(0.2, 1.0),
   randomRelative: randomFloatRelative(0.0, 1.0, 0.2),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     gain: parameters.gain *. value
   },
@@ -187,11 +184,11 @@ let gain = {
 };
 
 let pan = {
-  floatConverters: floatRangeConverters(-1.0, 1.0),
-  default: (length, _globalParameters) => Array.make(length, 0.0),
+  floatConverter: floatRangeConverters(-1.0, 1.0),
+  default: (length) => Array.make(length, 0.0),
   randomAbsolute: randomFloatAbsolute(-1.0, 1.0),
   randomRelative: randomFloatRelative(-1.0, 1.0, 0.2),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     pan: parameters.pan +. value
   },
@@ -199,11 +196,11 @@ let pan = {
 };
 
 let chance = {
-  floatConverters: floatRangeConverters(0.0, 1.0),
-  default: (length, _globalParameters) => Array.make(length, 1.0),
+  floatConverter: floatRangeConverters(0.0, 1.0),
+  default: (length) => Array.make(length, 1.0),
   randomAbsolute: randomFloatAbsolute(0.0, 1.0),
   randomRelative: randomFloatRelative(0.0, 1.0, 0.2),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     chance: parameters.chance *. value
   },
@@ -211,11 +208,11 @@ let chance = {
 };
 
 let length = {
-  floatConverters: floatRangeConverters(0.0, 2.0),
-  default: (length, _globalParameters) => Array.make(length, 1.0),
+  floatConverter: floatRangeConverters(0.0, 2.0),
+  default: (length) => Array.make(length, 1.0),
   randomAbsolute: randomFloatAbsolute(0.0, 2.0),
   randomRelative: randomFloatRelative(0.0, 2.0, 0.2),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     length: parameters.length *. value
   },
@@ -223,11 +220,11 @@ let length = {
 };
 
 let filter = {
-  floatConverters: floatRangeConverters(0.0, 1.0),
-  default: (length, _globalParameters) => Array.make(length, 1.0),
+  floatConverter: floatRangeConverters(0.0, 1.0),
+  default: (length) => Array.make(length, 1.0),
   randomAbsolute: randomFloatAbsolute(0.0, 1.0),
   randomRelative: randomFloatRelative(0.0, 1.0, 0.2),
-  updateSynthParameters: (_globalParameters, parameters, _timing, value) => {
+  updateSynthParameters: (_group, parameters, value) => {
     ...parameters,
     filter: parameters.filter *. value
   },

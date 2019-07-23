@@ -7,7 +7,7 @@ let getUpdate = (offset, cellSize, values, pageX, pageY) => {
   let x = pageX + offsetX;
   let y = pageY + offsetY;
 
-  let index = Utils.limit(x / cellSize, 0, SynthValues.valuesLength(values) - 1);
+  let index = Utils.limit(x / cellSize, 0, SynthValues.length(values) - 1);
   let value = 1. -. (float_of_int(y) /. float_of_int(cellSize));
 
   let value = Utils.limit(value, 0., 1.);
@@ -106,7 +106,7 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
     ref={ReactDOMRe.Ref.domRef(containerRef)}
     className="opacity-transition-1 bg-white relative flex-none no-select"
     style=(ReactDOMRe.Style.make(
-      ~width=string_of_int(cellSize * SynthValues.valuesLength(values)) ++ "px",
+      ~width=string_of_int(cellSize * SynthValues.length(values)) ++ "px",
       ~height=string_of_int(cellSize) ++ "px",
       ~opacity=containerOpacity,
       ()

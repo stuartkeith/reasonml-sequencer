@@ -5,11 +5,8 @@ let make = (
   ~id: Id.t,
   ~label: string,
   ~valueConverter: SynthValues.valueConverter,
-  ~values: SynthValues.values,
-  ~loopLength: int,
-  ~timing: Timing.t,
+  ~synthInstance: SynthInstance.t,
   ~editMode: TrackEditMode.editMode(SynthValues.values),
-  ~globalParameters: SynthParameters.globalParameters,
   ~dispatch
 ) => {
   let viewMode = switch (editMode) {
@@ -20,19 +17,13 @@ let make = (
     | Active(_) => Slider.Deactive
   };
 
-  let mapValues = React.useCallback2(
-    SynthValues.mapValues(globalParameters, valueConverter),
-    (globalParameters, valueConverter)
-  );
+  let timing = SynthInstance.timing(synthInstance);
+  let values = SynthInstance.values(synthInstance);
+  let loopLength = SynthInstance.loopLength(synthInstance);
 
-  let getValueAt = React.useCallback2(
-    SynthValues.getValueAt(globalParameters, valueConverter),
-    (globalParameters, valueConverter)
-  );
-
-  let onAction = React.useCallback1(
+  let onAction = React.useCallback2(
     (update, action) => dispatch(Actions.TrackEditMode(id, update, action)),
-    [|id|]
+    (id, values)
   );
 
   let onSetLength = React.useCallback1(
@@ -59,8 +50,8 @@ let make = (
     <div className="w1 flex-none" />
     <Slider
       viewMode
-      mapValues
-      getValueAt
+      mapValues=valueConverter.mapValues
+      getValueAt=valueConverter.getValueAt
       values
       highlightedIndex=Timing.index(timing)
       disabledIndex=loopLength

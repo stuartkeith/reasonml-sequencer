@@ -1,6 +1,15 @@
-open SynthParameters;
-
 type values;
+
+let emptyValues: values;
+
+let length: (values) => int;
+
+type floatConverter('a) = {
+  fromFloat: (float) => 'a,
+  toFloat: ('a) => float
+};
+
+let fromArray: (floatConverter('a), array('a)) => values;
 
 type index = int;
 type length = int;
@@ -10,36 +19,28 @@ type update = {
   value: float
 };
 
-type floatConverters('a) = {
-  fromFloat: (globalParameters, float) => 'a,
-  toFloat: (globalParameters, 'a) => float
+type updateGroup = {
+  globalParameters: SynthParameters.globalParameters,
+  timing: Timing.t
 };
 
 type valueConverterConfig('a) = {
-  floatConverters: floatConverters('a),
-  default: (length, globalParameters) => array('a),
-  randomAbsolute: (globalParameters, array('a)) => array('a),
-  randomRelative: (globalParameters, array('a)) => array('a),
-  updateSynthParameters: (globalParameters, parameters, Timing.t, 'a) => parameters,
+  floatConverter: floatConverter('a),
+  default: (length) => array('a),
+  randomAbsolute: (array('a)) => array('a),
+  randomRelative: (array('a)) => array('a),
+  updateSynthParameters: (updateGroup, SynthParameters.parameters, 'a) => SynthParameters.parameters,
   toString: ('a) => string
 };
 
-type valueConverter;
+type valueConverter = {
+  defaultValues: (length) => values,
+  randomValuesAbsolute: (values) => values,
+  randomValuesRelative: (values) => values,
+  mapValues: 'a . ((index, float, string) => 'a, values) => array('a),
+  getValueAt: (index, values) => float,
+  updateValues: (values, update) => values,
+  updateSynthParameters: (updateGroup, SynthParameters.parameters, values) => SynthParameters.parameters
+};
 
 let createValueConverter: (valueConverterConfig('a)) => valueConverter;
-
-let defaultValues: (length, globalParameters, valueConverter) => values;
-
-let randomValuesAbsolute: (globalParameters, valueConverter, values) => values;
-
-let randomValuesRelative: (globalParameters, valueConverter, values) => values;
-
-let mapValues: (globalParameters, valueConverter, (index, float, string) => 'a, values) => array('a);
-
-let getValueAt: (globalParameters, valueConverter, index, values) => float;
-
-let updateValues: (globalParameters, valueConverter, values, update) => values;
-
-let valuesLength: (values) => length;
-
-let updateSynthParameters: (globalParameters, parameters, Timing.t, values, valueConverter) => parameters;

@@ -1,40 +1,58 @@
+type parameter =
+  | Octave
+  | PitchWithNotes
+  | PitchWithoutNotes
+  | Gain
+  | Pan
+  | Chance
+  | Length
+  | Filter;
+
 type synthTrack = {
   id: Id.t,
   label: string,
-  values: SynthValues.values,
-  valueConverter: SynthValues.valueConverter,
-  loopLength: int,
-  timing: Timing.t
+  parameter,
+  synthInstance: SynthInstance.t
 };
 
-let createSynthTrack = (globalParameters, (label, valueConverter)) => {
-  let values = SynthValues.defaultValues(16, globalParameters, valueConverter);
+let getValueConverter = (globalParameters: SynthParameters.globalParameters, parameter) => {
+  open SynthValues;
+  open SynthValuesHelpers;
 
-  {
-    id: Id.create(),
-    label,
-    values,
-    valueConverter,
-    loopLength: 8,
-    timing: Timing.start
+  switch (parameter) {
+    | Octave => createValueConverter(octave)
+    | PitchWithNotes => createValueConverter(pitchWithFirstNote(globalParameters.scale));
+    | PitchWithoutNotes => createValueConverter(pitch(globalParameters.scale))
+    | Gain => createValueConverter(gain)
+    | Pan => createValueConverter(pan)
+    | Chance => createValueConverter(chance)
+    | Length => createValueConverter(SynthValuesHelpers.length)
+    | Filter => createValueConverter(filter)
   };
 };
 
 let defaultSynthTracks = (globalParameters) => {
-  open SynthValues;
-  open SynthValuesHelpers;
-
   [
-    ("Octave", createValueConverter(octave)),
-    ("Pitch 1", createValueConverter(pitchWithFirstNote)),
-    ("Pitch 2", createValueConverter(pitch)),
-    ("Pitch 3", createValueConverter(pitch)),
-    ("Gain", createValueConverter(gain)),
-    ("Pan", createValueConverter(pan)),
-    ("Chance", createValueConverter(chance)),
-    ("Length", createValueConverter(length)),
-    ("Filter", createValueConverter(filter))
-  ] |> List.map(createSynthTrack(globalParameters));
+    ("Octave", Octave),
+    ("Pitch 1", PitchWithNotes),
+    ("Pitch 2", PitchWithoutNotes),
+    ("Pitch 3", PitchWithoutNotes),
+    ("Gain", Gain),
+    ("Pan", Pan),
+    ("Chance", Chance),
+    ("Length", Length),
+    ("Filter", Filter),
+  ] |> List.map(((label, parameter)) => {
+    let valueConverter = getValueConverter(globalParameters, parameter);
+    let values = valueConverter.defaultValues(16);
+
+    {
+      id: Id.create(),
+      label,
+      parameter,
+      synthInstance: SynthInstance.create(values)
+    };
+  });
 };
 
 let mergeSynthTracks = (incomingSynthTracks, existingSynthTracks) => {
@@ -47,22 +65,12 @@ let mergeSynthTracks = (incomingSynthTracks, existingSynthTracks) => {
 
         {
           ...incomingSynthTrack,
-          timing: Timing.merge(incomingSynthTrack.loopLength, incomingSynthTrack.timing, existingSynthTrack.timing)
+          synthInstance: SynthInstance.merge(incomingSynthTrack.synthInstance, existingSynthTrack.synthInstance)
         };
       }
       | [] => incomingSynthTrack;
     }
   }, incomingSynthTracks);
-};
-
-let mapSynthTrackById = (id, fn, synthTracks) => {
-  List.map((synthTrack) => {
-    if (Id.equals(synthTrack.id, id)) {
-      fn(synthTrack);
-    } else {
-      synthTrack;
-    }
-  }, synthTracks);
 };
 
 type state = {
@@ -79,6 +87,21 @@ type state = {
   editMode: TrackEditMode.editMode(SynthValues.values),
   globalTranspose: int,
   playbackSideEffects: ref(array((state, WebAudio.scheduleTime)))
+};
+
+let updateSynthTrackById = (id, fn, synthTracks) => {
+  List.map((synthTrack) => {
+    if (Id.equals(synthTrack.id, id)) {
+      fn(synthTrack);
+    } else {
+      synthTrack;
+    }
+  }, synthTracks);
+};
+
+let updateSynthInstance = (fn, synthTrack) => {
+  ...synthTrack,
+  synthInstance: fn(synthTrack.synthInstance)
 };
 
 let randomTranspose = () => Utils.randomInt(-5, 6);
@@ -130,10 +153,7 @@ let reducer = (state, action) => {
     }
     | Restart => {
       ...state,
-      synthTracks: List.map(synthTrack => {
-        ...synthTrack,
-        timing: Timing.restart(synthTrack.timing)
-      }, state.synthTracks),
+      synthTracks: List.map(SynthInstance.restart |> updateSynthInstance, state.synthTracks),
       tick: 0
     }
     | AdvancePlayback(scheduleTime) => {
@@ -144,10 +164,7 @@ let reducer = (state, action) => {
 
       {
         ...state,
-        synthTracks: List.map((synthTrack) => {
-          ...synthTrack,
-          timing: Timing.advance(synthTrack.loopLength, sync, synthTrack.timing),
-        }, state.synthTracks),
+        synthTracks: List.map(SynthInstance.advance(sync) |> updateSynthInstance, state.synthTracks),
         tick: nextTick,
         playbackSideEffects: ref(playbackSideEffects)
       };
@@ -164,9 +181,12 @@ let reducer = (state, action) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
       synthTracks: List.map((synthTrack) => {
-        ...synthTrack,
-        values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopLength: Utils.randomInt(2, SynthValues.valuesLength(synthTrack.values))
+        let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+        {
+          ...synthTrack,
+          synthInstance: SynthInstance.randomAbsolute(valueConverter, synthTrack.synthInstance)
+        };
       }, state.synthTracks),
       globalTranspose: randomTranspose()
     }
@@ -189,26 +209,30 @@ let reducer = (state, action) => {
     | SetLoopLength(id, index) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
-      synthTracks: mapSynthTrackById(id, (synthTrack) => {
-        ...synthTrack,
-        loopLength: index
-      }, state.synthTracks)
+      synthTracks: updateSynthTrackById(id, SynthInstance.setLoopLength(index) |> updateSynthInstance, state.synthTracks),
     }
     | RandomiseAbsolute(id) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
-      synthTracks: mapSynthTrackById(id, synthTrack => {
-        ...synthTrack,
-        values: SynthValues.randomValuesAbsolute(state.globalParameters, synthTrack.valueConverter, synthTrack.values),
-        loopLength: Utils.randomInt(2, SynthValues.valuesLength(synthTrack.values))
-      }, state.synthTracks)
+      synthTracks: updateSynthTrackById(id, (synthTrack) => {
+        let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+        {
+          ...synthTrack,
+          synthInstance: SynthInstance.randomAbsolute(valueConverter, synthTrack.synthInstance)
+        };
+      }, state.synthTracks),
     }
     | RandomiseRelative(id) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
-      synthTracks: mapSynthTrackById(id, synthTrack => {
-        ...synthTrack,
-        values: SynthValues.randomValuesRelative(state.globalParameters, synthTrack.valueConverter, synthTrack.values)
+      synthTracks: updateSynthTrackById(id, (synthTrack) => {
+        let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+        {
+          ...synthTrack,
+          synthInstance: SynthInstance.randomRelative(valueConverter, synthTrack.synthInstance)
+        };
       }, state.synthTracks)
     }
     | ResetAll => {
@@ -219,62 +243,57 @@ let reducer = (state, action) => {
     | Reset(id) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
-      synthTracks: mapSynthTrackById(id, synthTrack => {
-        ...synthTrack,
-        values: SynthValues.defaultValues(SynthValues.valuesLength(synthTrack.values), state.globalParameters, synthTrack.valueConverter)
-      }, state.synthTracks)
+      synthTracks: updateSynthTrackById(id, (synthTrack) => {
+        let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+        {
+          ...synthTrack,
+          synthInstance: SynthInstance.reset(valueConverter, synthTrack.synthInstance)
+        };
+      }, state.synthTracks),
     }
     | SetSubTicks(id, subTicks) => {
       ...state,
       synthTracksUndoBuffer: UndoBuffer.write(state.synthTracks, state.synthTracksUndoBuffer),
-      synthTracks: mapSynthTrackById(id, synthTrack => {
-        ...synthTrack,
-        timing: Timing.setSubTicks(subTicks, synthTrack.timing)
-      }, state.synthTracks)
+      synthTracks: updateSynthTrackById(id, SynthInstance.setSubTicks(subTicks) |> updateSynthInstance, state.synthTracks)
     }
     | TrackEditMode(id, update, action) => {
-      let targetSynthTrack = List.find(synthTrack => synthTrack.id === id, state.synthTracks);
+      let selectedSynthTrack = List.find((synthTrack) => synthTrack.id === id, state.synthTracks);
+      let selectedValues = SynthInstance.values(selectedSynthTrack.synthInstance);
 
-      let (newEditMode, sideEffects, valuesToUndo) = TrackEditMode.updateEditMode(id, targetSynthTrack.values, update, action, state.editMode);
+      let (newEditMode, sideEffects, valuesToUndo) = TrackEditMode.updateEditMode(id, selectedValues, update, action, state.editMode);
 
-      let applyUpdate = (id, values, update) => {
-        mapSynthTrackById(id, (synthTrack) => {
-          ...synthTrack,
-          values: SynthValues.updateValues(state.globalParameters, synthTrack.valueConverter, values, update)
-        });
+      let synthTracks = switch (sideEffects) {
+        | NoSideEffects => state.synthTracks
+        | ApplyUpdateToValues(id, values, update) => {
+          updateSynthTrackById(id, (synthTrack) => {
+            let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+            {
+              ...synthTrack,
+              synthInstance: SynthInstance.applyUpdate(valueConverter, values, update, synthTrack.synthInstance)
+            };
+          }, state.synthTracks);
+        }
+        | RestoreValues(id, values) => {
+          updateSynthTrackById(id, SynthInstance.setValues(values) |> updateSynthInstance, state.synthTracks);
+        }
       };
 
-      let restoreValues = (id, values) => {
-        mapSynthTrackById(id, (synthTrack) => {
-          ...synthTrack,
-          values
-        });
-      };
+      let synthTracksUndoBuffer = switch (valuesToUndo) {
+        | None => state.synthTracksUndoBuffer
+        | Some((id, values)) => {
+          let synthTracks = updateSynthTrackById(id, SynthInstance.setValues(values) |> updateSynthInstance, state.synthTracks)
 
-      let valuesToUpdate = switch (sideEffects) {
-        | NoSideEffects => None
-        | ApplyUpdateToValues(id, values, update) => Some(applyUpdate(id, values, update))
-        | RestoreValues(id, values) => Some(restoreValues(id, values))
+          UndoBuffer.write(synthTracks, state.synthTracksUndoBuffer);
+        }
       };
 
       {
         ...state,
         editMode: newEditMode,
-        synthTracks: switch (valuesToUpdate) {
-          | None => state.synthTracks
-          | Some(fn) => fn(state.synthTracks)
-        },
-        synthTracksUndoBuffer: switch (valuesToUndo) {
-          | None => state.synthTracksUndoBuffer
-          | Some((id, values)) => {
-            let synthTracks = mapSynthTrackById(id, (synthTrack) => {
-              ...synthTrack,
-              values
-            }, state.synthTracks)
-
-            UndoBuffer.write(synthTracks, state.synthTracksUndoBuffer);
-          }
-        }
+        synthTracks,
+        synthTracksUndoBuffer
       };
     }
   }
@@ -291,11 +310,19 @@ let scheduleCallback = (state, beatTime, beatLength) => {
     transpose: 0
   };
 
-  let playback = List.fold_left((parameters, synthTrack) => {
-    SynthValues.updateSynthParameters(state.globalParameters, parameters, synthTrack.timing, synthTrack.values, synthTrack.valueConverter);
+  let parameters = List.fold_left((parameters, synthTrack) => {
+    let synthInstance = synthTrack.synthInstance;
+    let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
+    let group = {
+      SynthValues.globalParameters: state.globalParameters,
+      SynthValues.timing: SynthInstance.timing(synthInstance)
+    };
+
+    valueConverter.updateSynthParameters(group, parameters, SynthInstance.values(synthInstance));
   }, initialParameters, state.synthTracks);
 
-  if (playback.chance > 0.0) {
+  if (parameters.chance > 0.0) {
     let offset = if (state.tick mod 2 === 1) {
       (state.warble ** 2.3) *. 0.3;
     } else {
@@ -304,24 +331,24 @@ let scheduleCallback = (state, beatTime, beatLength) => {
 
     // avoid duplicate notes by sorting in ascending order then skipping over
     // values <= the previous value.
-    Array.sort((a, b) => a - b, playback.notes);
+    Array.sort((a, b) => a - b, parameters.notes);
 
     let lastNotePlayed = ref(-1);
 
     Array.iter((incomingNote) => {
-      if ((incomingNote > lastNotePlayed^) && (Random.float(1.) <= playback.chance)) {
+      if ((incomingNote > lastNotePlayed^) && (Random.float(1.) <= parameters.chance)) {
         lastNotePlayed := incomingNote;
 
         WebAudio.playSynth(
-          ~note=incomingNote + playback.transpose + state.globalTranspose,
-          ~gain=playback.gain,
-          ~pan=playback.pan,
-          ~filter=playback.filter,
+          ~note=incomingNote + parameters.transpose + state.globalTranspose,
+          ~gain=parameters.gain,
+          ~pan=parameters.pan,
+          ~filter=parameters.filter,
           ~start=beatTime +. (beatLength *. offset),
-          ~time=beatLength *. playback.length
+          ~time=beatLength *. parameters.length
         );
       }
-    }, playback.notes);
+    }, parameters.notes);
   };
 
   WebAudio.playHihat(~start=beatTime);
@@ -554,17 +581,16 @@ let make = () => {
     <span className="dib h2" />
     (
       List.mapi((index, synthTrack) => {
+        let valueConverter = getValueConverter(state.globalParameters, synthTrack.parameter);
+
         <React.Fragment key=(Id.toString(synthTrack.id))>
           {index > 0 ? <span className="dib h1 flex-none" /> : React.null}
           <Track
             id=synthTrack.id
             label=synthTrack.label
-            valueConverter=synthTrack.valueConverter
-            values=synthTrack.values
-            loopLength=synthTrack.loopLength
-            timing=synthTrack.timing
+            valueConverter=valueConverter
+            synthInstance=synthTrack.synthInstance
             editMode=state.editMode
-            globalParameters=state.globalParameters
             dispatch
           />
         </React.Fragment>
