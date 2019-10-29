@@ -27,7 +27,7 @@ let make = (~cellSize, ~highlightedIndex, ~disabledIndex, ~length, ~onSetLength)
 
       <button
         key=string_of_int(index)
-        className=("input-reset absolute " ++ backgroundClassName)
+        className=("input-reset absolute ba " ++ backgroundClassName)
         style=(ReactDOMRe.Style.make(
           ~width=string_of_int(cellSize) ++ "px",
           ~height,
