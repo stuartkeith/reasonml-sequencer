@@ -25,7 +25,7 @@ type viewMode =
   | Active;
 
 [@react.component]
-let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~disabledIndex, ~onAction, ~onSetLength) => {
+let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledIndex, ~onAction, ~onSetLength) => {
   let containerRef = React.useRef(Js.Nullable.null);
   let offsetRef = React.useRef((0, 0));
 
@@ -35,8 +35,6 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
     | Preview(_) => ("1", true)
     | Active => ("1", true)
   };
-
-  let cellSize = 48;
 
   let getUpdateFromMouse = (event) => getUpdate(React.Ref.current(offsetRef), cellSize, values, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
 
@@ -126,7 +124,7 @@ let make = (~viewMode, ~mapValues, ~getValueAt, ~values, ~highlightedIndex, ~dis
 
       <div
         key=string_of_int(valueIndex)
-        className=("absolute " ++ (valueIndex === highlightedIndex ? "bg-light-yellow" : isDisabled ? "bg-near-white" : "bg-light-gray"))
+        className=("absolute " ++ (isDisabled ? "bg-near-white" : "bg-light-gray"))
         style=(ReactDOMRe.Style.make(
           ~width=string_of_int(cellSize) ++ "px",
           ~height=string_of_int(cellSize) ++ "px",

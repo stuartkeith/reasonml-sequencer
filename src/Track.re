@@ -31,6 +31,8 @@ let make = (
     [|id|]
   );
 
+  let cellSize = 48;
+
   <div className="flex items-center">
     <p className="ma0 w4 flex-none">(React.string(label))</p>
     <div className="w1 flex-none" />
@@ -48,16 +50,25 @@ let make = (
         |> React.array)
       </select>
     <div className="w1 flex-none" />
-    <Slider
-      viewMode
-      mapValues=valueConverter.mapValues
-      getValueAt=valueConverter.getValueAt
-      values
-      highlightedIndex=Timing.index(timing)
-      disabledIndex=loopLength
-      onAction
-      onSetLength
-    />
+    <div className="flex-none">
+      <Slider
+        cellSize
+        viewMode
+        mapValues=valueConverter.mapValues
+        getValueAt=valueConverter.getValueAt
+        values
+        disabledIndex=loopLength
+        onAction
+        onSetLength
+      />
+      <LoopProgress
+        cellSize
+        highlightedIndex=Timing.index(timing)
+        disabledIndex=loopLength
+        length=SynthValues.length(values)
+        onSetLength
+      />
+    </div>
     <div className="w1 flex-none" />
     <div className="flex flex-none f6">
       <button
