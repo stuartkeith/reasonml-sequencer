@@ -2,6 +2,8 @@
 
 A step sequencer written in ReasonML and ReasonReact.
 
+Try it at [reasonml-sequencer.stuartkeith.com](https://reasonml-sequencer.stuartkeith.com/), or read more at [stuartkeith.com](https://stuartkeith.com/#reasonml-sequencer).
+
 
 ## Setup
 
