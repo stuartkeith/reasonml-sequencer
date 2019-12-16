@@ -1,5 +1,5 @@
 type action =
-  | AdvancePlayback(WebAudio.scheduleTime)
+  | AdvancePlayback
   | RandomiseAll
   | RandomiseAbsolute(Id.t)
   | RandomiseRelative(Id.t)
