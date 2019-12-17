@@ -8,7 +8,7 @@ Try it at [reasonml-sequencer.stuartkeith.com](https://reasonml-sequencer.stuart
 ## Setup
 
 - `npm install`
-- `npm run watch` to generate the JavaScript files
+- `npm start` to generate the JavaScript files
 - `npm run serve` to run the development server (http://localhost:1234)
 - `npm test` to run tests
 
