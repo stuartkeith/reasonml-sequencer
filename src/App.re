@@ -356,14 +356,14 @@ let useReducerRealTime = (reducer, initialState) => {
   let stateRef = React.useRef(state);
 
   let getState = React.useCallback1(() => {
-    React.Ref.current(stateRef);
+    stateRef.current;
   }, [||]);
 
   let dispatch = React.useCallback1((action) => {
     let previousState = getState();
     let nextState = reducer(previousState, action);
 
-    React.Ref.setCurrent(stateRef, nextState);
+    stateRef.current = nextState;
 
     setState((_) => nextState);
   }, [|reducer|]);
@@ -374,7 +374,7 @@ let useReducerRealTime = (reducer, initialState) => {
 let useScheduler = ((state, dispatch, getState)) => {
   let schedulerRef = React.useRef(None);
 
-  let scheduler = switch (React.Ref.current(schedulerRef)) {
+  let scheduler = switch (schedulerRef.current) {
     | Some(scheduler) => scheduler;
     | None => {
       let scheduler = WebAudio.createSchedule((scheduleTime) => {
@@ -383,7 +383,7 @@ let useScheduler = ((state, dispatch, getState)) => {
         dispatch(Actions.AdvancePlayback);
       });
 
-      React.Ref.setCurrent(schedulerRef, Some(scheduler));
+      schedulerRef.current = Some(scheduler);
 
       scheduler;
     }

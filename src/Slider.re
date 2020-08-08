@@ -36,13 +36,13 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
     | Active => ("1", true)
   };
 
-  let getUpdateFromMouse = (event) => getUpdate(React.Ref.current(offsetRef), cellSize, values, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
+  let getUpdateFromMouse = (event) => getUpdate(offsetRef.current, cellSize, values, ReactEvent.Mouse.pageX(event), ReactEvent.Mouse.pageY(event));
 
   let onMouseEnter = (event) => {
     // update offset first.
-    let offsetOption = containerRef |> React.Ref.current |> Js.Nullable.toOption;
+    let offsetOption = containerRef.current |> Js.Nullable.toOption;
 
-    React.Ref.setCurrent(offsetRef, Utils.getOffset(offsetOption, 0, 0));
+    offsetRef.current = Utils.getOffset(offsetOption, 0, 0);
 
     onAction(getUpdateFromMouse(event), TrackEditMode.MouseEnter);
   };
@@ -81,11 +81,11 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
         let getPageY = Webapi.Dom.MouseEvent.pageY;
 
         let onMouseMove = (event) => {
-          onAction(getUpdate(React.Ref.current(offsetRef), cellSize, values, getPageX(event), getPageY(event)), MouseMove);
+          onAction(getUpdate(offsetRef.current, cellSize, values, getPageX(event), getPageY(event)), MouseMove);
         };
 
         let onMouseUp = (event) => {
-          onAction(getUpdate(React.Ref.current(offsetRef), cellSize, values, getPageX(event), getPageY(event)), MouseUp);
+          onAction(getUpdate(offsetRef.current, cellSize, values, getPageX(event), getPageY(event)), MouseUp);
         };
 
         Webapi.Dom.Document.addMouseMoveEventListener(onMouseMove, Webapi.Dom.document);

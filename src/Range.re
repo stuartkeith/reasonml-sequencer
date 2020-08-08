@@ -19,7 +19,7 @@ let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~child
       type_="range"
       className="input-range-reset pointer absolute absolute--fill w-100"
       value=Js.Float.toString(value)
-      min=Js.Math.floor(min)
+      min=Js.Float.toString(min)
       max=Js.Float.toString(max)
       step
       onChange=((event) => {
