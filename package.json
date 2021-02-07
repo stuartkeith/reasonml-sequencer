@@ -15,13 +15,13 @@
   "author": "Stuart Keith <stuart@stuartkeith.com>",
   "license": "MIT",
   "dependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.5.1",
-    "bs-platform": "^8.2.0",
-    "bs-webapi": "^0.18.0",
+    "@glennsl/bs-jest": "^0.6.0",
+    "bs-platform": "^8.4.2",
+    "bs-webapi": "^0.19.1",
     "parcel-bundler": "^1.12.4",
     "reason-react": "^0.9.1"
   }
