@@ -130,7 +130,7 @@ let createPitch = (default) => {
       notes: {
         if (globalParameters.repeatNotesEverySubTick || Timing.isFirstTick(timing)) {
           switch (value) {
-            | Some(value) => Array.append(parameters.notes, [|value|])
+            | Some(value) => Array.append(parameters.notes, [value])
             | None => parameters.notes
           };
         } else {

@@ -1,23 +1,23 @@
 type audioContext;
 type globalFx;
 
-let create_audioContext: unit => audioContext = [%bs.raw {|
+let create_audioContext: unit => audioContext = %bs.raw(`
   function (_) {
     return new (window.AudioContext || window.webkitAudioContext)();
   }
-|}];
+`);
 
-[@bs.get] external getCurrentTime : (audioContext) => float = "currentTime";
+@bs.get external getCurrentTime : (audioContext) => float = "currentTime";
 
 let audioContext = create_audioContext();
 
-let resume: unit => unit = [%bs.raw {|
+let resume: unit => unit = %bs.raw(`
   function () {
     audioContext.resume();
   }
-|}];
+`);
 
-let createGlobalFx: unit => globalFx = [%bs.raw {|
+let createGlobalFx: unit => globalFx = %bs.raw(`
   function (_) {
     function createConvolver () {
       const seconds = 2;
@@ -65,26 +65,26 @@ let createGlobalFx: unit => globalFx = [%bs.raw {|
 
     return globalFx;
   }
-|}];
+`);
 
-let setGlobalVolume: float => unit = [%bs.raw {|
+let setGlobalVolume: float => unit = %bs.raw(`
   function (volume) {
     globalFx.masterGain.gain.value = Math.pow(volume, 1.6);
   }
-|}];
+`);
 
-let setGlobalWarble: float => unit = [%bs.raw {|
+let setGlobalWarble: float => unit = %bs.raw(`
   function (volume) {
     globalFx.warbleGain.gain.value = Math.pow(volume, 1.6);
   }
-|}];
+`);
 
 let globalFx = createGlobalFx();
 
 let fundamental = 40;
-let ratios = [|2., 3., 4.16, 5.43, 6.79, 8.21|];
+let ratios = [2., 3., 4.16, 5.43, 6.79, 8.21];
 
-let playHihat: (~start:float) => unit = [%bs.raw {|
+let playHihat: (~start:float) => unit = %bs.raw(`
   function (start) {
     const gain = audioContext.createGain();
     const random = Math.random();
@@ -121,9 +121,9 @@ let playHihat: (~start:float) => unit = [%bs.raw {|
     gain.gain.exponentialRampToValueAtTime(0.3 - (random * 0.15), start + 0.03);
     gain.gain.exponentialRampToValueAtTime(0.00001, start + 0.3);
   }
-|}];
+`);
 
-let playOsc: unit => unit = [%bs.raw {|
+let playOsc: unit => unit = %bs.raw(`
   function (note, start, time, gain, output) {
     const frequency = 440 * Math.pow(2, note / 12);
 
@@ -144,14 +144,14 @@ let playOsc: unit => unit = [%bs.raw {|
 
     globalFx.warbleGain.connect(osc.frequency);
   }
-|}];
+`);
 
 let synthFilterMin = 100.0;
 let synthFilterMax = 22000.0;
 let synthFilterRange = synthFilterMax -. synthFilterMin;
 let synthFilterLog = log(synthFilterMax /. synthFilterMin) /. log(2.0);
 
-let playSynth: (~note:int, ~gain:float, ~pan:float, ~filter:float, ~start:float, ~time:float) => unit = [%bs.raw {|
+let playSynth: (~note:int, ~gain:float, ~pan:float, ~filter:float, ~start:float, ~time:float) => unit = %bs.raw(`
   function (note, gain, pan, filter, start, time) {
     const filterLogScale = synthFilterMin + (synthFilterRange * Math.pow(2, synthFilterLog * (filter - 1)));
 
@@ -190,7 +190,7 @@ let playSynth: (~note:int, ~gain:float, ~pan:float, ~filter:float, ~start:float,
 
     playOsc(note, start, time, voiceGain, gainNode);
   }
-|}];
+`);
 
 type schedule = {
   start: (unit) => unit,
@@ -211,24 +211,24 @@ let createSchedule = (callback) => {
 
   let rec onTimeout = () => {
     let targetTime = getCurrentTime(audioContext) +. 0.2;
-    let beatLength = 60. /. bpm^ /. ticksPerBeat;
+    let beatLength = 60. /. bpm.contents /. ticksPerBeat;
 
     // "stop" may be called during the callback, so the timeout must be set
     // first.
     timeoutId := Some(Js.Global.setTimeout(onTimeout, 100));
 
-    while (beatTime^ < targetTime) {
+    while (beatTime.contents < targetTime) {
       callback({
-        beatTime: beatTime^,
+        beatTime: beatTime.contents,
         beatLength
       });
 
-      beatTime := beatTime^ +. beatLength;
+      beatTime := beatTime.contents +. beatLength;
     };
   };
 
   let start = () => {
-    switch (timeoutId^) {
+    switch (timeoutId.contents) {
       | None => ()
       | Some(i) => Js.Global.clearTimeout(i)
     };
@@ -239,7 +239,7 @@ let createSchedule = (callback) => {
   };
 
   let stop = () => {
-    switch (timeoutId^) {
+    switch (timeoutId.contents) {
       | None => ()
       | Some(i) => Js.Global.clearTimeout(i)
       };

@@ -12,10 +12,12 @@ let getUpdate = (offset, cellSize, values, pageX, pageY) => {
 
   let value = Utils.limit(value, 0., 1.);
 
-  SynthValues.{
+  let values: SynthValues.update = {
     index,
     value
   };
+
+  values;
 };
 
 type viewMode =
@@ -24,7 +26,7 @@ type viewMode =
   | Preview(values, index)
   | Active;
 
-[@react.component]
+@react.component
 let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledIndex, ~onAction, ~onSetLength) => {
   let containerRef = React.useRef(Js.Nullable.null);
   let offsetRef = React.useRef((0, 0));

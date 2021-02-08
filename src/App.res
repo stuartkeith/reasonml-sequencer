@@ -32,7 +32,7 @@ let getValueConverter = (globalParameters: SynthParameters.globalParameters, par
 };
 
 let defaultSynthTracks = (globalParameters) => {
-  [
+  list{
     ("Octave", Octave),
     ("Pitch 1", PitchWithNotes),
     ("Pitch 2", PitchWithoutNotes),
@@ -42,7 +42,7 @@ let defaultSynthTracks = (globalParameters) => {
     ("Chance", Chance),
     ("Length", Length),
     ("Filter", Filter),
-  ] |> List.map(((label, parameter)) => {
+  } |> List.map(((label, parameter)) => {
     let valueConverter = getValueConverter(globalParameters, parameter);
     let values = valueConverter.defaultValues(16);
 
@@ -59,8 +59,8 @@ let mergeSynthTracks = (incomingSynthTracks, existingSynthTracks) => {
   let existingSynthTracksCurrent = ref(existingSynthTracks);
 
   List.map(incomingSynthTrack => {
-    switch (existingSynthTracksCurrent^) {
-      | [existingSynthTrack, ...existingSynthTracksRest] => {
+    switch (existingSynthTracksCurrent.contents) {
+      | list{existingSynthTrack, ...existingSynthTracksRest} => {
         existingSynthTracksCurrent := existingSynthTracksRest;
 
         {
@@ -68,15 +68,15 @@ let mergeSynthTracks = (incomingSynthTracks, existingSynthTracks) => {
           synthInstance: SynthInstance.merge(incomingSynthTrack.synthInstance, existingSynthTrack.synthInstance)
         };
       }
-      | [] => incomingSynthTrack;
+      | list{} => incomingSynthTrack;
     }
   }, incomingSynthTracks);
 };
 
 type state = {
-  synthTracks: list(synthTrack),
-  synthTracksUndoBuffer: UndoBuffer.t(list(synthTrack)),
-  synthTracksRedoBuffer: UndoBuffer.t(list(synthTrack)),
+  synthTracks: list<synthTrack>,
+  synthTracksUndoBuffer: UndoBuffer.t<list<synthTrack>>,
+  synthTracksRedoBuffer: UndoBuffer.t<list<synthTrack>>,
   isPlaying: bool,
   volume: float,
   warble: float,
@@ -84,7 +84,7 @@ type state = {
   tick: int,
   sync: bool,
   globalParameters: SynthParameters.globalParameters,
-  editMode: TrackEditMode.editMode(SynthValues.values),
+  editMode: TrackEditMode.editMode<SynthValues.values>,
   globalTranspose: int
 };
 
@@ -108,15 +108,15 @@ let randomTranspose = () => Utils.randomInt(-5, 6);
 let initialState = () => {
   let (_, initialScale) = Utils.randomArrayValue(Scales.scales);
 
-  let initialGlobalParameters = SynthParameters.{
+  let initialGlobalParameters: SynthParameters.globalParameters = {
     repeatNotesEverySubTick: false,
     scale: initialScale
   };
 
   {
     synthTracks: defaultSynthTracks(initialGlobalParameters),
-    synthTracksUndoBuffer: UndoBuffer.create(12, []),
-    synthTracksRedoBuffer: UndoBuffer.create(12, []),
+    synthTracksUndoBuffer: UndoBuffer.create(12, list{}),
+    synthTracksRedoBuffer: UndoBuffer.create(12, list{}),
     isPlaying: false,
     volume: 1.0,
     warble: 0.0,
@@ -295,12 +295,12 @@ let reducer = (state, action) => {
 };
 
 let scheduleCallback = (getState, beatTime, beatLength) => {
-  let initialParameters = SynthParameters.{
+  let initialParameters: SynthParameters.parameters = {
     chance: 1.0,
     filter: 1.0,
     gain: 1.0,
     length: 1.0,
-    notes: [||],
+    notes: [],
     pan: 0.0,
     transpose: 0
   };
@@ -320,7 +320,7 @@ let scheduleCallback = (getState, beatTime, beatLength) => {
   }, initialParameters, state.synthTracks);
 
   if (parameters.chance > 0.0) {
-    let offset = if (state.tick mod 2 === 1) {
+    let offset = if (mod(state.tick, 2) === 1) {
       (state.warble ** 2.3) *. 0.3;
     } else {
       0.0;
@@ -333,7 +333,7 @@ let scheduleCallback = (getState, beatTime, beatLength) => {
     let lastNotePlayed = ref(-1);
 
     Array.iter((incomingNote) => {
-      if ((incomingNote > lastNotePlayed^) && (Random.float(1.) <= parameters.chance)) {
+      if ((incomingNote > lastNotePlayed.contents) && (Random.float(1.) <= parameters.chance)) {
         lastNotePlayed := incomingNote;
 
         WebAudio.playSynth(
@@ -357,7 +357,7 @@ let useReducerRealTime = (reducer, initialState) => {
 
   let getState = React.useCallback1(() => {
     stateRef.current;
-  }, [||]);
+  }, []);
 
   let dispatch = React.useCallback1((action) => {
     let previousState = getState();
@@ -366,7 +366,7 @@ let useReducerRealTime = (reducer, initialState) => {
     stateRef.current = nextState;
 
     setState((_) => nextState);
-  }, [|reducer|]);
+  }, [reducer]);
 
   (state, dispatch, getState);
 };
@@ -390,7 +390,7 @@ let useScheduler = ((state, dispatch, getState)) => {
   };
 
   // make sure scheduler is stopped on unmount.
-  React.useEffect1(() => Some(() => scheduler.stop()), [||]);
+  React.useEffect1(() => Some(() => scheduler.stop()), []);
 
   let dispatchWrapper = React.useCallback1((action) => {
     let previousState = getState();
@@ -406,12 +406,12 @@ let useScheduler = ((state, dispatch, getState)) => {
       | (true, false) => scheduler.stop()
       | _ => ()
     };
-  }, [||]);
+  }, []);
 
   (state, dispatchWrapper);
 };
 
-[@react.component]
+@react.component
 let make = () => {
   let (state, dispatch) = useReducerRealTime(reducer, initialState)
     |> useScheduler;
@@ -420,13 +420,13 @@ let make = () => {
     WebAudio.setGlobalVolume(state.volume);
 
     None;
-  }, [|state.volume|]);
+  }, [state.volume]);
 
   React.useEffect1(() => {
     WebAudio.setGlobalWarble(state.warble *. 2.9);
 
     None;
-  }, [|state.warble|]);
+  }, [state.warble]);
 
   <div className="ma4">
     <div className="flex items-center f6">
@@ -501,7 +501,7 @@ let make = () => {
       <span className="db w2 flex-none" />
       <label className="flex-none">
         <input type_="checkbox" checked=state.sync onChange=(event => {
-          dispatch(SetSync(event->ReactEvent.Form.target##checked));
+          dispatch(SetSync(ReactEvent.Form.target(event)["checked"]));
         }) />
         <span className="ml2">(React.string("Sync"))</span>
       </label>
@@ -512,7 +512,7 @@ let make = () => {
           checked=state.globalParameters.repeatNotesEverySubTick
           onChange=((event) => dispatch(UpdateGlobalParameters({
             ...state.globalParameters,
-            repeatNotesEverySubTick: event->ReactEvent.Form.target##checked
+            repeatNotesEverySubTick: ReactEvent.Form.target(event)["checked"]
           })))
         />
         <span className="ml2">(React.string("Repeat notes"))</span>

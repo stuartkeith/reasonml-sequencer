@@ -1,6 +1,6 @@
-type t('a) = {
+type t<'a> = {
   length: int,
-  buffer: array('a),
+  buffer: array<'a>,
   indexHead: int,
   indexTail: int,
   indexAccess: int
@@ -30,9 +30,11 @@ let pop = (t) => {
   if (isEmpty(t)) {
     t;
   } else {
-    ...t,
-    indexHead: t.indexAccess,
-    indexAccess: t.indexAccess == 0 ? t.length : t.indexAccess - 1
+    {
+      ...t,
+      indexHead: t.indexAccess,
+      indexAccess: t.indexAccess == 0 ? t.length : t.indexAccess - 1
+    };
   }
 };
 

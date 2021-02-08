@@ -3,9 +3,9 @@ type t = string;
 let nextId = ref(0);
 
 let create = () => {
-  nextId := nextId^ + 1;
+  nextId := nextId.contents + 1;
 
-  string_of_int(nextId^);
+  string_of_int(nextId.contents);
 };
 
 let equals = (idOne, idTwo) => idOne === idTwo;

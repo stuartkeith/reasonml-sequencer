@@ -1,4 +1,4 @@
-[@react.component]
+@react.component
 let make = (~cellSize, ~highlightedIndex, ~disabledIndex, ~length, ~onSetLength) => {
   let height = "16px";
 

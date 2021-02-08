@@ -1,12 +1,12 @@
 let options = Array.init(64, i => (string_of_int(i + 1), i + 1));
 
-[@react.component]
+@react.component
 let make = (
   ~id: Id.t,
   ~label: string,
   ~valueConverter: SynthValues.valueConverter,
   ~synthInstance: SynthInstance.t,
-  ~editMode: TrackEditMode.editMode(SynthValues.values),
+  ~editMode: TrackEditMode.editMode<SynthValues.values>,
   ~dispatch
 ) => {
   let viewMode = switch (editMode) {
@@ -28,7 +28,7 @@ let make = (
 
   let onSetLength = React.useCallback1(
     (index) => dispatch(Actions.SetLoopLength(id, index)),
-    [|id|]
+    [id]
   );
 
   let cellSize = 48;
@@ -39,7 +39,7 @@ let make = (
       <select
         value=(timing |> Timing.subTicks |> string_of_int)
         onChange=((event) => {
-          let value = int_of_string(event->ReactEvent.Form.target##value);
+          let value = int_of_string(ReactEvent.Form.target(event)["value"]);
 
           dispatch(Actions.SetSubTicks(id, value));
         })

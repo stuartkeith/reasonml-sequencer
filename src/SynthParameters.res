@@ -8,7 +8,7 @@ type parameters = {
   filter: float,
   gain: float,
   length: float,
-  notes: array(int),
+  notes: array<int>,
   pan: float,
   transpose: int
 };

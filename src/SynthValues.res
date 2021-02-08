@@ -1,10 +1,10 @@
-type values = array(float);
+type values = array<float>;
 
-let emptyValues = [||];
+let emptyValues = [];
 
 let length = Array.length;
 
-type floatConverter('a) = {
+type floatConverter<'a> = {
   fromFloat: (float) => 'a,
   toFloat: ('a) => float
 };
@@ -26,11 +26,11 @@ type updateGroup = {
   timing: Timing.t
 };
 
-type valueConverterConfig('a) = {
-  floatConverter: floatConverter('a),
-  default: (length) => array('a),
-  randomAbsolute: (array('a)) => array('a),
-  randomRelative: (array('a)) => array('a),
+type valueConverterConfig<'a> = {
+  floatConverter: floatConverter<'a>,
+  default: (length) => array<'a>,
+  randomAbsolute: (array<'a>) => array<'a>,
+  randomRelative: (array<'a>) => array<'a>,
   updateSynthParameters: (updateGroup, SynthParameters.parameters, 'a) => SynthParameters.parameters,
   toString: ('a) => string
 };
@@ -39,7 +39,7 @@ type valueConverter = {
   defaultValues: (length) => values,
   randomValuesAbsolute: (values) => values,
   randomValuesRelative: (values) => values,
-  mapValues: 'a . ((index, float, string) => 'a, values) => array('a),
+  mapValues: 'a . ((index, float, string) => 'a, values) => array<'a>,
   getValueAt: (index, values) => float,
   updateValues: (values, update) => values,
   updateSynthParameters: (updateGroup, SynthParameters.parameters, values) => SynthParameters.parameters

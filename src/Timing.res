@@ -27,8 +27,8 @@ let advance = (loopLength, sync, t) => {
 
   switch (sync) {
     | Sync(tick) => {
-      let index = (tick / t.subTicks) mod loopLength;
-      let subIndex = tick mod t.subTicks;
+      let index = mod((tick / t.subTicks), loopLength);
+      let subIndex = mod(tick, t.subTicks);
 
       {
         ...t,
@@ -40,7 +40,7 @@ let advance = (loopLength, sync, t) => {
       let nextSubIndex = t.subIndex + 1;
 
       if (nextSubIndex >= t.subTicks) {
-        let nextIndex = (t.index + 1) mod loopLength;
+        let nextIndex = mod((t.index + 1), loopLength);
 
         {
           ...t,

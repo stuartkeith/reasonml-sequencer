@@ -1,4 +1,4 @@
-[@react.component]
+@react.component
 let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~children) => {
   let scale = 1.0 -. ((value -. min) /. (max -. min));
 
@@ -23,7 +23,7 @@ let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~child
       max=Js.Float.toString(max)
       step
       onChange=((event) => {
-        let value = event->ReactEvent.Form.target##value;
+        let value = ReactEvent.Form.target(event)["value"];
 
         onChange(value);
       })

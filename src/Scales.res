@@ -1,16 +1,16 @@
-type t = array(int);
+type t = array<int>;
 
 type steps =
   | Whole
   | Half;
 
-let majorScale = [|Whole, Whole, Half, Whole, Whole, Whole, Half|];
+let majorScale = [Whole, Whole, Half, Whole, Whole, Whole, Half];
 
 let generateScale = (majorScaleOffset) => {
   let result = Array.make(Array.length(majorScale), 0);
 
   for (i in 1 to Array.length(result) - 1) {
-    let value = majorScale[(i - 1 + majorScaleOffset) mod Array.length(majorScale)];
+    let value = majorScale[mod((i - 1 + majorScaleOffset), Array.length(majorScale))];
 
     let increment = switch (value) {
       | Whole => 2
@@ -31,7 +31,7 @@ let scaleMixolydian = generateScale(4);
 let scaleMinor = generateScale(5);
 let scaleLocrian = generateScale(6);
 
-let scales = [|
+let scales = [
   ("Major", scaleMajor),
   ("Minor", scaleMinor),
   ("Dorian", scaleDorian),
@@ -39,4 +39,4 @@ let scales = [|
   ("Lydian", scaleLydian),
   ("Mixolydian", scaleMixolydian),
   ("Locrian", scaleLocrian)
-|];
+];

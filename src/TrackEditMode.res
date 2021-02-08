@@ -5,29 +5,29 @@ type mouseAction =
   | MouseDown
   | MouseUp;
 
-type preview('a) = {
+type preview<'a> = {
   id: Id.t,
   valuesBeforeEdit: 'a,
   index: int
 };
 
-type mousePosition('a) =
+type mousePosition<'a> =
   | Inside
   | Outside
   | InsideAnother(Id.t, 'a, SynthValues.update);
 
-type active('a) = {
+type active<'a> = {
   id: Id.t,
   valuesBeforeEdit: 'a,
-  mousePosition: mousePosition('a)
+  mousePosition: mousePosition<'a>
 };
 
-type editMode('a) =
+type editMode<'a> =
   | Inactive
-  | Preview(preview('a))
-  | Active(active('a));
+  | Preview(preview<'a>)
+  | Active(active<'a>);
 
-type sideEffects('a) =
+type sideEffects<'a> =
   | NoSideEffects
   | ApplyUpdateToValues(Id.t, 'a, SynthValues.update)
   | RestoreValues(Id.t, 'a);
