@@ -8,12 +8,12 @@ describe("SynthInstance", () => {
     }) |> toThrow;
   });
 
-  let valueConverter = SynthValues.{
+  let valueConverter: SynthValues.floatConverter<int> = {
     fromFloat: int_of_float,
     toFloat: float_of_int
   };
 
-  let values = SynthValues.fromArray(valueConverter, [|0, 1, 2, 3|]);
+  let values = SynthValues.fromArray(valueConverter, [0, 1, 2, 3]);
   let synthInstance = SynthInstance.create(values);
 
   test("should throw an exception if loop length is zero", () => {

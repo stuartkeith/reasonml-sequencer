@@ -7,19 +7,19 @@ describe("TrackEditMode", () => {
 
     let id = Id.create();
 
-    let result = updateEditMode(id, [|1|], { index: 1, value: 0.0 }, MouseMove, Preview({
+    let result = updateEditMode(id, [1], { index: 1, value: 0.0 }, MouseMove, Preview({
       id,
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       index: 0
     }));
 
     expect(result) |> toEqual((
       Preview({
         id,
-        valuesBeforeEdit: [|2|],
+        valuesBeforeEdit: [2],
         index: 1
       }),
-      ApplyUpdateToValues(id, [|2|], { index: 1, value: 0.0 }),
+      ApplyUpdateToValues(id, [2], { index: 1, value: 0.0 }),
       None
     ));
   });
@@ -29,19 +29,19 @@ describe("TrackEditMode", () => {
 
     let id = Id.create();
 
-    let result = updateEditMode(id, [|1|], { index: 0, value: 0.0 }, MouseMove, Preview({
+    let result = updateEditMode(id, [1], { index: 0, value: 0.0 }, MouseMove, Preview({
       id,
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       index: 0
     }));
 
     expect(result) |> toEqual((
       Preview({
         id,
-        valuesBeforeEdit: [|2|],
+        valuesBeforeEdit: [2],
         index: 0
       }),
-      ApplyUpdateToValues(id, [|1|], { index: 0, value: 0.0 }),
+      ApplyUpdateToValues(id, [1], { index: 0, value: 0.0 }),
       None
     ));
   });
@@ -52,19 +52,19 @@ describe("TrackEditMode", () => {
     let previewId = Id.create();
     let id = Id.create();
 
-    let result = updateEditMode(previewId, [|1|], { index: 0, value: 0.0 }, MouseMove, Active({
+    let result = updateEditMode(previewId, [1], { index: 0, value: 0.0 }, MouseMove, Active({
       id,
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       mousePosition: Outside
     }));
 
     expect(result) |> toEqual((
       Active({
         id,
-        valuesBeforeEdit: [|2|],
+        valuesBeforeEdit: [2],
         mousePosition: InsideAnother(
           previewId,
-          [|1|],
+          [1],
           { index: 0, value: 0.0 }
         )
       }),
@@ -79,12 +79,12 @@ describe("TrackEditMode", () => {
     let previewId = Id.create();
     let id = Id.create();
 
-    let result = updateEditMode(id, [|1|], { index: 0, value: 0.0 }, MouseUp, Active({
+    let result = updateEditMode(id, [1], { index: 0, value: 0.0 }, MouseUp, Active({
       id,
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       mousePosition: InsideAnother(
         previewId,
-        [|3|],
+        [3],
         { index: 4, value: 123.0 }
       )
     }));
@@ -92,22 +92,22 @@ describe("TrackEditMode", () => {
     expect(result) |> toEqual((
       Preview({
         id: previewId,
-        valuesBeforeEdit: [|3|],
+        valuesBeforeEdit: [3],
         index: 4
       }),
-      ApplyUpdateToValues(previewId, [|3|], { index: 4, value: 123.0 }),
-      Some((id, [|2|]))
+      ApplyUpdateToValues(previewId, [3], { index: 4, value: 123.0 }),
+      Some((id, [2]))
     ));
   });
 
-  let nonActiveTest = (label, editMode, blah) => {
+  let nonActiveTest = (label, editMode, events) => {
     open TrackEditMode;
 
-    List.iter(((mouseEventName, mouseEvent)) => {
+    Array.iter(((mouseEventName, mouseEvent)) => {
       test(label ++ " should ignore " ++ mouseEventName ++ " from non-active component", () => {
         let inactiveId = Id.create();
 
-        let result = updateEditMode(inactiveId, [|1|], { index: 0, value: 0.0 }, mouseEvent, editMode);
+        let result = updateEditMode(inactiveId, [1], { index: 0, value: 0.0 }, mouseEvent, editMode);
 
         expect(result) |> toEqual((
           editMode,
@@ -115,29 +115,29 @@ describe("TrackEditMode", () => {
           None
         ));
       });
-    }, blah);
+    }, events);
   };
 
-  TrackEditMode.[
-    ("mouse enter", MouseEnter),
-    ("mouse move", MouseMove),
-    ("mouse leave", MouseLeave),
-    ("mouse down", MouseDown),
-    ("mouse up", MouseUp)
+  [
+    ("mouse enter", TrackEditMode.MouseEnter),
+    ("mouse move", TrackEditMode.MouseMove),
+    ("mouse leave", TrackEditMode.MouseLeave),
+    ("mouse down", TrackEditMode.MouseDown),
+    ("mouse up", TrackEditMode.MouseUp)
   ] |>
     nonActiveTest("preview", Preview({
       id: Id.create(),
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       index: 0
     }));
 
-  TrackEditMode.[
-    ("mouse down", MouseDown),
-    ("mouse up", MouseUp)
+  [
+    ("mouse down", TrackEditMode.MouseDown),
+    ("mouse up", TrackEditMode.MouseUp)
   ] |>
     nonActiveTest("active", Active({
       id: Id.create(),
-      valuesBeforeEdit: [|2|],
+      valuesBeforeEdit: [2],
       mousePosition: Outside
     }));
 });

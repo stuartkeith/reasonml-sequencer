@@ -5,10 +5,10 @@ let applyMultipleTimes = (count, fn, timing) => {
   let timing = ref(timing);
 
   for (_ in 1 to count) {
-    timing := fn(timing^);
+    timing := fn(timing.contents);
   }
 
-  timing^;
+  timing.contents;
 };
 
 describe("Timing", () => {
