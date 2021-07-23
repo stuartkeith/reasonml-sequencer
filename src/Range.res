@@ -1,10 +1,11 @@
 @react.component
 let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~children) => {
   let scale = 1.0 -. ((value -. min) /. (max -. min));
+  let scaleString = Belt.Float.toString(scale *. -100.0);
 
   let style = ReactDOMRe.Style.make(
     ~transformOrigin="0 100%",
-    ~transform=Printf.sprintf("translate3d(%g%%, 0, 0)", scale *. -100.0),
+    ~transform=`translate3d(${scaleString}, 0, 0)`,
     ()
   );
 
