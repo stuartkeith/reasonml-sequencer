@@ -1,15 +1,14 @@
-let rec getOffset = (element, x, y) => {
-  switch (element) {
-    | None => (x, y)
-    | Some(element) => {
-      open Webapi.Dom;
-
-      switch (Element.asHtmlElement(element)) {
-        | Some(htmlElement) => getOffset(HtmlElement.offsetParent(htmlElement), x - HtmlElement.offsetLeft(htmlElement), y - HtmlElement.offsetTop(htmlElement))
-        | None => (x, y)
-      }
+let getOffset = (element) => {
+  let rec traverse = (element, x, y) => {
+    switch (element) {
+      | Some(obj) => traverse(Js.Nullable.toOption(obj["offsetParent"]), x - obj["offsetLeft"], y - obj["offsetTop"])
+      | None => (x, y)
     }
-  }
+  };
+
+  let elementObject = Belt.Option.map(element, ReactDOM.domElementToObj)
+
+  traverse(elementObject, 0, 0)
 };
 
 let limit = (value, min, max) => Pervasives.min(max, Pervasives.max(min, value));

@@ -1,3 +1,5 @@
+@val external document: {..} = "document"
+
 type values = SynthValues.values;
 type index = int;
 
@@ -44,7 +46,7 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
     // update offset first.
     let offsetOption = containerRef.current |> Js.Nullable.toOption;
 
-    offsetRef.current = Utils.getOffset(offsetOption, 0, 0);
+    offsetRef.current = Utils.getOffset(offsetOption);
 
     onAction(getUpdateFromMouse(event), TrackEditMode.MouseEnter);
   };
@@ -60,7 +62,7 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
         if (ReactEvent.Mouse.shiftKey(event)) {
           onSetLength(update.index + 1);
         } else {
-          onAction(getUpdateFromMouse(event), MouseDown);
+          onAction(getUpdateFromMouse(event), TrackEditMode.MouseDown);
         }
       }
     }
@@ -79,8 +81,8 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
   React.useEffect4(() => {
     switch (viewMode) {
       | Preview(_) | Active => {
-        let getPageX = Webapi.Dom.MouseEvent.pageX;
-        let getPageY = Webapi.Dom.MouseEvent.pageY;
+        let getPageX = element => element["pageX"];
+        let getPageY = element => element["pageY"];
 
         let onMouseMove = (event) => {
           onAction(getUpdate(offsetRef.current, cellSize, values, getPageX(event), getPageY(event)), MouseMove);
@@ -90,12 +92,12 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
           onAction(getUpdate(offsetRef.current, cellSize, values, getPageX(event), getPageY(event)), MouseUp);
         };
 
-        Webapi.Dom.Document.addMouseMoveEventListener(onMouseMove, Webapi.Dom.document);
-        Webapi.Dom.Document.addMouseUpEventListener(onMouseUp, Webapi.Dom.document);
+        ignore(document["addEventListener"]("mousemove", onMouseMove))
+        ignore(document["addEventListener"]("mouseup", onMouseUp))
 
         Some(() => {
-          Webapi.Dom.Document.removeMouseMoveEventListener(onMouseMove, Webapi.Dom.document);
-          Webapi.Dom.Document.removeMouseUpEventListener(onMouseUp, Webapi.Dom.document);
+          ignore(document["removeEventListener"]("mousemove", onMouseMove))
+          ignore(document["removeEventListener"]("mouseup", onMouseUp))
         });
       }
       | Deactive | Inactive => None
