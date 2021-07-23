@@ -5,7 +5,7 @@ let make = (~value:float, ~min:float, ~max:float, ~step:float, ~onChange, ~child
 
   let style = ReactDOM.Style.make(
     ~transformOrigin="0 100%",
-    ~transform=`translate3d(${scaleString}, 0, 0)`,
+    ~transform=`translate3d(${scaleString}%, 0, 0)`,
     ()
   );
 
