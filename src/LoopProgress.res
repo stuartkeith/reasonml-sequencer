@@ -4,7 +4,7 @@ let make = (~cellSize, ~highlightedIndex, ~disabledIndex, ~length, ~onSetLength)
 
   <div
     className="relative flex-none"
-    style=(ReactDOMRe.Style.make(
+    style=(ReactDOM.Style.make(
       ~width=string_of_int(cellSize * length) ++ "px",
       ~height,
       ()
@@ -28,7 +28,7 @@ let make = (~cellSize, ~highlightedIndex, ~disabledIndex, ~length, ~onSetLength)
       <button
         key=string_of_int(index)
         className=("input-reset absolute ba " ++ backgroundClassName)
-        style=(ReactDOMRe.Style.make(
+        style=(ReactDOM.Style.make(
           ~width=string_of_int(cellSize) ++ "px",
           ~height,
           ~left=string_of_int(cellSize * index) ++ "px",

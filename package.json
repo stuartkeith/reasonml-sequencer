@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@glennsl/bs-jest": "^0.6.0",
+    "@rescript/react": "^0.10.3",
     "bs-webapi": "^0.19.1",
     "parcel-bundler": "^1.12.4",
-    "reason-react": "^0.9.1",
     "rescript": "^9.1.4"
   }
 }

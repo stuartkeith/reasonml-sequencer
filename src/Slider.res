@@ -103,9 +103,9 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
   }, (values, viewMode, cellSize, onAction));
 
   <div
-    ref={ReactDOMRe.Ref.domRef(containerRef)}
+    ref={ReactDOM.Ref.domRef(containerRef)}
     className="opacity-transition-1 bg-white relative flex-none no-select"
-    style=(ReactDOMRe.Style.make(
+    style=(ReactDOM.Style.make(
       ~width=string_of_int(cellSize * SynthValues.length(values)) ++ "px",
       ~height=string_of_int(cellSize) ++ "px",
       ~opacity=containerOpacity,
@@ -127,7 +127,7 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
       <div
         key=string_of_int(valueIndex)
         className=("absolute " ++ (isDisabled ? "bg-near-white" : "bg-light-gray"))
-        style=(ReactDOMRe.Style.make(
+        style=(ReactDOM.Style.make(
           ~width=string_of_int(cellSize) ++ "px",
           ~height=string_of_int(cellSize) ++ "px",
           ~left=string_of_int(cellSize * valueIndex) ++ "px",
@@ -136,7 +136,7 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
       >
         <div
           className=("absolute absolute--fill " ++ (isDisabled ? "bg-moon-gray" : "bg-dark-gray"))
-          style=(ReactDOMRe.Style.make(
+          style=(ReactDOM.Style.make(
             ~transformOrigin="0 100%",
             ~transform=("scale3d(1, " ++ Js.Float.toString(scale) ++ ", 1)"),
             ()
@@ -144,7 +144,7 @@ let make = (~cellSize, ~viewMode, ~mapValues, ~getValueAt, ~values, ~disabledInd
         />
         <div
           className=("absolute absolute--fill bg-hot-pink o-50")
-          style=(ReactDOMRe.Style.make(
+          style=(ReactDOM.Style.make(
             ~transformOrigin="0 100%",
             ~transform=("scale3d(1, " ++ Js.Float.toString(previewScale) ++ ", 1)"),
             ()

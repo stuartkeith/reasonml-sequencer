@@ -20,8 +20,8 @@
   "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
-    "bs-webapi",
-    "reason-react"
+    "@rescript/react",
+    "bs-webapi"
   ],
   "bs-dev-dependencies": ["@glennsl/bs-jest"]
 }
