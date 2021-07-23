@@ -9,9 +9,6 @@
     "build": "rescript build && parcel build src/index.html",
     "test": "jest --watch"
   },
-  "keywords": [
-    "BuckleScript"
-  ],
   "author": "Stuart Keith <stuart@stuartkeith.com>",
   "license": "MIT",
   "dependencies": {
